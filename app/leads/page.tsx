@@ -78,20 +78,53 @@ export default function LeadsPage() {
     fetchLeads()
   }, [])
 
-  const triggerMail = async (leadId: number) => {
-    setSending(leadId)
+  const triggerMail = async (lead: DisplayLead) => {
+    setSending(lead.id)
     try {
-      const res = await fetch('/api/leads', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: leadId, statut: 'reception' }),
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        alert('Erreur: ' + err.error)
-        return
+      if (lead._source === 'cahier_des_charges') {
+        const createRes = await fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            domaine: lead.domaine,
+            appellation: lead.appellation,
+            nom: lead.nom,
+            email: lead.email,
+            tel: lead.tel,
+            message: lead.message,
+            consent: lead.consent,
+            pack_demande: lead.pack_demande,
+            style_visuel: lead.style_visuel,
+            couleurs_souhaitees: lead.couleurs_souhaitees,
+            liste_cuvees: lead.liste_cuvees,
+            slogan: lead.slogan,
+            type_demande: 'site',
+          }),
+        })
+        if (!createRes.ok) {
+          const err = await createRes.json()
+          alert('Erreur: ' + err.error)
+          return
+        }
+        await fetch('/api/cahier-des-charges', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: lead.id, traite: true }),
+        })
+        alert('Migré vers Leads — le mail sera envoyé automatiquement dans les 2 prochaines minutes.')
+      } else {
+        const res = await fetch('/api/leads', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: lead.id, statut: 'reception' }),
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          alert('Erreur: ' + err.error)
+          return
+        }
+        alert('Statut remis à "reception" — le mail sera envoyé automatiquement dans les 2 prochaines minutes.')
       }
-      alert('Statut remis à "reception" — le mail sera envoyé automatiquement dans les 2 prochaines minutes.')
       fetchLeads()
     } finally {
       setSending(null)
@@ -165,17 +198,15 @@ export default function LeadsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex space-x-2">
-                          {lead._source === 'leads' && (
-                            <button
-                              onClick={() => triggerMail(lead.id)}
-                              disabled={sending === lead.id}
-                              title="Envoyer / renvoyer le mail de prise de contact"
-                              className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-wine text-white hover:bg-wine/90 disabled:opacity-50"
-                            >
-                              <Send size={14} />
-                              <span>{sending === lead.id ? '...' : 'Mail'}</span>
-                            </button>
-                          )}
+                          <button
+                            onClick={() => triggerMail(lead)}
+                            disabled={sending === lead.id}
+                            title="Envoyer / renvoyer le mail de prise de contact"
+                            className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-wine text-white hover:bg-wine/90 disabled:opacity-50"
+                          >
+                            <Send size={14} />
+                            <span>{sending === lead.id ? '...' : 'Mail'}</span>
+                          </button>
                           <button
                             onClick={() => setClientLead(lead)}
                             title="Créer le client (après le RDV)"
