@@ -138,6 +138,7 @@ export interface Article {
   date_publication_prevue?: string
   status?: string
   date_publication_reelle?: string
+  plan_editorial_valide?: boolean
 }
 
 export interface Post {
@@ -153,6 +154,7 @@ export interface Post {
   date_publication_prevue?: string
   status?: string
   date_publication_reelle?: string
+  media_url?: string
 }
 
 export interface Newsletter {

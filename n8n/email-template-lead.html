@@ -1,0 +1,97 @@
+<!-- Template email "Prise de contact" — DA La Gabare -->
+<!-- Variables n8n : {{ nom }}, {{ domaine }}, {{ pack_demande }}, {{ lead_id }} -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
+
+        <!-- En-tête sombre -->
+        <tr>
+          <td style="background-color:#1A1310;padding:32px 40px;text-align:center;">
+            <span style="font-family:Georgia,'Cormorant Garamond',serif;font-size:24px;letter-spacing:0.04em;color:#F5F2EC;">La Gabare</span>
+          </td>
+        </tr>
+
+        <!-- Filet or -->
+        <tr>
+          <td style="height:3px;background:linear-gradient(90deg,#5A1226,#B08D57);font-size:0;line-height:0;">&nbsp;</td>
+        </tr>
+
+        <!-- Corps -->
+        <tr>
+          <td style="padding:44px 40px 24px 40px;">
+            <p style="margin:0 0 6px 0;font-family:Arial,'Geist',sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">Votre demande</p>
+            <h1 style="margin:0 0 20px 0;font-family:Georgia,'Cormorant Garamond',serif;font-weight:400;font-size:28px;line-height:1.25;color:#1A1310;">
+              Merci, {{ nom }}.
+            </h1>
+            <p style="margin:0 0 16px 0;font-family:Arial,'Geist',sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">
+              Nous avons bien reçu votre demande concernant <strong style="color:#1A1310;">{{ domaine }}</strong>{{ pack_demande_suffix }}.
+            </p>
+            <p style="margin:0 0 32px 0;font-family:Arial,'Geist',sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">
+              Pour avancer, deux options s'offrent à vous — choisissez celle qui vous convient le mieux.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Option 1 : RDV -->
+        <tr>
+          <td style="padding:0 40px 20px 40px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(26,19,16,0.14);">
+              <tr>
+                <td style="padding:24px;">
+                  <p style="margin:0 0 6px 0;font-family:Arial,'Geist',sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#B08D57;">Option 1</p>
+                  <p style="margin:0 0 14px 0;font-family:Georgia,'Cormorant Garamond',serif;font-size:19px;color:#1A1310;">Réserver un appel de 20 minutes</p>
+                  <p style="margin:0 0 18px 0;font-family:Arial,'Geist',sans-serif;font-size:14px;line-height:1.6;color:#4A3E37;">
+                    Le moyen le plus rapide pour qu'on comprenne bien votre projet et qu'on vous propose la formule adaptée.
+                  </p>
+                  <a href="https://cal.com/la-gabare/appel-decouverte-la-gabare" style="display:inline-block;padding:12px 28px;background-color:#5A1226;color:#F5F2EC;font-family:Arial,'Geist',sans-serif;font-size:14px;font-weight:600;text-decoration:none;">
+                    Réserver un créneau &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Option 2 : Formulaire -->
+        <tr>
+          <td style="padding:0 40px 36px 40px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(26,19,16,0.14);">
+              <tr>
+                <td style="padding:24px;">
+                  <p style="margin:0 0 6px 0;font-family:Arial,'Geist',sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#B08D57;">Option 2</p>
+                  <p style="margin:0 0 14px 0;font-family:Georgia,'Cormorant Garamond',serif;font-size:19px;color:#1A1310;">Compléter le formulaire détaillé</p>
+                  <p style="margin:0 0 18px 0;font-family:Arial,'Geist',sans-serif;font-size:14px;line-height:1.6;color:#4A3E37;">
+                    Vous préférez écrire ? Prenez le temps qu'il vous faut, à votre rythme.
+                  </p>
+                  <a href="https://la-gabare.fr/formulaire-complet.html?lead_id={{ lead_id }}" style="display:inline-block;padding:12px 28px;background-color:transparent;border:1px solid #1A1310;color:#1A1310;font-family:Arial,'Geist',sans-serif;font-size:14px;font-weight:600;text-decoration:none;">
+                    Compléter le formulaire &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Note relance -->
+        <tr>
+          <td style="padding:0 40px 40px 40px;">
+            <p style="margin:0;font-family:Arial,'Geist',sans-serif;font-size:13px;line-height:1.6;color:#4A3E37;font-style:italic;">
+              Sans nouvelle de votre part sous 5 jours, nous reviendrons vers vous.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background-color:#1A1310;padding:24px 40px;text-align:center;">
+            <p style="margin:0;font-family:Arial,'Geist',sans-serif;font-size:11px;letter-spacing:0.05em;color:rgba(245,242,236,0.5);">
+              La Gabare — Agence pour les domaines viticoles de la Loire
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>

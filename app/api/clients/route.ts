@@ -14,6 +14,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
+  if (data.email_contact) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://admin.la-gabare.fr'
+    await supabaseAdmin.auth.admin.inviteUserByEmail(data.email_contact, {
+      redirectTo: `${siteUrl}/mon-espace`,
+    })
+  }
+
   return NextResponse.json(data)
 }
 
