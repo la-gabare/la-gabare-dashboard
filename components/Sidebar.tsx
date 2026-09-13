@@ -1,13 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { Home, Inbox, FileSignature, Users, BookOpen, Mail, BarChart3 } from 'lucide-react'
+import { Home, Inbox, Users, BookOpen, Mail, BarChart3 } from 'lucide-react'
 
 export default function Sidebar() {
   const navItems = [
     { icon: Home, label: 'Dashboard', href: '/' },
     { icon: Inbox, label: 'Leads', href: '/leads' },
-    { icon: FileSignature, label: 'Cahiers des charges', href: '/cahier-des-charges' },
     { icon: Users, label: 'Clients', href: '/clients' },
     { icon: BookOpen, label: 'Contenu', href: '/contenu' },
     { icon: Mail, label: 'Newsletters', href: '/newsletters' },

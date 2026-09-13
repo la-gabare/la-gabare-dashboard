@@ -6,7 +6,6 @@ import { fetchAdminData } from '@/lib/admin-data'
 export default function Home() {
   const [counts, setCounts] = useState({
     leads: 0,
-    cahiers: 0,
     clients: 0,
     articlesEnAttente: 0,
     postsEnAttente: 0,
@@ -15,9 +14,8 @@ export default function Home() {
 
   useEffect(() => {
     const fetchCounts = async () => {
-      const [leads, cahiers, clients, articles, posts] = await Promise.all([
+      const [leads, clients, articles, posts] = await Promise.all([
         fetchAdminData('leads'),
-        fetchAdminData('cahier_des_charges', { eq_column: 'traite', eq_value: 'false' }),
         fetchAdminData('clients', { eq_column: 'statut', eq_value: 'actif' }),
         fetchAdminData('articles', { eq_column: 'status', eq_value: 'brouillon' }),
         fetchAdminData('posts', { eq_column: 'status', eq_value: 'brouillon' }),
@@ -25,7 +23,6 @@ export default function Home() {
 
       setCounts({
         leads: leads.length,
-        cahiers: cahiers.length,
         clients: clients.length,
         articlesEnAttente: articles.length,
         postsEnAttente: posts.length,
@@ -42,7 +39,6 @@ export default function Home() {
 
   const cards = [
     { label: 'Leads (total)', value: counts.leads, href: '/leads' },
-    { label: 'Cahiers des charges à traiter', value: counts.cahiers, href: '/cahier-des-charges' },
     { label: 'Clients actifs', value: counts.clients, href: '/clients' },
     { label: 'Articles en brouillon', value: counts.articlesEnAttente, href: '/contenu' },
     { label: 'Posts en brouillon', value: counts.postsEnAttente, href: '/contenu' },

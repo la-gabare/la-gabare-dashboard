@@ -3,8 +3,8 @@
 import { Fragment, useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Lead } from '@/lib/types'
-import { ChevronDown, ChevronUp, Send, FileSignature } from 'lucide-react'
-import CreateCahierModal from '@/components/CreateCahierModal'
+import { ChevronDown, ChevronUp, Send, UserPlus } from 'lucide-react'
+import CreateClientModal from '@/components/CreateClientModal'
 
 const typeLabels: Record<string, string> = {
   site: 'Demande de site',
@@ -35,7 +35,7 @@ export default function LeadsPage() {
   const [expanded, setExpanded] = useState<number | null>(null)
   const [filter, setFilter] = useState<'tous' | 'site' | 'abonnement'>('tous')
   const [sending, setSending] = useState<number | null>(null)
-  const [cahierLead, setCahierLead] = useState<Lead | null>(null)
+  const [clientLead, setClientLead] = useState<Lead | null>(null)
 
   const fetchLeads = async () => {
     const data = await fetchAdminData<Lead>('leads', { order_column: 'created_at', order_asc: 'false' })
@@ -141,13 +141,13 @@ export default function LeadsPage() {
                             <span>{sending === lead.id ? '...' : 'Mail'}</span>
                           </button>
                           <button
-                            onClick={() => setCahierLead(lead)}
-                            title="Créer le cahier des charges (après le RDV)"
-                            className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-gold text-white hover:opacity-90"
+                            onClick={() => setClientLead(lead)}
+                            title="Créer le client (après le RDV)"
+                            className="flex items-center space-x-1 text-xs px-2 py-1 rounded text-white hover:opacity-90"
                             style={{ backgroundColor: '#B08D57' }}
                           >
-                            <FileSignature size={14} />
-                            <span>Cahier</span>
+                            <UserPlus size={14} />
+                            <span>Client</span>
                           </button>
                         </div>
                       </td>
@@ -191,11 +191,11 @@ export default function LeadsPage() {
         )}
       </div>
 
-      {cahierLead && (
-        <CreateCahierModal
-          lead={cahierLead}
-          onClose={() => setCahierLead(null)}
-          onCreated={() => alert('Cahier des charges créé — visible dans /cahier-des-charges')}
+      {clientLead && (
+        <CreateClientModal
+          lead={clientLead}
+          onClose={() => setClientLead(null)}
+          onCreated={() => alert('Client créé — un email d\'invitation a été envoyé, visible dans /clients')}
         />
       )}
     </div>
