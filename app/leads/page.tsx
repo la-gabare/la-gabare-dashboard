@@ -82,36 +82,17 @@ export default function LeadsPage() {
     setSending(lead.id)
     try {
       if (lead._source === 'cahier_des_charges') {
-        const createRes = await fetch('/api/leads', {
-          method: 'POST',
+        const res = await fetch('/api/cahier-des-charges', {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            domaine: lead.domaine,
-            appellation: lead.appellation,
-            nom: lead.nom,
-            email: lead.email,
-            tel: lead.tel,
-            message: lead.message,
-            consent: lead.consent,
-            pack_demande: lead.pack_demande,
-            style_visuel: lead.style_visuel,
-            couleurs_souhaitees: lead.couleurs_souhaitees,
-            liste_cuvees: lead.liste_cuvees,
-            slogan: lead.slogan,
-            type_demande: 'site',
-          }),
+          body: JSON.stringify({ id: lead.id, traite: false }),
         })
-        if (!createRes.ok) {
-          const err = await createRes.json()
+        if (!res.ok) {
+          const err = await res.json()
           alert('Erreur: ' + err.error)
           return
         }
-        await fetch('/api/cahier-des-charges', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: lead.id, traite: true }),
-        })
-        alert('Migré vers Leads — le mail sera envoyé automatiquement dans les 2 prochaines minutes.')
+        alert('Le mail sera envoyé automatiquement dans les 2 prochaines minutes.')
       } else {
         const res = await fetch('/api/leads', {
           method: 'PATCH',
