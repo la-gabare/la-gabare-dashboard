@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { sendMail, paymentLinkEmail } from '@/lib/mailer'
 
 export async function POST(req: NextRequest) {
   const { client_id, type, montant, description } = await req.json()
@@ -45,6 +46,14 @@ export async function POST(req: NextRequest) {
     success_url: `${siteUrl}/clients/${client.id}?payment=success`,
     cancel_url: `${siteUrl}/clients/${client.id}?payment=cancelled`,
   })
+
+  if (session.url && client.email_contact) {
+    await sendMail(
+      client.email_contact,
+      `Votre lien de paiement — ${client.nom_domaine}`,
+      paymentLinkEmail(client.nom_domaine, montant, type, session.url)
+    )
+  }
 
   return NextResponse.json({ url: session.url })
 }

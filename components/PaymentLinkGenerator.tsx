@@ -83,12 +83,13 @@ export default function PaymentLinkGenerator({ client }: Props) {
       </div>
 
       <button onClick={handleGenerate} disabled={loading} className="btn-primary disabled:opacity-50 text-sm">
-        {loading ? 'Génération...' : 'Générer le lien de paiement'}
+        {loading ? 'Génération et envoi du mail...' : 'Générer et envoyer le lien de paiement'}
       </button>
 
       {link && (
         <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
-          <p className="text-xs text-gray-500 mb-1">Lien à envoyer au client :</p>
+          <p className="text-xs text-green-700 mb-2 font-semibold">✓ Mail envoyé au client avec ce lien</p>
+          <p className="text-xs text-gray-500 mb-1">Lien (pour référence ou renvoi manuel) :</p>
           <div className="flex items-center space-x-2">
             <input readOnly value={link} className="flex-1 px-2 py-1 text-sm border rounded bg-white" onFocus={(e) => e.target.select()} />
             <button
