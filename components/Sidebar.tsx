@@ -1,15 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { Home, Users, FileText, BookOpen, Zap, BarChart3 } from 'lucide-react'
+import { Home, Inbox, FileSignature, Users, BookOpen, Mail, BarChart3 } from 'lucide-react'
 
 export default function Sidebar() {
   const navItems = [
     { icon: Home, label: 'Dashboard', href: '/' },
-    { icon: Users, label: 'CRM', href: '/crm' },
-    { icon: FileText, label: 'Offres', href: '/offres' },
+    { icon: Inbox, label: 'Leads', href: '/leads' },
+    { icon: FileSignature, label: 'Cahiers des charges', href: '/cahier-des-charges' },
+    { icon: Users, label: 'Clients', href: '/clients' },
     { icon: BookOpen, label: 'Contenu', href: '/contenu' },
-    { icon: Zap, label: 'Workflows', href: '/workflows' },
+    { icon: Mail, label: 'Newsletters', href: '/newsletters' },
     { icon: BarChart3, label: 'Analytics', href: '/analytics' },
   ]
 
@@ -19,7 +20,7 @@ export default function Sidebar() {
         <h1 className="font-bold text-lg">La Gabare</h1>
       </div>
 
-      <nav className="flex-1 space-y-2 p-4">
+      <nav className="flex-1 space-y-1 p-4">
         {navItems.map((item) => (
           <Link
             key={item.href}
@@ -33,7 +34,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-wine/30">
-        <p className="text-xs text-wine/80">La Gabare 2024</p>
+        <p className="text-xs text-wine/80">La Gabare</p>
       </div>
     </div>
   )
