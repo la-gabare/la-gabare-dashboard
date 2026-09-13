@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
+import { withCors, corsPreflight } from '@/lib/cors'
+
+export async function OPTIONS() {
+  return corsPreflight()
+}
 
 export async function POST(req: NextRequest) {
   const result = await getClientFromRequest(req)
   if ('error' in result) {
-    return NextResponse.json({ error: result.error }, { status: result.status })
+    return withCors(NextResponse.json({ error: result.error }, { status: result.status }))
   }
   const { client } = result
 
@@ -14,7 +19,7 @@ export async function POST(req: NextRequest) {
   const postId = formData.get('post_id') as string | null
 
   if (!file || !postId) {
-    return NextResponse.json({ error: 'file and post_id are required' }, { status: 400 })
+    return withCors(NextResponse.json({ error: 'file and post_id are required' }, { status: 400 }))
   }
 
   const { data: post } = await supabaseAdmin
@@ -24,7 +29,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (!post || post.client_id !== client.id) {
-    return NextResponse.json({ error: 'Post not found for this client' }, { status: 404 })
+    return withCors(NextResponse.json({ error: 'Post not found for this client' }, { status: 404 }))
   }
 
   const ext = file.name.split('.').pop()
@@ -36,7 +41,7 @@ export async function POST(req: NextRequest) {
     .upload(path, Buffer.from(arrayBuffer), { contentType: file.type })
 
   if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 400 })
+    return withCors(NextResponse.json({ error: uploadError.message }, { status: 400 }))
   }
 
   const { data: publicUrlData } = supabaseAdmin.storage.from('client-media').getPublicUrl(path)
@@ -49,8 +54,8 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 400 })
+    return withCors(NextResponse.json({ error: updateError.message }, { status: 400 }))
   }
 
-  return NextResponse.json(updated)
+  return withCors(NextResponse.json(updated))
 }
