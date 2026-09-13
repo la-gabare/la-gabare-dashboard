@@ -16,7 +16,6 @@ export interface Lead {
   tel?: string
   message?: string
   consent: boolean
-  traite?: boolean
 }
 
 export interface AuditGratuit {

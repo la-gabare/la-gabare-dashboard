@@ -16,7 +16,7 @@ export default function Home() {
   useEffect(() => {
     const fetchCounts = async () => {
       const [leads, cahiers, clients, articles, posts] = await Promise.all([
-        supabase.from('leads').select('id', { count: 'exact', head: true }).eq('traite', false),
+        supabase.from('leads').select('id', { count: 'exact', head: true }),
         supabase.from('cahier_des_charges').select('id', { count: 'exact', head: true }).eq('traite', false),
         supabase.from('clients').select('id', { count: 'exact', head: true }).eq('statut', 'actif'),
         supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'brouillon'),
@@ -41,7 +41,7 @@ export default function Home() {
   }
 
   const cards = [
-    { label: 'Leads non traités', value: counts.leads, href: '/leads' },
+    { label: 'Leads (total)', value: counts.leads, href: '/leads' },
     { label: 'Cahiers des charges à traiter', value: counts.cahiers, href: '/cahier-des-charges' },
     { label: 'Clients actifs', value: counts.clients, href: '/clients' },
     { label: 'Articles en brouillon', value: counts.articlesEnAttente, href: '/contenu' },
