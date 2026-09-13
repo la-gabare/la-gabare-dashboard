@@ -3,7 +3,8 @@
 import { Fragment, useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Lead } from '@/lib/types'
-import { ChevronDown, ChevronUp, Send } from 'lucide-react'
+import { ChevronDown, ChevronUp, Send, FileSignature } from 'lucide-react'
+import CreateCahierModal from '@/components/CreateCahierModal'
 
 const typeLabels: Record<string, string> = {
   site: 'Demande de site',
@@ -34,6 +35,7 @@ export default function LeadsPage() {
   const [expanded, setExpanded] = useState<number | null>(null)
   const [filter, setFilter] = useState<'tous' | 'site' | 'abonnement'>('tous')
   const [sending, setSending] = useState<number | null>(null)
+  const [cahierLead, setCahierLead] = useState<Lead | null>(null)
 
   const fetchLeads = async () => {
     const data = await fetchAdminData<Lead>('leads', { order_column: 'created_at', order_asc: 'false' })
@@ -128,15 +130,26 @@ export default function LeadsPage() {
                         {new Date(lead.created_at).toLocaleDateString('fr-FR')}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => triggerMail(lead.id)}
-                          disabled={sending === lead.id}
-                          title="Envoyer / renvoyer le mail de prise de contact"
-                          className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-wine text-white hover:bg-wine/90 disabled:opacity-50"
-                        >
-                          <Send size={14} />
-                          <span>{sending === lead.id ? '...' : 'Envoyer mail'}</span>
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => triggerMail(lead.id)}
+                            disabled={sending === lead.id}
+                            title="Envoyer / renvoyer le mail de prise de contact"
+                            className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-wine text-white hover:bg-wine/90 disabled:opacity-50"
+                          >
+                            <Send size={14} />
+                            <span>{sending === lead.id ? '...' : 'Mail'}</span>
+                          </button>
+                          <button
+                            onClick={() => setCahierLead(lead)}
+                            title="Créer le cahier des charges (après le RDV)"
+                            className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-gold text-white hover:opacity-90"
+                            style={{ backgroundColor: '#B08D57' }}
+                          >
+                            <FileSignature size={14} />
+                            <span>Cahier</span>
+                          </button>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <button
@@ -177,6 +190,14 @@ export default function LeadsPage() {
           </div>
         )}
       </div>
+
+      {cahierLead && (
+        <CreateCahierModal
+          lead={cahierLead}
+          onClose={() => setCahierLead(null)}
+          onCreated={() => alert('Cahier des charges créé — visible dans /cahier-des-charges')}
+        />
+      )}
     </div>
   )
 }
