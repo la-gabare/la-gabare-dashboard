@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Lead, CahierDesCharges } from '@/lib/types'
-import { ChevronDown, ChevronUp, Send, UserPlus } from 'lucide-react'
+import { ChevronDown, ChevronUp, Send, UserPlus, Trash2 } from 'lucide-react'
 import CreateClientModal from '@/components/CreateClientModal'
 
 type DisplayLead = Lead & { _source: 'leads' | 'cahier_des_charges' }
@@ -112,6 +112,20 @@ export default function LeadsPage() {
     }
   }
 
+  const handleDelete = async (lead: DisplayLead) => {
+    if (!confirm(`Supprimer définitivement "${lead.nom}" (${lead.domaine}) ?`)) return
+
+    const endpoint = lead._source === 'cahier_des_charges' ? '/api/cahier-des-charges' : '/api/leads'
+    const res = await fetch(`${endpoint}?id=${lead.id}`, { method: 'DELETE' })
+
+    if (!res.ok) {
+      const err = await res.json()
+      alert('Erreur: ' + err.error)
+      return
+    }
+    fetchLeads()
+  }
+
   const filteredLeads = filter === 'tous' ? leads : leads.filter((l) => (l.type_demande || 'site') === filter)
 
   return (
@@ -196,6 +210,13 @@ export default function LeadsPage() {
                           >
                             <UserPlus size={14} />
                             <span>Client</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(lead)}
+                            title="Supprimer"
+                            className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700"
+                          >
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </td>
