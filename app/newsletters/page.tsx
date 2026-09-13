@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchAdminData } from '@/lib/admin-data'
 import { Newsletter, Client } from '@/lib/types'
 
 export default function NewslettersPage() {
@@ -12,11 +12,11 @@ export default function NewslettersPage() {
   useEffect(() => {
     const fetchData = async () => {
       const [nlRes, clientsRes] = await Promise.all([
-        supabase.from('newsletters').select('*').order('created_at', { ascending: false }),
-        supabase.from('clients').select('*'),
+        fetchAdminData<Newsletter>('newsletters', { order_column: 'created_at', order_asc: 'false' }),
+        fetchAdminData<Client>('clients'),
       ])
-      setNewsletters(nlRes.data || [])
-      setClients(clientsRes.data || [])
+      setNewsletters(nlRes)
+      setClients(clientsRes)
       setLoading(false)
     }
     fetchData()

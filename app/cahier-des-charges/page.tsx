@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchAdminData } from '@/lib/admin-data'
 import { CahierDesCharges } from '@/lib/types'
 
 export default function CahierDesChargesPage() {
@@ -11,12 +11,11 @@ export default function CahierDesChargesPage() {
 
   const fetchCahiers = async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('cahier_des_charges')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (!error) setCahiers(data || [])
+    const data = await fetchAdminData<CahierDesCharges>('cahier_des_charges', {
+      order_column: 'created_at',
+      order_asc: 'false',
+    })
+    setCahiers(data)
     setLoading(false)
   }
 

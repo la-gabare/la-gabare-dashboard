@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post } from '@/lib/types'
 
 const abonnementQuotas: Record<string, string> = {
@@ -23,14 +23,14 @@ export default function ClientDetailPage() {
   useEffect(() => {
     const fetchData = async () => {
       const [clientRes, articlesRes, postsRes] = await Promise.all([
-        supabase.from('clients').select('*').eq('id', id).single(),
-        supabase.from('articles').select('*').eq('client_id', id).order('date_publication_prevue', { ascending: true }),
-        supabase.from('posts').select('*').eq('client_id', id).order('date_publication_prevue', { ascending: true }),
+        fetchAdminData<Client>('clients', { id }),
+        fetchAdminData<Article>('articles', { eq_column: 'client_id', eq_value: id, order_column: 'date_publication_prevue' }),
+        fetchAdminData<Post>('posts', { eq_column: 'client_id', eq_value: id, order_column: 'date_publication_prevue' }),
       ])
 
-      setClient(clientRes.data)
-      setArticles(articlesRes.data || [])
-      setPosts(postsRes.data || [])
+      setClient(clientRes[0] || null)
+      setArticles(articlesRes)
+      setPosts(postsRes)
       setLoading(false)
     }
     fetchData()

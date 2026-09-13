@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { fetchAdminData } from '@/lib/admin-data'
 import { Client } from '@/lib/types'
 
 const abonnementLabels: Record<string, string> = {
@@ -17,12 +17,8 @@ export default function ClientsPage() {
 
   useEffect(() => {
     const fetchClients = async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (!error) setClients(data || [])
+      const data = await fetchAdminData<Client>('clients', { order_column: 'created_at', order_asc: 'false' })
+      setClients(data)
       setLoading(false)
     }
     fetchClients()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchAdminData } from '@/lib/admin-data'
 import { Publication, Client } from '@/lib/types'
 
 export default function AnalyticsPage() {
@@ -12,11 +12,11 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const fetchData = async () => {
       const [pubRes, clientsRes] = await Promise.all([
-        supabase.from('publications').select('*').order('date_publication', { ascending: false }),
-        supabase.from('clients').select('*'),
+        fetchAdminData<Publication>('publications', { order_column: 'date_publication', order_asc: 'false' }),
+        fetchAdminData<Client>('clients'),
       ])
-      setPublications(pubRes.data || [])
-      setClients(clientsRes.data || [])
+      setPublications(pubRes)
+      setClients(clientsRes)
       setLoading(false)
     }
     fetchData()

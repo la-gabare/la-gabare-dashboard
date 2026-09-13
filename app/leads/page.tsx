@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchAdminData } from '@/lib/admin-data'
 import { Lead } from '@/lib/types'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -12,12 +12,8 @@ export default function LeadsPage() {
 
   useEffect(() => {
     const fetchLeads = async () => {
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (!error) setLeads(data || [])
+      const data = await fetchAdminData<Lead>('leads', { order_column: 'created_at', order_asc: 'false' })
+      setLeads(data)
       setLoading(false)
     }
     fetchLeads()

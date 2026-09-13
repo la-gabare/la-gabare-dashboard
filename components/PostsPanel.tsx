@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchAdminData } from '@/lib/admin-data'
 import { Post, Client } from '@/lib/types'
 
 const statuses = ['brouillon', 'en_attente_media', 'media_recu', 'confirme', 'programme', 'publie']
@@ -24,11 +24,11 @@ export default function PostsPanel() {
   const fetchData = async () => {
     setLoading(true)
     const [postsRes, clientsRes] = await Promise.all([
-      supabase.from('posts').select('*').order('date_publication_prevue', { ascending: true }),
-      supabase.from('clients').select('*').order('nom_domaine'),
+      fetchAdminData<Post>('posts', { order_column: 'date_publication_prevue' }),
+      fetchAdminData<Client>('clients', { order_column: 'nom_domaine' }),
     ])
-    setPosts(postsRes.data || [])
-    setClients(clientsRes.data || [])
+    setPosts(postsRes)
+    setClients(clientsRes)
     setLoading(false)
   }
 

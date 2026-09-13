@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchAdminData } from '@/lib/admin-data'
 
 export default function Home() {
   const [counts, setCounts] = useState({
@@ -16,19 +16,19 @@ export default function Home() {
   useEffect(() => {
     const fetchCounts = async () => {
       const [leads, cahiers, clients, articles, posts] = await Promise.all([
-        supabase.from('leads').select('id', { count: 'exact', head: true }),
-        supabase.from('cahier_des_charges').select('id', { count: 'exact', head: true }).eq('traite', false),
-        supabase.from('clients').select('id', { count: 'exact', head: true }).eq('statut', 'actif'),
-        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'brouillon'),
-        supabase.from('posts').select('id', { count: 'exact', head: true }).eq('status', 'brouillon'),
+        fetchAdminData('leads'),
+        fetchAdminData('cahier_des_charges', { eq_column: 'traite', eq_value: 'false' }),
+        fetchAdminData('clients', { eq_column: 'statut', eq_value: 'actif' }),
+        fetchAdminData('articles', { eq_column: 'status', eq_value: 'brouillon' }),
+        fetchAdminData('posts', { eq_column: 'status', eq_value: 'brouillon' }),
       ])
 
       setCounts({
-        leads: leads.count || 0,
-        cahiers: cahiers.count || 0,
-        clients: clients.count || 0,
-        articlesEnAttente: articles.count || 0,
-        postsEnAttente: posts.count || 0,
+        leads: leads.length,
+        cahiers: cahiers.length,
+        clients: clients.length,
+        articlesEnAttente: articles.length,
+        postsEnAttente: posts.length,
       })
       setLoading(false)
     }
