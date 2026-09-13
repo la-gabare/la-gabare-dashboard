@@ -3,11 +3,29 @@
 import { Fragment, useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Lead } from '@/lib/types'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Send } from 'lucide-react'
 
 const typeLabels: Record<string, string> = {
   site: 'Demande de site',
   abonnement: 'Abonnement seul',
+}
+
+const statutLabels: Record<string, string> = {
+  reception: 'Réception',
+  mail_envoye: 'Mail envoyé',
+  relance: 'Relancé',
+  rdv_pris: 'RDV pris',
+  formulaire_complete: 'Formulaire complété',
+  archive: 'Archivé',
+}
+
+const statutColors: Record<string, string> = {
+  reception: 'badge-warning',
+  mail_envoye: 'badge-info',
+  relance: 'badge-warning',
+  rdv_pris: 'badge-success',
+  formulaire_complete: 'badge-success',
+  archive: 'badge-danger',
 }
 
 export default function LeadsPage() {
@@ -15,15 +33,37 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<number | null>(null)
   const [filter, setFilter] = useState<'tous' | 'site' | 'abonnement'>('tous')
+  const [sending, setSending] = useState<number | null>(null)
+
+  const fetchLeads = async () => {
+    const data = await fetchAdminData<Lead>('leads', { order_column: 'created_at', order_asc: 'false' })
+    setLeads(data)
+    setLoading(false)
+  }
 
   useEffect(() => {
-    const fetchLeads = async () => {
-      const data = await fetchAdminData<Lead>('leads', { order_column: 'created_at', order_asc: 'false' })
-      setLeads(data)
-      setLoading(false)
-    }
     fetchLeads()
   }, [])
+
+  const triggerMail = async (leadId: number) => {
+    setSending(leadId)
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: leadId, statut: 'reception' }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        alert('Erreur: ' + err.error)
+        return
+      }
+      alert('Statut remis à "reception" — le mail sera envoyé automatiquement dans les 2 prochaines minutes.')
+      fetchLeads()
+    } finally {
+      setSending(null)
+    }
+  }
 
   const filteredLeads = filter === 'tous' ? leads : leads.filter((l) => (l.type_demande || 'site') === filter)
 
@@ -60,7 +100,9 @@ export default function LeadsPage() {
                   <th className="px-4 py-3 text-left text-sm font-semibold">Domaine</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Pack / Gamme</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold"></th>
                   <th className="px-4 py-3 text-left text-sm font-semibold"></th>
                 </tr>
               </thead>
@@ -77,8 +119,24 @@ export default function LeadsPage() {
                       <td className="px-4 py-3 text-sm">{lead.domaine}</td>
                       <td className="px-4 py-3 text-sm">{lead.pack_demande || '-'}</td>
                       <td className="px-4 py-3 text-sm">{lead.email}</td>
+                      <td className="px-4 py-3">
+                        <span className={`badge ${statutColors[lead.statut || 'reception']}`}>
+                          {statutLabels[lead.statut || 'reception']}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         {new Date(lead.created_at).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => triggerMail(lead.id)}
+                          disabled={sending === lead.id}
+                          title="Envoyer / renvoyer le mail de prise de contact"
+                          className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-wine text-white hover:bg-wine/90 disabled:opacity-50"
+                        >
+                          <Send size={14} />
+                          <span>{sending === lead.id ? '...' : 'Envoyer mail'}</span>
+                        </button>
                       </td>
                       <td className="px-4 py-3">
                         <button
@@ -91,7 +149,7 @@ export default function LeadsPage() {
                     </tr>
                     {expanded === lead.id && (
                       <tr className="bg-gray-50 border-b">
-                        <td colSpan={7} className="px-4 py-4">
+                        <td colSpan={9} className="px-4 py-4">
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-sm">
                             <div><span className="text-gray-500">Appellation :</span> {lead.appellation || '-'}</div>
                             <div><span className="text-gray-500">Superficie :</span> {lead.surface || '-'}</div>

@@ -1,0 +1,158 @@
+{
+  "name": "Workflow 1 - Nouveau Lead - Mail de prise de contact",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-lead",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Nouveau Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "lead_id",
+              "name": "lead_id",
+              "value": "={{ $json.body.record.id }}",
+              "type": "string"
+            },
+            {
+              "id": "nom",
+              "name": "nom",
+              "value": "={{ $json.body.record.nom }}",
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "value": "={{ $json.body.record.email }}",
+              "type": "string"
+            },
+            {
+              "id": "domaine",
+              "name": "domaine",
+              "value": "={{ $json.body.record.domaine }}",
+              "type": "string"
+            },
+            {
+              "id": "type_demande",
+              "name": "type_demande",
+              "value": "={{ $json.body.record.type_demande }}",
+              "type": "string"
+            },
+            {
+              "id": "pack_demande",
+              "name": "pack_demande",
+              "value": "={{ $json.body.record.pack_demande }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-fields",
+      "name": "Extraire les champs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Votre demande — {{ $json.domaine }}",
+        "emailType": "html",
+        "message": "=<p>Bonjour {{ $json.nom }},</p><p>Merci pour votre demande concernant <strong>{{ $json.domaine }}</strong>{{ $json.pack_demande ? ' (formule ' + $json.pack_demande + ')' : '' }}.</p><p>Deux options pour la suite, selon ce qui vous convient le mieux :</p><p><a href=\"https://cal.com/la-gabare/appel-decouverte-la-gabare\" style=\"display:inline-block;padding:12px 24px;background:#722f37;color:#fff;text-decoration:none;border-radius:6px;margin:8px 0;\">📅 Réserver un appel de 20 min</a></p><p><a href=\"https://la-gabare.fr/formulaire-complet.html?lead_id={{ $json.lead_id }}\" style=\"display:inline-block;padding:12px 24px;background:#b08d57;color:#111;text-decoration:none;border-radius:6px;margin:8px 0;\">📝 Compléter le formulaire détaillé</a></p><p>Sans réponse de votre part sous 5 jours, nous reviendrons vers vous.</p><p>À très bientôt,<br>L'équipe La Gabare</p>",
+        "options": {}
+      },
+      "id": "send-gmail",
+      "name": "Envoyer mail Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [680, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "contact@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://psktffrjqueafwfwrjcj.supabase.co/rest/v1/leads?id=eq.{{ $('Extraire les champs').item.json.lead_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "REPLACE_WITH_SERVICE_ROLE_KEY"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer REPLACE_WITH_SERVICE_ROLE_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"statut\": \"mail_envoye\"}",
+        "options": {}
+      },
+      "id": "update-status",
+      "name": "MAJ statut = mail_envoye",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Nouveau Lead": {
+      "main": [
+        [
+          {
+            "node": "Extraire les champs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraire les champs": {
+      "main": [
+        [
+          {
+            "node": "Envoyer mail Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer mail Gmail": {
+      "main": [
+        [
+          {
+            "node": "MAJ statut = mail_envoye",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

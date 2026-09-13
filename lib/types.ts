@@ -22,6 +22,7 @@ export interface Lead {
   liste_cuvees?: string
   slogan?: string
   type_demande?: string
+  statut?: string
 }
 
 export interface AuditGratuit {
