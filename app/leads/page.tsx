@@ -264,7 +264,7 @@ export default function LeadsPage() {
         <CreateClientModal
           lead={clientLead}
           onClose={() => setClientLead(null)}
-          onCreated={() => alert('Client créé — un email d\'invitation a été envoyé, visible dans /clients')}
+          onCreated={() => alert('Client créé (en attente de paiement) — visible dans /clients')}
         />
       )}
     </div>

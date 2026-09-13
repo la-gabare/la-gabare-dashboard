@@ -14,12 +14,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  if (data.email_contact) {
-    await supabaseAdmin.auth.admin.inviteUserByEmail(data.email_contact, {
-      redirectTo: 'https://la-gabare.fr/espace-client.html',
-    })
-  }
-
   return NextResponse.json(data)
 }
 

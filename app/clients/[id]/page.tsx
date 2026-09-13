@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post } from '@/lib/types'
+import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 
 const abonnementQuotas: Record<string, string> = {
   village: '4 articles + 4 idées story / mois',
@@ -55,7 +56,7 @@ export default function ClientDetailPage() {
             <div className="flex justify-between"><dt className="text-gray-600">Style</dt><dd>{client.style || '-'}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-600">Public cible</dt><dd>{client.public_cible || '-'}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-600">Tone de voix</dt><dd>{client.tone_voix || '-'}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-600">Statut</dt><dd><span className="badge badge-success">{client.statut}</span></dd></div>
+            <div className="flex justify-between"><dt className="text-gray-600">Statut</dt><dd><span className={`badge ${client.statut === 'actif' ? 'badge-success' : 'badge-warning'}`}>{client.statut}</span></dd></div>
           </dl>
         </div>
 
@@ -71,6 +72,8 @@ export default function ClientDetailPage() {
           )}
         </div>
       </div>
+
+      <PaymentLinkGenerator client={client} />
 
       <div className="card">
         <h2 className="text-xl font-bold mb-4">Articles ({articles.length})</h2>

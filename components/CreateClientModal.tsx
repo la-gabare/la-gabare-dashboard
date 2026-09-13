@@ -43,8 +43,7 @@ export default function CreateClientModal({ lead, onClose, onCreated }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          statut: 'actif',
-          date_debut_abonnement: new Date().toISOString(),
+          statut: 'en_attente_paiement',
         }),
       })
       if (!res.ok) {
@@ -74,7 +73,8 @@ export default function CreateClientModal({ lead, onClose, onCreated }: Props) {
       >
         <h2 className="text-xl font-bold mb-4">Créer le client — {lead.nom}</h2>
         <p className="text-sm text-gray-500 mb-4">
-          Un email d&apos;invitation sera envoyé à {form.email_contact} pour accéder à son espace personnel.
+          Le client sera créé avec le statut &laquo; en attente de paiement &raquo;. L&apos;accès à son espace personnel
+          lui sera envoyé automatiquement une fois le paiement confirmé.
         </p>
 
         <div className="space-y-3">
