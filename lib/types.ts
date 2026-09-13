@@ -16,6 +16,11 @@ export interface Lead {
   tel?: string
   message?: string
   consent: boolean
+  pack_demande?: string
+  style_visuel?: string
+  couleurs_souhaitees?: string
+  liste_cuvees?: string
+  slogan?: string
 }
 
 export interface AuditGratuit {
