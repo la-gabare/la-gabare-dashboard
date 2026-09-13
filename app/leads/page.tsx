@@ -5,10 +5,16 @@ import { fetchAdminData } from '@/lib/admin-data'
 import { Lead } from '@/lib/types'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
+const typeLabels: Record<string, string> = {
+  site: 'Demande de site',
+  abonnement: 'Abonnement seul',
+}
+
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<number | null>(null)
+  const [filter, setFilter] = useState<'tous' | 'site' | 'abonnement'>('tous')
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -19,44 +25,58 @@ export default function LeadsPage() {
     fetchLeads()
   }, [])
 
+  const filteredLeads = filter === 'tous' ? leads : leads.filter((l) => (l.type_demande || 'site') === filter)
+
   return (
     <div className="container-dashboard">
       <h1 className="text-3xl font-bold mb-8">Leads (formulaire de contact)</h1>
 
+      <div className="flex space-x-2 mb-6">
+        {(['tous', 'site', 'abonnement'] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold ${
+              filter === f ? 'bg-wine text-white' : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            {f === 'tous' ? 'Tous' : typeLabels[f]}
+          </button>
+        ))}
+      </div>
+
       <div className="card">
         {loading ? (
           <p className="text-gray-500">Chargement...</p>
-        ) : leads.length === 0 ? (
+        ) : filteredLeads.length === 0 ? (
           <p className="text-gray-500">Aucun lead</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-100 border-b">
                 <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Nom</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Domaine</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Pack</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Pack / Gamme</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Budget</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold"></th>
                 </tr>
               </thead>
               <tbody>
-                {leads.map((lead) => (
+                {filteredLeads.map((lead) => (
                   <Fragment key={lead.id}>
                     <tr className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <span className={`badge ${lead.type_demande === 'abonnement' ? 'badge-success' : 'badge-info'}`}>
+                          {typeLabels[lead.type_demande || 'site']}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 font-medium">{lead.nom}</td>
                       <td className="px-4 py-3 text-sm">{lead.domaine}</td>
-                      <td className="px-4 py-3">
-                        {lead.pack_demande ? (
-                          <span className="badge badge-info">{lead.pack_demande}</span>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
+                      <td className="px-4 py-3 text-sm">{lead.pack_demande || '-'}</td>
                       <td className="px-4 py-3 text-sm">{lead.email}</td>
-                      <td className="px-4 py-3 text-sm">{lead.budget || '-'}</td>
                       <td className="px-4 py-3 text-sm">
                         {new Date(lead.created_at).toLocaleDateString('fr-FR')}
                       </td>
@@ -80,6 +100,7 @@ export default function LeadsPage() {
                             <div><span className="text-gray-500">Site existant :</span> {lead.site || '-'}</div>
                             <div><span className="text-gray-500">URL :</span> {lead.url || '-'}</div>
                             <div><span className="text-gray-500">Réseaux :</span> {lead.reseaux || '-'}</div>
+                            <div><span className="text-gray-500">Budget :</span> {lead.budget || '-'}</div>
                             <div><span className="text-gray-500">Échéance :</span> {lead.echeance || '-'}</div>
                             <div><span className="text-gray-500">Téléphone :</span> {lead.tel || '-'}</div>
                             <div><span className="text-gray-500">Style visuel :</span> {lead.style_visuel || '-'}</div>

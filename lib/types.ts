@@ -21,6 +21,7 @@ export interface Lead {
   couleurs_souhaitees?: string
   liste_cuvees?: string
   slogan?: string
+  type_demande?: string
 }
 
 export interface AuditGratuit {
