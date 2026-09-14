@@ -20,8 +20,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Client introuvable' }, { status: 404 })
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://admin.la-gabare.fr'
-
   const priceData: {
     currency: string
     product_data: { name: string }
@@ -43,8 +41,8 @@ export async function POST(req: NextRequest) {
     customer_email: client.email_contact,
     line_items: [{ price_data: priceData, quantity: 1 }],
     metadata: { client_id: String(client.id) },
-    success_url: `${siteUrl}/clients/${client.id}?payment=success`,
-    cancel_url: `${siteUrl}/clients/${client.id}?payment=cancelled`,
+    success_url: 'https://la-gabare.fr/merci-paiement.html',
+    cancel_url: 'https://la-gabare.fr/abonnement.html',
   })
 
   if (session.url && client.email_contact) {
