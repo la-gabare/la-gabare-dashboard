@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
     .from('publications')
     .insert({
       client_id: client.id,
-      article_id: article_id,
       titre: article.titre,
       contenu: article.contenu,
       slug: slug,
