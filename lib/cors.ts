@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-const ALLOWED_ORIGIN = 'https://la-gabare.fr'
+const ALLOWED_ORIGIN = '*' // Allow all origins for public API
 
 export function corsHeaders() {
   return {
