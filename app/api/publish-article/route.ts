@@ -56,7 +56,6 @@ export async function POST(req: NextRequest) {
       article_id: article_id,
       titre: article.titre,
       contenu: article.contenu,
-      angle: article.angle,
       slug: slug,
       statut: 'publie',
     })
