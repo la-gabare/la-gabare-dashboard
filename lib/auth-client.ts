@@ -14,15 +14,16 @@ export async function getClientFromRequest(req: NextRequest) {
     return { error: 'Invalid session', status: 401 as const }
   }
 
-  const { data: client, error: clientError } = await supabaseAdmin
+  const { data: clients, error: clientError } = await supabaseAdmin
     .from('clients')
     .select('*')
     .eq('email_contact', userData.user.email)
-    .single()
+    .order('created_at', { ascending: false })
+    .limit(1)
 
-  if (clientError || !client) {
+  if (clientError || !clients || clients.length === 0) {
     return { error: 'No client linked to this account', status: 404 as const }
   }
 
-  return { client }
+  return { client: clients[0] }
 }
