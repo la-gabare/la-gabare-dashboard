@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { withCors, corsPreflight } from '@/lib/cors'
+
+export async function OPTIONS() {
+  return corsPreflight()
+}
 
 export async function GET(request: NextRequest) {
   const domaine = request.nextUrl.searchParams.get('domain')
 
   if (!domaine) {
-    return NextResponse.json({ error: 'domain parameter required' }, { status: 400 })
+    return withCors(NextResponse.json({ error: 'domain parameter required' }, { status: 400 }))
   }
 
   // Get client by domain
@@ -16,7 +21,7 @@ export async function GET(request: NextRequest) {
     .single()
 
   if (clientError || !client) {
-    return NextResponse.json({ publications: [] })
+    return withCors(NextResponse.json({ publications: [] }))
   }
 
   // Get published articles
@@ -28,8 +33,8 @@ export async function GET(request: NextRequest) {
     .order('date_publication', { ascending: false })
 
   if (error) {
-    return NextResponse.json({ publications: [] })
+    return withCors(NextResponse.json({ publications: [] }))
   }
 
-  return NextResponse.json({ publications: publications || [] })
+  return withCors(NextResponse.json({ publications: publications || [] }))
 }
