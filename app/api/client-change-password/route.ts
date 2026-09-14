@@ -9,10 +9,11 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
-    const client = await getClientFromRequest(request)
-    if (!client) {
-      return withCors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+    const result = await getClientFromRequest(request)
+    if (result.error || !result.client) {
+      return withCors(NextResponse.json({ error: result.error || 'Unauthorized' }, { status: result.status || 401 }))
     }
+    const client = result.client
 
     const { new_password } = await request.json()
 

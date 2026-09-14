@@ -9,10 +9,11 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    const client = await getClientFromRequest(request)
-    if (!client) {
-      return withCors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+    const result = await getClientFromRequest(request)
+    if (result.error || !result.client) {
+      return withCors(NextResponse.json({ error: result.error || 'Unauthorized' }, { status: result.status || 401 }))
     }
+    const client = result.client
 
     return withCors(NextResponse.json({
       preferences: {
@@ -28,10 +29,11 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const client = await getClientFromRequest(request)
-    if (!client) {
-      return withCors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+    const result = await getClientFromRequest(request)
+    if (result.error || !result.client) {
+      return withCors(NextResponse.json({ error: result.error || 'Unauthorized' }, { status: result.status || 401 }))
     }
+    const client = result.client
 
     const { notif_published, notif_validation, notif_feedback } = await request.json()
 
