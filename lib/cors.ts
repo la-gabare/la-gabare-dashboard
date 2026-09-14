@@ -5,7 +5,7 @@ const ALLOWED_ORIGIN = 'https://la-gabare.fr'
 export function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
   }
 }

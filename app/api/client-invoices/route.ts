@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClientFromRequest } from '@/lib/auth-client'
+import { withCors, corsPreflight } from '@/lib/cors'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+export async function OPTIONS() {
+  return corsPreflight()
+}
 
 export async function GET(request: NextRequest) {
   try {
     const client = await getClientFromRequest(request)
     if (!client) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return withCors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
     }
 
     if (!client.stripe_customer_id) {
-      return NextResponse.json({ invoices: [] })
+      return withCors(NextResponse.json({ invoices: [] }))
     }
 
     const invoices = await stripe.invoices.list({
@@ -30,8 +35,8 @@ export async function GET(request: NextRequest) {
       url: inv.invoice_pdf,
     }))
 
-    return NextResponse.json({ invoices: formattedInvoices })
+    return withCors(NextResponse.json({ invoices: formattedInvoices }))
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return withCors(NextResponse.json({ error: err.message }, { status: 500 }))
   }
 }
