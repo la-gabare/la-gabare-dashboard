@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
       if (client?.email_contact) {
         await supabaseAdmin.auth.admin.inviteUserByEmail(client.email_contact, {
-          redirectTo: 'https://la-gabare.fr/bienvenue.html',
+          redirectTo: 'https://la-gabare.fr/espace-client.html',
         })
       }
     }
