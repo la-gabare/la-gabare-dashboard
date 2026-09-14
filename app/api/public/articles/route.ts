@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   // Get published articles
   const { data: publications, error } = await supabaseAdmin
-    .from('publications')
+    .from('articles_publications')
     .select('*')
     .eq('client_id', client.id)
     .eq('statut', 'publie')

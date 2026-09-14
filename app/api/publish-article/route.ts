@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   // Create publication
   const { data: publication, error } = await supabaseAdmin
-    .from('publications')
+    .from('articles_publications')
     .insert({
       client_id: client.id,
       titre: article.titre,
