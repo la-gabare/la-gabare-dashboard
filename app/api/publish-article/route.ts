@@ -15,33 +15,28 @@ export async function POST(req: NextRequest) {
       return withCors(NextResponse.json({ error: 'article_id required' }, { status: 400 }))
     }
 
-    // Get article from articles table
-    const { data: article, error: fetchError } = await supabaseAdmin
-      .from('articles')
-      .select('*')
-      .eq('id', article_id)
-      .single()
-
-    if (fetchError || !article) {
-      console.error('Fetch article error:', fetchError)
-      return withCors(NextResponse.json({ error: 'Article not found', details: fetchError }, { status: 404 }))
-    }
+    // Convert article_id to number if it's a string
+    const id = typeof article_id === 'string' ? parseInt(article_id, 10) : article_id
 
     // Update status to 'publie' and set publication date
-    const { data: updated, error: updateError } = await supabaseAdmin
+    const { data: updated, error: updateError, count } = await supabaseAdmin
       .from('articles')
       .update({ status: 'publie', date_publication: new Date().toISOString() })
-      .eq('id', article_id)
+      .eq('id', id)
       .select()
-      .single()
 
     if (updateError) {
       console.error('Publish article error:', updateError)
-      return withCors(NextResponse.json({ error: updateError.message, details: updateError }, { status: 400 }))
+      return withCors(NextResponse.json({ error: updateError.message }, { status: 400 }))
     }
 
-    return withCors(NextResponse.json({ success: true, article: updated }))
+    if (!updated || updated.length === 0) {
+      return withCors(NextResponse.json({ error: 'Article not found' }, { status: 404 }))
+    }
+
+    return withCors(NextResponse.json({ success: true, article: updated[0] }))
   } catch (err) {
+    console.error('Publish article exception:', err)
     return withCors(NextResponse.json({
       error: `Server error: ${err instanceof Error ? err.message : 'Unknown'}`
     }, { status: 500 }))
