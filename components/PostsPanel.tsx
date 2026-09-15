@@ -24,14 +24,13 @@ export default function PostsPanel() {
 
   const fetchData = async () => {
     setLoading(true)
-    const [postsRes, clientsRes, clientPostsRes] = await Promise.all([
+    const [postsRes, clientsRes] = await Promise.all([
       fetchAdminData<Post>('posts', { order_column: 'date_publication_prevue' }),
       fetchAdminData<Client>('clients', { order_column: 'nom_domaine' }),
-      fetchAdminData<any>('posts_clients', { order_column: 'created_at' }),
     ])
     setPosts(postsRes)
     setClients(clientsRes)
-    setClientPosts(clientPostsRes)
+    setClientPosts(postsRes || [])
     setLoading(false)
   }
 

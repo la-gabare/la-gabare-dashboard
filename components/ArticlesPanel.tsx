@@ -16,14 +16,13 @@ export default function ArticlesPanel() {
 
   const fetchData = async () => {
     setLoading(true)
-    const [articlesRes, clientsRes, clientArticlesRes] = await Promise.all([
+    const [articlesRes, clientsRes] = await Promise.all([
       fetchAdminData<Article>('articles', { order_column: 'date_publication_prevue' }),
       fetchAdminData<Client>('clients', { order_column: 'nom_domaine' }),
-      fetchAdminData<any>('articles_clients', { order_column: 'created_at' }),
     ])
     setArticles(articlesRes)
     setClients(clientsRes)
-    setClientArticles(clientArticlesRes)
+    setClientArticles(articlesRes || [])
     setLoading(false)
   }
 
