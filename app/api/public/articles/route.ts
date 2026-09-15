@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Admin-created articles
     supabaseAdmin
       .from('articles')
-      .select('id, titre, angle, contenu, date_publication_prevue, status, client_id')
+      .select('id, titre, angle, contenu, date_publication_prevue, status, client_id, image_url')
       .eq('client_id', client.id)
       .eq('status', 'publie'),
     // Client-created articles
