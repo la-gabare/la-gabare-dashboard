@@ -179,6 +179,14 @@ export interface Tache {
   client_id?: number
 }
 
+export interface PhotoGalerie {
+  id: number
+  created_at: string
+  client_id: number
+  angle: string
+  image_url: string
+}
+
 export interface Publication {
   id: number
   created_at: string
