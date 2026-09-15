@@ -24,17 +24,32 @@ export async function GET(request: NextRequest) {
     return withCors(NextResponse.json({ publications: [] }))
   }
 
-  // Get published articles
-  const { data: publications, error } = await supabaseAdmin
-    .from('articles_publications')
-    .select('*')
-    .eq('client_id', client.id)
-    .eq('statut', 'publie')
-    .order('date_publication', { ascending: false })
+  // Get published articles from both tables
+  const [adminRes, clientRes] = await Promise.all([
+    // Admin-created articles
+    supabaseAdmin
+      .from('articles')
+      .select('id, titre, angle, contenu, date_publication, status, client_id')
+      .eq('client_id', client.id)
+      .eq('status', 'publie'),
+    // Client-created articles
+    supabaseAdmin
+      .from('articles_publications')
+      .select('*')
+      .eq('client_id', client.id)
+      .eq('statut', 'publie'),
+  ])
 
-  if (error) {
-    return withCors(NextResponse.json({ publications: [] }))
-  }
+  const adminArticles = adminRes.data || []
+  const clientArticles = clientRes.data || []
 
-  return withCors(NextResponse.json({ publications: publications || [] }))
+  // Combine and sort by date
+  const publications = [...adminArticles, ...clientArticles]
+    .sort((a, b) => {
+      const dateA = new Date(a.date_publication || 0).getTime()
+      const dateB = new Date(b.date_publication || 0).getTime()
+      return dateB - dateA
+    })
+
+  return withCors(NextResponse.json({ publications }))
 }
