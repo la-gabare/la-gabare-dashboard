@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (fetchError || !article) {
-      return withCors(NextResponse.json({ error: 'Article not found' }, { status: 404 }))
+      console.error('Fetch article error:', fetchError)
+      return withCors(NextResponse.json({ error: 'Article not found', details: fetchError }, { status: 404 }))
     }
 
     // Update status to 'publie' and set publication date
@@ -35,7 +36,8 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (updateError) {
-      return withCors(NextResponse.json({ error: updateError.message }, { status: 400 }))
+      console.error('Publish article error:', updateError)
+      return withCors(NextResponse.json({ error: updateError.message, details: updateError }, { status: 400 }))
     }
 
     return withCors(NextResponse.json({ success: true, article: updated }))
