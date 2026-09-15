@@ -9,6 +9,19 @@ const MdEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
 
 const statuses = ['brouillon', 'en_attente_media', 'media_recu', 'programme', 'publie']
 
+const angles = [
+  'Histoire',
+  'Évènement',
+  'Pairing',
+  'Technique',
+  'Terroir',
+  'Saisonnalité',
+  'Cépage',
+  'Œnotourisme',
+  'Accords',
+  'Événement',
+]
+
 export default function ArticlesPanel() {
   const [articles, setArticles] = useState<Article[]>([])
   const [clientArticles, setClientArticles] = useState<any[]>([])
@@ -169,13 +182,16 @@ export default function ArticlesPanel() {
             onChange={(e) => setForm({ ...form, titre: e.target.value })}
             className="w-full px-3 py-2 border rounded-lg"
           />
-          <input
-            type="text"
-            placeholder="Angle"
+          <select
             value={form.angle}
             onChange={(e) => setForm({ ...form, angle: e.target.value })}
             className="w-full px-3 py-2 border rounded-lg"
-          />
+          >
+            <option value="">Sélectionner un angle</option>
+            {angles.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
           <div className="border rounded-lg">
             <div className="flex gap-2 bg-gray-100 p-2 border-b">
               <button
