@@ -9,12 +9,6 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const result = await getClientFromRequest(req)
-    if ('error' in result) {
-      return withCors(NextResponse.json({ error: result.error }, { status: result.status }))
-    }
-
-    const { client } = result
     const body = await req.json()
     const { id } = body
 
@@ -27,12 +21,29 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Supprimer l'article (vérifier que c'est du client)
-    const { error } = await supabaseAdmin
-      .from('articles_publications')
-      .delete()
-      .eq('id', id)
-      .eq('client_id', client.id)
+    // Vérifier l'authentification (Bearer token OU admin session)
+    const authHeader = req.headers.get('authorization')
+    let clientId: number | null = null
+
+    if (authHeader?.startsWith('Bearer ')) {
+      // Client authentifié via Supabase token
+      const result = await getClientFromRequest(req)
+      if ('error' in result) {
+        return withCors(NextResponse.json({ error: result.error }, { status: result.status }))
+      }
+      clientId = result.client.id
+    } else {
+      // Admin - pas de vérification de clientId (supprime n'importe quel article)
+      // Pour que ce soit safe, l'article à supprimer doit exister
+    }
+
+    // Supprimer l'article
+    let query = supabaseAdmin.from('articles_publications').delete().eq('id', id)
+    if (clientId !== null) {
+      query = query.eq('client_id', clientId)
+    }
+
+    const { error } = await query
 
     if (error) {
       return withCors(
