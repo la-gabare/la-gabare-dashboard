@@ -54,14 +54,15 @@ export default function PostsPanel() {
         method: 'POST',
         body: formData,
       })
+      const data = await res.json()
       if (res.ok) {
-        const { url } = await res.json()
-        setForm({ ...form, media_url: url })
+        setForm({ ...form, media_url: data.url })
+        alert('✓ Media uploadé')
       } else {
-        alert('Erreur upload')
+        alert(`Erreur upload: ${data.error || 'Erreur inconnue'}`)
       }
     } catch (err) {
-      alert('Erreur upload')
+      alert(`Erreur upload: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
     }
     setUploading(false)
   }
@@ -207,17 +208,27 @@ export default function PostsPanel() {
             onChange={(e) => setForm({ ...form, date_publication_prevue: e.target.value })}
             className="w-full px-3 py-2 border rounded-lg"
           />
-          <div>
-            <label className="block text-sm font-semibold mb-2">Photo/Vidéo</label>
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold">Photo/Vidéo</label>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleMediaUpload}
+                disabled={uploading}
+                className="flex-1 px-3 py-2 border rounded-lg"
+              />
+              {uploading && <span className="px-3 py-2 text-sm text-gray-600">Upload...</span>}
+            </div>
             <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleMediaUpload}
-              disabled={uploading}
-              className="w-full px-3 py-2 border rounded-lg"
+              type="text"
+              placeholder="Ou coller une URL de media"
+              value={form.media_url}
+              onChange={(e) => setForm({ ...form, media_url: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg text-sm"
             />
             {form.media_url && (
-              <p className="text-sm text-green-600 mt-2">✓ Fichier uploadé</p>
+              <p className="text-sm text-green-600">✓ URL définie</p>
             )}
           </div>
           <button onClick={createPost} className="btn-primary" disabled={uploading}>
