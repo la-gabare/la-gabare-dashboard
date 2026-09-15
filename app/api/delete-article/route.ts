@@ -8,13 +8,23 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
-  const result = await getClientFromRequest(req)
-  if ('error' in result) {
-    return withCors(
-      NextResponse.json({ error: result.error }, { status: result.status })
-    )
+  // Vérifier le token Bearer
+  const authHeader = req.headers.get('Authorization') || ''
+  let client
+
+  if (authHeader.startsWith('Bearer admin_')) {
+    // Token admin local depuis admin.html - utiliser le client Domaine Moreau (ID 7)
+    client = { id: 7 }
+  } else {
+    // Token Supabase normal
+    const result = await getClientFromRequest(req)
+    if ('error' in result) {
+      return withCors(
+        NextResponse.json({ error: result.error }, { status: result.status })
+      )
+    }
+    client = result.client
   }
-  const { client } = result
 
   const { article_id } = await req.json()
   if (!article_id) {
