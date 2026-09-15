@@ -167,6 +167,17 @@ export interface Newsletter {
   status?: string
 }
 
+export interface Tache {
+  id: number
+  created_at: string
+  titre: string
+  description?: string
+  statut: string
+  priorite: string
+  deadline?: string
+  client_id?: number
+}
+
 export interface Publication {
   id: number
   created_at: string

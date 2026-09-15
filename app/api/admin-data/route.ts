@@ -11,6 +11,7 @@ const ALLOWED_TABLES = [
   'publications',
   'audits_gratuits',
   'formulaire_complet',
+  'taches',
 ]
 
 export async function GET(req: NextRequest) {
