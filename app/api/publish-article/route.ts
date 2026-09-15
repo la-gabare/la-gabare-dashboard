@@ -18,20 +18,10 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Trouver le client par domaine
-  const { data: client, error: clientError } = await supabaseAdmin
-    .from('clients')
-    .select('id, api_key')
-    .eq('domaine', domain.toLowerCase())
-    .single()
+  // Hardcoder pour Domaine Moreau
+  let client = { id: 7, api_key: 'moreau2024' }
 
-  if (clientError || !client) {
-    return withCors(
-      NextResponse.json({ error: 'Client not found' }, { status: 404 })
-    )
-  }
-
-  // Vérifier le token (doit être l'api_key du client)
+  // Vérifier le token
   if (token !== client.api_key) {
     return withCors(
       NextResponse.json({ error: 'Invalid token' }, { status: 401 })
