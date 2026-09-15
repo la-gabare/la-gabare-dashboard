@@ -18,11 +18,11 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Trouver le client par domaine
+  // Trouver le client par domaine (insensible à la casse)
   const { data: client, error: clientError } = await supabaseAdmin
     .from('clients')
     .select('id, api_key')
-    .eq('domain', domain)
+    .ilike('domain', domain)
     .single()
 
   if (clientError || !client) {
