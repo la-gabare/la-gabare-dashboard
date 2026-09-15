@@ -67,15 +67,21 @@ export default function ArticlesPanel() {
   }
 
   const deleteClientArticle = async (id: string) => {
-    if (!confirm('Supprimer cet article?')) return
-    const res = await fetch('/api/client-delete-article', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    })
-    if (res.ok) {
-      fetchData()
-    } else {
+    try {
+      const res = await fetch('/api/client-delete-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        fetchData()
+      } else {
+        console.error('Delete error:', data)
+        alert('Erreur: ' + (data.error || 'Suppression échouée'))
+      }
+    } catch (err) {
+      console.error('Delete exception:', err)
       alert('Erreur suppression')
     }
   }
