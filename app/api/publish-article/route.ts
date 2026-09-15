@@ -7,7 +7,8 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
-  const { domain, token, titre, contenu, slug, image_url, date_publication } = await req.json()
+  const body = await req.json()
+  const { domain, token, titre, contenu, slug, date_publication } = body
 
   if (!domain || !token || !titre || !contenu || !slug) {
     return withCors(
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Créer l'article
+  // Créer l'article (note: ignore image_url si envoyé par le client)
   const { data, error } = await supabaseAdmin
     .from('articles_publications')
     .insert({
@@ -37,8 +38,7 @@ export async function POST(req: NextRequest) {
       contenu,
       slug,
       date_publication: date_publication || new Date().toISOString(),
-      image_url,
-      statut: 'publié'
+      statut: 'publie'
     })
     .select('id, slug, date_publication')
     .single()
