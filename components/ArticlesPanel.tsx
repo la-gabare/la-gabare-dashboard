@@ -67,6 +67,26 @@ export default function ArticlesPanel() {
     fetchData()
   }
 
+  const deleteAdminArticle = async (id: number) => {
+    try {
+      const res = await fetch('/api/articles', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        fetchData()
+      } else {
+        console.error('Delete error:', data)
+        alert('Erreur: ' + (data.error || 'Suppression échouée'))
+      }
+    } catch (err) {
+      console.error('Delete exception:', err)
+      alert('Erreur suppression')
+    }
+  }
+
   const deleteClientArticle = async (id: string) => {
     try {
       const res = await fetch('/api/client-delete-article', {
@@ -153,6 +173,7 @@ export default function ArticlesPanel() {
                 <th className="px-4 py-3 text-left text-sm font-semibold">Titre</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Date prévue</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -171,6 +192,14 @@ export default function ArticlesPanel() {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => deleteAdminArticle(a.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                    >
+                      Supprimer
+                    </button>
                   </td>
                 </tr>
               ))}

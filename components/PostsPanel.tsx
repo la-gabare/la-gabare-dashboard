@@ -75,6 +75,26 @@ export default function PostsPanel() {
     fetchData()
   }
 
+  const deleteAdminPost = async (id: number) => {
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        fetchData()
+      } else {
+        console.error('Delete error:', data)
+        alert('Erreur: ' + (data.error || 'Suppression échouée'))
+      }
+    } catch (err) {
+      console.error('Delete exception:', err)
+      alert('Erreur suppression')
+    }
+  }
+
   const deleteClientPost = async (id: string) => {
     try {
       const res = await fetch('/api/client-delete-post', {
@@ -176,6 +196,7 @@ export default function PostsPanel() {
                 <th className="px-4 py-3 text-left text-sm font-semibold">Réseau/Format</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Date prévue</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -195,6 +216,14 @@ export default function PostsPanel() {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => deleteAdminPost(p.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                    >
+                      Supprimer
+                    </button>
                   </td>
                 </tr>
               ))}
