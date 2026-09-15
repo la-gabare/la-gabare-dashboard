@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     // Supprimer l'article (vérifier que c'est du client)
     const { error } = await supabaseAdmin
-      .from('articles')
+      .from('articles_publications')
       .delete()
       .eq('id', id)
       .eq('client_id', client.id)
