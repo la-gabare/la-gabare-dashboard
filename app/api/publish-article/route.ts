@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
     // Convert article_id to number if it's a string
     const id = typeof article_id === 'string' ? parseInt(article_id, 10) : article_id
 
-    // Update status to 'publie' and set publication date
+    // Update status to 'publie'
     const { data: updated, error: updateError, count } = await supabaseAdmin
       .from('articles')
-      .update({ status: 'publie', date_publication: new Date().toISOString() })
+      .update({ status: 'publie' })
       .eq('id', id)
       .select()
 

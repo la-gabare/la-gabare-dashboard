@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Admin-created articles
     supabaseAdmin
       .from('articles')
-      .select('id, titre, angle, contenu, date_publication, status, client_id')
+      .select('id, titre, angle, contenu, date_publication_prevue, status, client_id')
       .eq('client_id', client.id)
       .eq('status', 'publie'),
     // Client-created articles
@@ -40,7 +40,14 @@ export async function GET(request: NextRequest) {
       .eq('statut', 'publie'),
   ])
 
-  const adminArticles = adminRes.data || []
+  if (adminRes.error) console.error('public/articles admin query error:', adminRes.error)
+  if (clientRes.error) console.error('public/articles client query error:', clientRes.error)
+
+  // Normalize admin articles to the same shape as client articles (date_publication field)
+  const adminArticles = (adminRes.data || []).map((a) => ({
+    ...a,
+    date_publication: a.date_publication_prevue,
+  }))
   const clientArticles = clientRes.data || []
 
   // Combine and sort by date
