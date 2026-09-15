@@ -1,8 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Post, Client } from '@/lib/types'
+
+const MdEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
 
 const statuses = ['brouillon', 'en_attente_media', 'media_recu', 'confirme', 'programme', 'publie']
 const formats = ['photo', 'story', 'carrousel', 'video']
@@ -23,6 +26,7 @@ export default function PostsPanel() {
     media_url: '',
   })
   const [uploading, setUploading] = useState(false)
+  const [contentMode, setContentMode] = useState<'markdown' | 'html'>('markdown')
 
   const fetchData = async () => {
     setLoading(true)
@@ -188,13 +192,45 @@ export default function PostsPanel() {
               ))}
             </select>
           </div>
-          <textarea
-            placeholder="Légende / contenu"
-            value={form.contenu}
-            onChange={(e) => setForm({ ...form, contenu: e.target.value })}
-            className="w-full px-3 py-2 border rounded-lg"
-            rows={3}
-          />
+          <div className="border rounded-lg">
+            <div className="flex gap-2 bg-gray-100 p-2 border-b">
+              <button
+                type="button"
+                onClick={() => setContentMode('markdown')}
+                className={`px-3 py-1 rounded text-sm font-semibold ${contentMode === 'markdown' ? 'bg-wine text-white' : 'bg-white'}`}
+              >
+                Markdown
+              </button>
+              <button
+                type="button"
+                onClick={() => setContentMode('html')}
+                className={`px-3 py-1 rounded text-sm font-semibold ${contentMode === 'html' ? 'bg-wine text-white' : 'bg-white'}`}
+              >
+                HTML
+              </button>
+            </div>
+            {contentMode === 'markdown' ? (
+              <div data-color-mode="light">
+                <MdEditor
+                  value={form.contenu}
+                  onChange={(val) => setForm({ ...form, contenu: val || '' })}
+                  preview="edit"
+                  hideToolbar={false}
+                  height={150}
+                  visibleDragbar={false}
+                  textareaProps={{ disabled: false }}
+                />
+              </div>
+            ) : (
+              <textarea
+                placeholder="Contenu HTML"
+                value={form.contenu}
+                onChange={(e) => setForm({ ...form, contenu: e.target.value })}
+                className="w-full px-3 py-2"
+                rows={5}
+              />
+            )}
+          </div>
           <input
             type="text"
             placeholder="CTA"

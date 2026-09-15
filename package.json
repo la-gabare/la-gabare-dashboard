@@ -11,6 +11,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.40.0",
     "@types/nodemailer": "^8.0.1",
+    "@uiw/react-md-editor": "^4.1.2",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
     "lucide-react": "^0.307.0",
