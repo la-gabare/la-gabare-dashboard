@@ -155,6 +155,7 @@ export interface Post {
   status?: string
   date_publication_reelle?: string
   media_url?: string
+  consignes_media?: string
 }
 
 export interface Newsletter {

@@ -24,6 +24,7 @@ export default function PostsPanel() {
     cta: '',
     date_publication_prevue: '',
     media_url: '',
+    consignes_media: '',
   })
   const [uploading, setUploading] = useState(false)
   const [contentMode, setContentMode] = useState<'markdown' | 'html'>('markdown')
@@ -88,10 +89,11 @@ export default function PostsPanel() {
         date_publication_prevue: form.date_publication_prevue || null,
         status: 'brouillon',
         media_url: form.media_url || null,
+        consignes_media: form.consignes_media || null,
       }),
     })
     if (res.ok) {
-      setForm({ client_id: '', contenu: '', reseau: 'instagram', format: 'photo', cta: '', date_publication_prevue: '', media_url: '' })
+      setForm({ client_id: '', contenu: '', reseau: 'instagram', format: 'photo', cta: '', date_publication_prevue: '', media_url: '', consignes_media: '' })
       setShowForm(false)
       fetchData()
     } else {
@@ -238,6 +240,13 @@ export default function PostsPanel() {
             onChange={(e) => setForm({ ...form, cta: e.target.value })}
             className="w-full px-3 py-2 border rounded-lg"
           />
+          <textarea
+            placeholder="Consignes de prise de photo/vidéo (envoyées au client)"
+            value={form.consignes_media}
+            onChange={(e) => setForm({ ...form, consignes_media: e.target.value })}
+            className="w-full px-3 py-2 border rounded-lg"
+            rows={3}
+          />
           <input
             type="date"
             value={form.date_publication_prevue}
@@ -294,7 +303,14 @@ export default function PostsPanel() {
               {posts.map((p) => (
                 <tr key={p.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm">{clientName(p.client_id)}</td>
-                  <td className="px-4 py-3 text-sm max-w-xs truncate">{p.contenu}</td>
+                  <td className="px-4 py-3 text-sm max-w-xs">
+                    <p className="truncate">{p.contenu}</p>
+                    {p.consignes_media && (
+                      <p className="text-xs text-gray-400 truncate" title={p.consignes_media}>
+                        📷 {p.consignes_media}
+                      </p>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-sm">{p.reseau} · {p.format}</td>
                   <td className="px-4 py-3 text-sm">{p.date_publication_prevue || '-'}</td>
                   <td className="px-4 py-3">
