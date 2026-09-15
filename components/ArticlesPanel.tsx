@@ -8,6 +8,7 @@ const statuses = ['brouillon', 'en_attente_media', 'media_recu', 'programme', 'p
 
 export default function ArticlesPanel() {
   const [articles, setArticles] = useState<Article[]>([])
+  const [clientArticles, setClientArticles] = useState<any[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -15,12 +16,14 @@ export default function ArticlesPanel() {
 
   const fetchData = async () => {
     setLoading(true)
-    const [articlesRes, clientsRes] = await Promise.all([
+    const [articlesRes, clientsRes, clientArticlesRes] = await Promise.all([
       fetchAdminData<Article>('articles', { order_column: 'date_publication_prevue' }),
       fetchAdminData<Client>('clients', { order_column: 'nom_domaine' }),
+      fetchAdminData<any>('articles_clients', { order_column: 'created_at' }),
     ])
     setArticles(articlesRes)
     setClients(clientsRes)
+    setClientArticles(clientArticlesRes)
     setLoading(false)
   }
 
@@ -62,6 +65,20 @@ export default function ArticlesPanel() {
       body: JSON.stringify({ id, status }),
     })
     fetchData()
+  }
+
+  const deleteClientArticle = async (id: string) => {
+    if (!confirm('Supprimer cet article?')) return
+    const res = await fetch('/api/client-delete-article', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    if (res.ok) {
+      fetchData()
+    } else {
+      alert('Erreur suppression')
+    }
   }
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || `#${id}`
@@ -148,6 +165,43 @@ export default function ArticlesPanel() {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <hr className="my-8" />
+      <h2 className="text-2xl font-bold mb-6">Articles créés par les clients</h2>
+
+      {clientArticles.length === 0 ? (
+        <p className="text-gray-500">Aucun article</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-100 border-b">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Client</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Titre</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Date création</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clientArticles.map((a) => (
+                <tr key={a.id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm">{a.client_id}</td>
+                  <td className="px-4 py-3 font-medium">{a.titre}</td>
+                  <td className="px-4 py-3 text-sm">{new Date(a.created_at).toLocaleDateString('fr-FR')}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => deleteClientArticle(a.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                    >
+                      Supprimer
+                    </button>
                   </td>
                 </tr>
               ))}

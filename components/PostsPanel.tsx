@@ -9,6 +9,7 @@ const formats = ['photo', 'story', 'carrousel', 'video']
 
 export default function PostsPanel() {
   const [posts, setPosts] = useState<Post[]>([])
+  const [clientPosts, setClientPosts] = useState<any[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -23,12 +24,14 @@ export default function PostsPanel() {
 
   const fetchData = async () => {
     setLoading(true)
-    const [postsRes, clientsRes] = await Promise.all([
+    const [postsRes, clientsRes, clientPostsRes] = await Promise.all([
       fetchAdminData<Post>('posts', { order_column: 'date_publication_prevue' }),
       fetchAdminData<Client>('clients', { order_column: 'nom_domaine' }),
+      fetchAdminData<any>('posts_clients', { order_column: 'created_at' }),
     ])
     setPosts(postsRes)
     setClients(clientsRes)
+    setClientPosts(clientPostsRes)
     setLoading(false)
   }
 
@@ -71,6 +74,20 @@ export default function PostsPanel() {
       body: JSON.stringify({ id, status }),
     })
     fetchData()
+  }
+
+  const deleteClientPost = async (id: string) => {
+    if (!confirm('Supprimer ce post?')) return
+    const res = await fetch('/api/client-delete-post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    if (res.ok) {
+      fetchData()
+    } else {
+      alert('Erreur suppression')
+    }
   }
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || `#${id}`
@@ -173,6 +190,43 @@ export default function PostsPanel() {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <hr className="my-8" />
+      <h2 className="text-2xl font-bold mb-6">Posts créés par les clients</h2>
+
+      {clientPosts.length === 0 ? (
+        <p className="text-gray-500">Aucun post</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-100 border-b">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Client</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Contenu</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Date création</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clientPosts.map((p) => (
+                <tr key={p.id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm">{p.client_id}</td>
+                  <td className="px-4 py-3 text-sm max-w-xs truncate">{p.contenu}</td>
+                  <td className="px-4 py-3 text-sm">{new Date(p.created_at).toLocaleDateString('fr-FR')}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => deleteClientPost(p.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                    >
+                      Supprimer
+                    </button>
                   </td>
                 </tr>
               ))}
