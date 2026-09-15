@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { withCors, corsPreflight } from '@/lib/cors'
+
+export async function OPTIONS() {
+  return corsPreflight()
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,36 +12,36 @@ export async function POST(req: NextRequest) {
     const { article_id } = body
 
     if (!article_id) {
-      return NextResponse.json({ error: 'article_id required' }, { status: 400 })
+      return withCors(NextResponse.json({ error: 'article_id required' }, { status: 400 }))
     }
 
-    // Get article from articles_publications
+    // Get article from articles table
     const { data: article, error: fetchError } = await supabaseAdmin
-      .from('articles_publications')
+      .from('articles')
       .select('*')
       .eq('id', article_id)
       .single()
 
     if (fetchError || !article) {
-      return NextResponse.json({ error: 'Article not found' }, { status: 404 })
+      return withCors(NextResponse.json({ error: 'Article not found' }, { status: 404 }))
     }
 
-    // Update status to 'publie'
+    // Update status to 'publie' and set publication date
     const { data: updated, error: updateError } = await supabaseAdmin
-      .from('articles_publications')
-      .update({ statut: 'publie', date_publication: new Date().toISOString() })
+      .from('articles')
+      .update({ status: 'publie', date_publication: new Date().toISOString() })
       .eq('id', article_id)
       .select()
       .single()
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 400 })
+      return withCors(NextResponse.json({ error: updateError.message }, { status: 400 }))
     }
 
-    return NextResponse.json({ success: true, article: updated })
+    return withCors(NextResponse.json({ success: true, article: updated }))
   } catch (err) {
-    return NextResponse.json({
+    return withCors(NextResponse.json({
       error: `Server error: ${err instanceof Error ? err.message : 'Unknown'}`
-    }, { status: 500 })
+    }, { status: 500 }))
   }
 }
