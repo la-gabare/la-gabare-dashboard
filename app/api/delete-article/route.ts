@@ -10,11 +10,38 @@ export async function OPTIONS() {
 export async function POST(req: NextRequest) {
   // Vérifier le token Bearer
   const authHeader = req.headers.get('Authorization') || ''
+  const referer = req.headers.get('referer') || ''
   let client
 
   if (authHeader.startsWith('Bearer admin_')) {
-    // Token admin local depuis admin.html - utiliser le client Domaine Moreau (ID 7)
-    client = { id: 7 }
+    // Token admin local depuis admin.html - mapper au client correct via le referer
+    try {
+      const domain = new URL(referer).hostname
+      const { data: foundClient, error } = await supabaseAdmin
+        .from('clients')
+        .select('id, api_key')
+        .eq('domain', domain)
+        .single()
+
+      if (error || !foundClient) {
+        return withCors(
+          NextResponse.json({ error: 'Client not found' }, { status: 404 })
+        )
+      }
+
+      const token = authHeader.replace('Bearer admin_', '')
+      if (token !== foundClient.api_key) {
+        return withCors(
+          NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+        )
+      }
+
+      client = foundClient
+    } catch (e) {
+      return withCors(
+        NextResponse.json({ error: 'Invalid referer' }, { status: 400 })
+      )
+    }
   } else {
     // Token Supabase normal
     const result = await getClientFromRequest(req)

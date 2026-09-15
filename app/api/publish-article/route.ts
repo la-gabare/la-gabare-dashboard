@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
 
 export async function OPTIONS() {
@@ -8,62 +7,62 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
-  const result = await getClientFromRequest(req)
-  if ('error' in result) {
-    return withCors(NextResponse.json({ error: result.error }, { status: result.status }))
-  }
-  const { client } = result
+  const { domain, token, titre, contenu, slug, image_url, date_publication } = await req.json()
 
-  const { article_id } = await req.json()
-  if (!article_id) {
-    return withCors(NextResponse.json({ error: 'article_id is required' }, { status: 400 }))
+  if (!domain || !token || !titre || !contenu || !slug) {
+    return withCors(
+      NextResponse.json(
+        { error: 'domain, token, titre, contenu, and slug are required' },
+        { status: 400 }
+      )
+    )
   }
 
-  // Get article
-  const { data: article, error: articleError } = await supabaseAdmin
-    .from('articles')
-    .select('*')
-    .eq('id', article_id)
-    .eq('client_id', client.id)
+  // Trouver le client par domaine
+  const { data: client, error: clientError } = await supabaseAdmin
+    .from('clients')
+    .select('id, api_key')
+    .eq('domain', domain)
     .single()
 
-  if (articleError || !article) {
-    return withCors(NextResponse.json({ error: 'Article not found' }, { status: 404 }))
+  if (clientError || !client) {
+    return withCors(
+      NextResponse.json({ error: 'Client not found' }, { status: 404 })
+    )
   }
 
-  // Create slug from title
-  const slug = article.titre
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-
-  // Check if already published
-  const { data: existingPub } = await supabaseAdmin
-    .from('publications')
-    .select('id')
-    .eq('article_id', article_id)
-    .single()
-
-  if (existingPub) {
-    return withCors(NextResponse.json({ error: 'Article already published' }, { status: 400 }))
+  // Vérifier le token (doit être l'api_key du client)
+  if (token !== client.api_key) {
+    return withCors(
+      NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    )
   }
 
-  // Create publication
-  const { data: publication, error } = await supabaseAdmin
+  // Créer l'article
+  const { data, error } = await supabaseAdmin
     .from('articles_publications')
     .insert({
       client_id: client.id,
-      titre: article.titre,
-      contenu: article.contenu,
-      slug: slug,
-      statut: 'publie',
+      titre,
+      contenu,
+      slug,
+      date_publication: date_publication || new Date().toISOString(),
+      image_url,
+      statut: 'publié'
     })
-    .select()
+    .select('id, slug, date_publication')
     .single()
 
   if (error) {
-    return withCors(NextResponse.json({ error: error.message }, { status: 400 }))
+    return withCors(
+      NextResponse.json({ error: error.message }, { status: 400 })
+    )
   }
 
-  return withCors(NextResponse.json({ success: true, publication }))
+  return withCors(
+    NextResponse.json({
+      success: true,
+      article: data
+    })
+  )
 }
