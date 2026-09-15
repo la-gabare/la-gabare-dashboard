@@ -6,6 +6,14 @@ export async function OPTIONS() {
   return corsPreflight()
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
 export async function GET(request: NextRequest) {
   const domaine = request.nextUrl.searchParams.get('domain')
 
@@ -43,12 +51,16 @@ export async function GET(request: NextRequest) {
   if (adminRes.error) console.error('public/articles admin query error:', adminRes.error)
   if (clientRes.error) console.error('public/articles client query error:', clientRes.error)
 
-  // Normalize admin articles to the same shape as client articles (date_publication field)
+  // Normalize admin articles to the same shape as client articles (date_publication field, slug)
   const adminArticles = (adminRes.data || []).map((a) => ({
     ...a,
     date_publication: a.date_publication_prevue,
+    slug: `${slugify(a.titre || '')}-${a.id}`,
   }))
-  const clientArticles = clientRes.data || []
+  const clientArticles = (clientRes.data || []).map((a) => ({
+    ...a,
+    slug: a.slug || `${slugify(a.titre || '')}-${a.id}`,
+  }))
 
   // Combine and sort by date
   const publications = [...adminArticles, ...clientArticles]
