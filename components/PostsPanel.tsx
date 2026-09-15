@@ -20,7 +20,9 @@ export default function PostsPanel() {
     format: 'photo',
     cta: '',
     date_publication_prevue: '',
+    media_url: '',
   })
+  const [uploading, setUploading] = useState(false)
 
   const fetchData = async () => {
     setLoading(true)
@@ -38,6 +40,32 @@ export default function PostsPanel() {
     fetchData()
   }, [])
 
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'post')
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      if (res.ok) {
+        const { url } = await res.json()
+        setForm({ ...form, media_url: url })
+      } else {
+        alert('Erreur upload')
+      }
+    } catch (err) {
+      alert('Erreur upload')
+    }
+    setUploading(false)
+  }
+
   const createPost = async () => {
     if (!form.client_id || !form.contenu) {
       alert('Client et contenu requis')
@@ -54,10 +82,11 @@ export default function PostsPanel() {
         cta: form.cta || null,
         date_publication_prevue: form.date_publication_prevue || null,
         status: 'brouillon',
+        media_url: form.media_url || null,
       }),
     })
     if (res.ok) {
-      setForm({ client_id: '', contenu: '', reseau: 'instagram', format: 'photo', cta: '', date_publication_prevue: '' })
+      setForm({ client_id: '', contenu: '', reseau: 'instagram', format: 'photo', cta: '', date_publication_prevue: '', media_url: '' })
       setShowForm(false)
       fetchData()
     } else {
@@ -178,7 +207,22 @@ export default function PostsPanel() {
             onChange={(e) => setForm({ ...form, date_publication_prevue: e.target.value })}
             className="w-full px-3 py-2 border rounded-lg"
           />
-          <button onClick={createPost} className="btn-primary">Créer</button>
+          <div>
+            <label className="block text-sm font-semibold mb-2">Photo/Vidéo</label>
+            <input
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleMediaUpload}
+              disabled={uploading}
+              className="w-full px-3 py-2 border rounded-lg"
+            />
+            {form.media_url && (
+              <p className="text-sm text-green-600 mt-2">✓ Fichier uploadé</p>
+            )}
+          </div>
+          <button onClick={createPost} className="btn-primary" disabled={uploading}>
+            {uploading ? 'Upload...' : 'Créer'}
+          </button>
         </div>
       )}
 

@@ -12,7 +12,8 @@ export default function ArticlesPanel() {
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ client_id: '', titre: '', angle: '', contenu: '', date_publication_prevue: '' })
+  const [form, setForm] = useState({ client_id: '', titre: '', angle: '', contenu: '', date_publication_prevue: '', image_url: '' })
+  const [uploading, setUploading] = useState(false)
 
   const fetchData = async () => {
     setLoading(true)
@@ -31,6 +32,32 @@ export default function ArticlesPanel() {
     fetchData()
   }, [])
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'article')
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      if (res.ok) {
+        const { url } = await res.json()
+        setForm({ ...form, image_url: url })
+      } else {
+        alert('Erreur upload')
+      }
+    } catch (err) {
+      alert('Erreur upload')
+    }
+    setUploading(false)
+  }
+
   const createArticle = async () => {
     if (!form.client_id || !form.titre) {
       alert('Client et titre requis')
@@ -46,10 +73,11 @@ export default function ArticlesPanel() {
         contenu: form.contenu || null,
         date_publication_prevue: form.date_publication_prevue || null,
         status: 'brouillon',
+        image_url: form.image_url || null,
       }),
     })
     if (res.ok) {
-      setForm({ client_id: '', titre: '', angle: '', contenu: '', date_publication_prevue: '' })
+      setForm({ client_id: '', titre: '', angle: '', contenu: '', date_publication_prevue: '', image_url: '' })
       setShowForm(false)
       fetchData()
     } else {
@@ -156,7 +184,22 @@ export default function ArticlesPanel() {
             onChange={(e) => setForm({ ...form, date_publication_prevue: e.target.value })}
             className="w-full px-3 py-2 border rounded-lg"
           />
-          <button onClick={createArticle} className="btn-primary">Créer</button>
+          <div>
+            <label className="block text-sm font-semibold mb-2">Image/Média</label>
+            <input
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleImageUpload}
+              disabled={uploading}
+              className="w-full px-3 py-2 border rounded-lg"
+            />
+            {form.image_url && (
+              <p className="text-sm text-green-600 mt-2">✓ Fichier uploadé</p>
+            )}
+          </div>
+          <button onClick={createArticle} className="btn-primary" disabled={uploading}>
+            {uploading ? 'Upload...' : 'Créer'}
+          </button>
         </div>
       )}
 
