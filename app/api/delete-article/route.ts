@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       const { data: foundClient, error } = await supabaseAdmin
         .from('clients')
         .select('id, api_key')
-        .eq('domain', domain.toLowerCase())
+        .eq('domaine', domain.toLowerCase())
         .single()
 
       if (error || !foundClient) {

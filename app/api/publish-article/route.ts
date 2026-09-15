@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const { data: client, error: clientError } = await supabaseAdmin
     .from('clients')
     .select('id, api_key')
-    .eq('domain', domain.toLowerCase())
+    .eq('domaine', domain.toLowerCase())
     .single()
 
   if (clientError || !client) {
