@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client } from '@/lib/types'
+import ClientEditModal from '@/components/ClientEditModal'
 
 const abonnementLabels: Record<string, string> = {
   village: 'Village',
@@ -14,6 +15,8 @@ const abonnementLabels: Record<string, string> = {
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingClient, setEditingClient] = useState<Client | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -62,8 +65,17 @@ export default function ClientsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm">{client.email_contact}</td>
-                    <td className="px-4 py-3">
-                      <Link href={`/clients/${client.id}`} className="text-wine font-semibold text-sm hover:underline">
+                    <td className="px-4 py-3 space-x-2 flex">
+                      <button
+                        onClick={() => {
+                          setEditingClient(client)
+                          setModalOpen(true)
+                        }}
+                        className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                      >
+                        Éditer
+                      </button>
+                      <Link href={`/clients/${client.id}`} className="text-wine font-semibold text-sm hover:underline px-3 py-1">
                         Voir la fiche →
                       </Link>
                     </td>
@@ -74,6 +86,18 @@ export default function ClientsPage() {
           </div>
         )}
       </div>
+
+      <ClientEditModal
+        client={editingClient}
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false)
+          setEditingClient(null)
+        }}
+        onSave={(updatedClient) => {
+          setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c))
+        }}
+      />
     </div>
   )
 }
