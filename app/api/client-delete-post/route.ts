@@ -10,7 +10,7 @@ export async function OPTIONS() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { id } = body
+    let { id } = body
 
     if (!id) {
       return withCors(
@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
         )
       )
     }
+
+    // Convertir l'ID en nombre
+    id = typeof id === 'string' ? parseInt(id, 10) : id
 
     // Vérifier l'authentification (Bearer token OU admin session)
     const authHeader = req.headers.get('authorization')
