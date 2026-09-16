@@ -16,9 +16,37 @@ export async function GET(req: NextRequest) {
 
   const { data } = await supabaseAdmin
     .from('client_social_accounts')
-    .select('facebook_page_name, instagram_business_account_id, connected_at')
+    .select('facebook_page_name, instagram_business_account_id, access_token, connected_at')
     .eq('client_id', client.id)
     .single()
 
-  return withCors(NextResponse.json({ connected: !!data, account: data || null }))
+  if (!data) {
+    return withCors(NextResponse.json({ connected: false, account: null }))
+  }
+
+  let instagram_username: string | null = null
+  let instagram_profile_picture_url: string | null = null
+
+  if (data.instagram_business_account_id) {
+    try {
+      const igRes = await fetch(
+        `https://graph.instagram.com/v21.0/${data.instagram_business_account_id}?fields=username,profile_picture_url&access_token=${data.access_token}`
+      )
+      const igData = await igRes.json()
+      instagram_username = igData.username || null
+      instagram_profile_picture_url = igData.profile_picture_url || null
+    } catch {
+      // Non-blocking: connection status still returns without profile details
+    }
+  }
+
+  return withCors(NextResponse.json({
+    connected: true,
+    account: {
+      facebook_page_name: data.facebook_page_name,
+      instagram_username,
+      instagram_profile_picture_url,
+      connected_at: data.connected_at,
+    },
+  }))
 }
