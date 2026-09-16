@@ -1,6 +1,10 @@
 import 'server-only'
 
-const GRAPH = 'https://graph.facebook.com/v21.0'
+// Instagram Business accounts connected via direct Instagram Login are
+// published to through graph.instagram.com; Facebook Pages still use
+// graph.facebook.com.
+const IG_GRAPH = 'https://graph.instagram.com/v21.0'
+const FB_GRAPH = 'https://graph.facebook.com/v21.0'
 
 type SocialAccount = {
   instagram_business_account_id: string | null
@@ -16,8 +20,8 @@ type Post = {
   contenu?: string | null
 }
 
-async function graphPost(path: string, body: Record<string, unknown>) {
-  const res = await fetch(`${GRAPH}/${path}`, {
+async function graphPost(base: string, path: string, body: Record<string, unknown>) {
+  const res = await fetch(`${base}/${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -30,24 +34,24 @@ async function graphPost(path: string, body: Record<string, unknown>) {
 }
 
 async function publishInstagramPhoto(account: SocialAccount, post: Post) {
-  const created = await graphPost(`${account.instagram_business_account_id}/media`, {
+  const created = await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media`, {
     image_url: post.media_url,
     caption: post.contenu || '',
     access_token: account.access_token,
   })
-  await graphPost(`${account.instagram_business_account_id}/media_publish`, {
+  await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media_publish`, {
     creation_id: created.id,
     access_token: account.access_token,
   })
 }
 
 async function publishInstagramStory(account: SocialAccount, post: Post) {
-  const created = await graphPost(`${account.instagram_business_account_id}/media`, {
+  const created = await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media`, {
     image_url: post.media_url,
     media_type: 'STORIES',
     access_token: account.access_token,
   })
-  await graphPost(`${account.instagram_business_account_id}/media_publish`, {
+  await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media_publish`, {
     creation_id: created.id,
     access_token: account.access_token,
   })
@@ -60,20 +64,20 @@ async function publishInstagramCarousel(account: SocialAccount, post: Post) {
   }
   const itemIds: string[] = []
   for (const url of urls) {
-    const item = await graphPost(`${account.instagram_business_account_id}/media`, {
+    const item = await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media`, {
       image_url: url,
       is_carousel_item: true,
       access_token: account.access_token,
     })
     itemIds.push(item.id)
   }
-  const parent = await graphPost(`${account.instagram_business_account_id}/media`, {
+  const parent = await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media`, {
     media_type: 'CAROUSEL',
     children: itemIds.join(','),
     caption: post.contenu || '',
     access_token: account.access_token,
   })
-  await graphPost(`${account.instagram_business_account_id}/media_publish`, {
+  await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media_publish`, {
     creation_id: parent.id,
     access_token: account.access_token,
   })
@@ -83,7 +87,7 @@ async function publishInstagramCarousel(account: SocialAccount, post: Post) {
 // ready in time we surface a clear "still processing" error rather than
 // timing out the request silently.
 async function publishInstagramReel(account: SocialAccount, post: Post) {
-  const created = await graphPost(`${account.instagram_business_account_id}/media`, {
+  const created = await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media`, {
     video_url: post.media_url,
     caption: post.contenu || '',
     media_type: 'REELS',
@@ -95,11 +99,11 @@ async function publishInstagramReel(account: SocialAccount, post: Post) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await new Promise((r) => setTimeout(r, 2500))
     const statusRes = await fetch(
-      `${GRAPH}/${created.id}?fields=status_code&access_token=${account.access_token}`
+      `${IG_GRAPH}/${created.id}?fields=status_code&access_token=${account.access_token}`
     )
     const statusData = await statusRes.json()
     if (statusData.status_code === 'FINISHED') {
-      await graphPost(`${account.instagram_business_account_id}/media_publish`, {
+      await graphPost(IG_GRAPH, `${account.instagram_business_account_id}/media_publish`, {
         creation_id: created.id,
         access_token: account.access_token,
       })
@@ -114,7 +118,7 @@ async function publishInstagramReel(account: SocialAccount, post: Post) {
 
 async function publishFacebookPhoto(account: SocialAccount, post: Post) {
   if (!account.facebook_page_id) return
-  await graphPost(`${account.facebook_page_id}/photos`, {
+  await graphPost(FB_GRAPH, `${account.facebook_page_id}/photos`, {
     url: post.media_url,
     caption: post.contenu || '',
     access_token: account.access_token,
@@ -123,7 +127,7 @@ async function publishFacebookPhoto(account: SocialAccount, post: Post) {
 
 async function publishFacebookVideo(account: SocialAccount, post: Post) {
   if (!account.facebook_page_id) return
-  await graphPost(`${account.facebook_page_id}/videos`, {
+  await graphPost(FB_GRAPH, `${account.facebook_page_id}/videos`, {
     file_url: post.media_url,
     description: post.contenu || '',
     access_token: account.access_token,
