@@ -1,0 +1,24 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getClientFromRequest } from '@/lib/auth-client'
+import { withCors, corsPreflight } from '@/lib/cors'
+
+export async function OPTIONS() {
+  return corsPreflight()
+}
+
+export async function GET(req: NextRequest) {
+  const result = await getClientFromRequest(req)
+  if ('error' in result) {
+    return withCors(NextResponse.json({ error: result.error }, { status: result.status }))
+  }
+  const { client } = result
+
+  const { data } = await supabaseAdmin
+    .from('client_social_accounts')
+    .select('facebook_page_name, instagram_business_account_id, connected_at')
+    .eq('client_id', client.id)
+    .single()
+
+  return withCors(NextResponse.json({ connected: !!data, account: data || null }))
+}
