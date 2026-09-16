@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   if (data.instagram_business_account_id) {
     try {
       const igRes = await fetch(
-        `https://graph.instagram.com/v21.0/${data.instagram_business_account_id}?fields=username,profile_picture_url&access_token=${data.access_token}`
+        `https://graph.instagram.com/v21.0/me?fields=username,profile_picture_url&access_token=${data.access_token}`
       )
       const igData = await igRes.json()
       instagram_username = igData.username || null
