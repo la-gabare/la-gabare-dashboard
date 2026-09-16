@@ -4,6 +4,10 @@ import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { publishPostToMeta } from '@/lib/meta-publish'
 
+// Publishing polls Instagram's media processing status before calling
+// media_publish, which can take longer than the platform's default timeout.
+export const maxDuration = 60
+
 export async function OPTIONS() {
   return corsPreflight()
 }

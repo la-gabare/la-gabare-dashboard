@@ -33,6 +33,26 @@ async function graphPost(base: string, path: string, body: Record<string, unknow
   return data
 }
 
+// Instagram processes every media container asynchronously (downloading the
+// image/video, transcoding video) — publishing right after creation fails
+// with "Media ID is not available" even for photos. Poll until it reports
+// FINISHED before calling media_publish.
+async function waitUntilReady(containerId: string, accessToken: string) {
+  const maxAttempts = 8
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    await new Promise((r) => setTimeout(r, 2000))
+    const statusRes = await fetch(
+      `${IG_GRAPH}/${containerId}?fields=status_code&access_token=${accessToken}`
+    )
+    const statusData = await statusRes.json()
+    if (statusData.status_code === 'FINISHED') return
+    if (statusData.status_code === 'ERROR') {
+      throw new Error('Le traitement du média a échoué côté Instagram')
+    }
+  }
+  throw new Error('PROCESSING')
+}
+
 // With direct Instagram Login, the authenticated account is addressed as
 // "me" on graph.instagram.com — the numeric instagram_business_account_id
 // we store is for our own reference/lookups, not a valid path segment here.
@@ -42,6 +62,7 @@ async function publishInstagramPhoto(account: SocialAccount, post: Post) {
     caption: post.contenu || '',
     access_token: account.access_token,
   })
+  await waitUntilReady(created.id, account.access_token)
   await graphPost(IG_GRAPH, `me/media_publish`, {
     creation_id: created.id,
     access_token: account.access_token,
@@ -54,6 +75,7 @@ async function publishInstagramStory(account: SocialAccount, post: Post) {
     media_type: 'STORIES',
     access_token: account.access_token,
   })
+  await waitUntilReady(created.id, account.access_token)
   await graphPost(IG_GRAPH, `me/media_publish`, {
     creation_id: created.id,
     access_token: account.access_token,
@@ -72,6 +94,7 @@ async function publishInstagramCarousel(account: SocialAccount, post: Post) {
       is_carousel_item: true,
       access_token: account.access_token,
     })
+    await waitUntilReady(item.id, account.access_token)
     itemIds.push(item.id)
   }
   const parent = await graphPost(IG_GRAPH, `me/media`, {
@@ -80,15 +103,13 @@ async function publishInstagramCarousel(account: SocialAccount, post: Post) {
     caption: post.contenu || '',
     access_token: account.access_token,
   })
+  await waitUntilReady(parent.id, account.access_token)
   await graphPost(IG_GRAPH, `me/media_publish`, {
     creation_id: parent.id,
     access_token: account.access_token,
   })
 }
 
-// Reels are transcoded asynchronously by Meta. We poll briefly; if it isn't
-// ready in time we surface a clear "still processing" error rather than
-// timing out the request silently.
 async function publishInstagramReel(account: SocialAccount, post: Post) {
   const created = await graphPost(IG_GRAPH, `me/media`, {
     video_url: post.media_url,
@@ -97,26 +118,11 @@ async function publishInstagramReel(account: SocialAccount, post: Post) {
     share_to_feed: true,
     access_token: account.access_token,
   })
-
-  const maxAttempts = 5
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise((r) => setTimeout(r, 2500))
-    const statusRes = await fetch(
-      `${IG_GRAPH}/${created.id}?fields=status_code&access_token=${account.access_token}`
-    )
-    const statusData = await statusRes.json()
-    if (statusData.status_code === 'FINISHED') {
-      await graphPost(IG_GRAPH, `me/media_publish`, {
-        creation_id: created.id,
-        access_token: account.access_token,
-      })
-      return
-    }
-    if (statusData.status_code === 'ERROR') {
-      throw new Error('Le traitement de la vidéo a échoué côté Instagram')
-    }
-  }
-  throw new Error('PROCESSING')
+  await waitUntilReady(created.id, account.access_token)
+  await graphPost(IG_GRAPH, `me/media_publish`, {
+    creation_id: created.id,
+    access_token: account.access_token,
+  })
 }
 
 async function publishFacebookPhoto(account: SocialAccount, post: Post) {
