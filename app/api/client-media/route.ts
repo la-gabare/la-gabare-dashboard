@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import sharp from 'sharp'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
@@ -32,13 +33,26 @@ export async function POST(req: NextRequest) {
     return withCors(NextResponse.json({ error: 'Post not found for this client' }, { status: 404 }))
   }
 
-  const ext = file.name.split('.').pop()
-  const path = `clients/${client.id}/posts/${postId}-${Date.now()}.${ext}`
+  const isImage = file.type.startsWith('image/')
   const arrayBuffer = await file.arrayBuffer()
+
+  // Instagram's Content Publishing API only accepts JPEG for image_url, so
+  // every image is normalized to JPEG regardless of what the client uploads.
+  let uploadBuffer = Buffer.from(arrayBuffer)
+  let contentType = file.type
+  let ext = file.name.split('.').pop()
+
+  if (isImage && file.type !== 'image/jpeg') {
+    uploadBuffer = await sharp(uploadBuffer).jpeg({ quality: 90 }).toBuffer()
+    contentType = 'image/jpeg'
+    ext = 'jpg'
+  }
+
+  const path = `clients/${client.id}/posts/${postId}-${Date.now()}.${ext}`
 
   const { error: uploadError } = await supabaseAdmin.storage
     .from('client-media')
-    .upload(path, Buffer.from(arrayBuffer), { contentType: file.type })
+    .upload(path, uploadBuffer, { contentType })
 
   if (uploadError) {
     return withCors(NextResponse.json({ error: uploadError.message }, { status: 400 }))
