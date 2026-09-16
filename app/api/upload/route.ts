@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import sharp from 'sharp'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 async function ensureBucketExists(bucketName: string) {
@@ -47,14 +48,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Aucun fichier' }, { status: 400 })
     }
 
-    const buffer = await file.arrayBuffer()
-    const filename = `${type}/${Date.now()}_${file.name}`
+    const arrayBuffer = await file.arrayBuffer()
     const bucketName = 'media'
+
+    // Instagram's Content Publishing API only accepts JPEG for image_url, so
+    // every image is normalized to JPEG regardless of what was uploaded.
+    let buffer: Buffer | ArrayBuffer = Buffer.from(arrayBuffer)
+    let contentType = file.type
+    let fileName = file.name
+
+    if (file.type.startsWith('image/') && file.type !== 'image/jpeg') {
+      buffer = await sharp(Buffer.from(arrayBuffer)).jpeg({ quality: 90 }).toBuffer()
+      contentType = 'image/jpeg'
+      fileName = fileName.replace(/\.[^.]+$/, '') + '.jpg'
+    }
+
+    const filename = `${type}/${Date.now()}_${fileName}`
 
     let uploadResult = await supabaseAdmin.storage
       .from(bucketName)
       .upload(filename, buffer, {
-        contentType: file.type,
+        contentType,
         upsert: true,
       })
 
@@ -71,7 +85,7 @@ export async function POST(req: NextRequest) {
       uploadResult = await supabaseAdmin.storage
         .from(bucketName)
         .upload(filename, buffer, {
-          contentType: file.type,
+          contentType,
           upsert: true,
         })
     }
