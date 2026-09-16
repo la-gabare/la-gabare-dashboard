@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
 
   let instagram_username: string | null = null
   let instagram_profile_picture_url: string | null = null
+  let debug: unknown = null
 
   if (data.instagram_business_account_id) {
     try {
@@ -35,9 +36,12 @@ export async function GET(req: NextRequest) {
       const igData = await igRes.json()
       instagram_username = igData.username || null
       instagram_profile_picture_url = igData.profile_picture_url || null
-    } catch {
-      // Non-blocking: connection status still returns without profile details
+      if (!igRes.ok || igData.error) debug = igData
+    } catch (err) {
+      debug = { catchError: err instanceof Error ? err.message : String(err) }
     }
+  } else {
+    debug = { note: 'no instagram_business_account_id stored' }
   }
 
   return withCors(NextResponse.json({
@@ -48,5 +52,6 @@ export async function GET(req: NextRequest) {
       instagram_profile_picture_url,
       connected_at: data.connected_at,
     },
+    debug,
   }))
 }
