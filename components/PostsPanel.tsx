@@ -158,7 +158,7 @@ export default function PostsPanel() {
   const isVideo = (url: string) => /\.(mp4|mov|webm)$/i.test(url)
 
   const enhancePost = async (id: number) => {
-    if (!confirm('Améliorer cette photo avec l\'IA ? Elle remplacera le média envoyé par le client.')) return
+    if (!confirm('Améliorer cette photo (netteté, lumière, couleurs) ? Elle remplacera le média envoyé par le client.')) return
     setEnhancingId(id)
     try {
       const res = await fetch('/api/enhance-post-media', {
