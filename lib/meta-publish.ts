@@ -20,6 +20,8 @@ type Post = {
   contenu?: string | null
 }
 
+const isVideoUrl = (url: string) => /\.(mp4|mov|webm|m4v)(\?.*)?$/i.test(url)
+
 async function graphPost(base: string, path: string, body: Record<string, unknown>) {
   const res = await fetch(`${base}/${path}`, {
     method: 'POST',
@@ -70,8 +72,11 @@ async function publishInstagramPhoto(account: SocialAccount, post: Post) {
 }
 
 async function publishInstagramStory(account: SocialAccount, post: Post) {
+  const mediaField = isVideoUrl(post.media_url || '')
+    ? { video_url: post.media_url }
+    : { image_url: post.media_url }
   const created = await graphPost(IG_GRAPH, `me/media`, {
-    image_url: post.media_url,
+    ...mediaField,
     media_type: 'STORIES',
     access_token: account.access_token,
   })
@@ -153,8 +158,10 @@ export async function publishPostToMeta(account: SocialAccount, post: Post) {
     else await publishInstagramPhoto(account, post)
   }
 
-  // Facebook Page publishing runs for photo/carousel-cover and video formats,
-  // independent of Instagram (skipped silently if no page is connected).
-  if (format === 'video') await publishFacebookVideo(account, post)
+  // Facebook Page publishing runs independent of Instagram (skipped silently
+  // if no page is connected). Route by the actual file type, not just the
+  // format label — a "story" can be a video now that direct video uploads
+  // are supported, and sending a video through the photos endpoint fails.
+  if (format === 'video' || isVideoUrl(post.media_url || '')) await publishFacebookVideo(account, post)
   else await publishFacebookPhoto(account, post)
 }
