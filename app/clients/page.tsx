@@ -69,8 +69,22 @@ export default function ClientsPage() {
     }
   }
 
-  const handleSendWeeklyEmail = (client: Client) => {
-    alert('Action à paramétrer prochainement')
+  const handleSendWeeklyEmail = async (client: Client) => {
+    try {
+      const res = await fetch('/api/mail-hebdo-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: client.id }),
+      })
+      if (res.ok) {
+        alert('Mail hebdomadaire mis en file d\'attente pour ' + client.nom_domaine + '.')
+      } else {
+        const err = await res.json()
+        alert('Erreur: ' + err.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
   }
 
   const toggleClientPlan = async (client: Client) => {

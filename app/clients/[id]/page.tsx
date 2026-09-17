@@ -85,8 +85,22 @@ export default function ClientDetailPage() {
     setCreatingPlan(false)
   }
 
-  const handleSendWeeklyEmail = () => {
-    alert('Action à paramétrer prochainement')
+  const handleSendWeeklyEmail = async () => {
+    try {
+      const res = await fetch('/api/mail-hebdo-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: client!.id }),
+      })
+      if (res.ok) {
+        alert('Mail hebdomadaire mis en file d\'attente : il partira sous peu (agent n8n toutes les 15 min).')
+      } else {
+        const err = await res.json()
+        alert('Erreur: ' + err.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
   }
 
   const toggleMonth = (m: string) => setExpandedMonths((prev) => ({ ...prev, [m]: !prev[m] }))

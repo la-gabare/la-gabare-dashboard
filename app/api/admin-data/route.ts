@@ -13,6 +13,7 @@ const ALLOWED_TABLES = [
   'formulaire_complet',
   'taches',
   'plans_generation',
+  'mail_hebdo_requests',
 ]
 
 export async function GET(req: NextRequest) {
