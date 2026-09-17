@@ -14,6 +14,8 @@ const ALLOWED_TABLES = [
   'taches',
   'plans_generation',
   'mail_hebdo_requests',
+  'client_google_accounts',
+  'avis_google',
 ]
 
 export async function GET(req: NextRequest) {
