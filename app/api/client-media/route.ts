@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   const { data: post } = await supabaseAdmin
     .from('posts')
-    .select('id, client_id')
+    .select('id, client_id, format')
     .eq('id', postId)
     .single()
 
@@ -37,13 +37,19 @@ export async function POST(req: NextRequest) {
   const arrayBuffer = await file.arrayBuffer()
 
   // Instagram's Content Publishing API only accepts JPEG for image_url, so
-  // every image is normalized to JPEG regardless of what the client uploads.
+  // every image is normalized to JPEG. It's also cropped to the aspect ratio
+  // Instagram expects for the post's format (stories are vertical, feed
+  // posts are square) so what the client sends is ready to publish as-is.
   let uploadBuffer = Buffer.from(arrayBuffer)
   let contentType = file.type
   let ext = file.name.split('.').pop()
 
-  if (isImage && file.type !== 'image/jpeg') {
-    uploadBuffer = await sharp(uploadBuffer).jpeg({ quality: 90 }).toBuffer()
+  if (isImage) {
+    const [width, height] = post.format === 'story' ? [1080, 1920] : [1080, 1080]
+    uploadBuffer = await sharp(uploadBuffer)
+      .resize(width, height, { fit: 'cover', position: 'centre' })
+      .jpeg({ quality: 90 })
+      .toBuffer()
     contentType = 'image/jpeg'
     ext = 'jpg'
   }
