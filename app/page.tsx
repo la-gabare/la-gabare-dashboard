@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
-import { Tache, Client } from '@/lib/types'
+import { Tache, Client, PlanGeneration } from '@/lib/types'
 
 const prioriteBadge: Record<string, string> = {
   basse: 'badge-info',
@@ -27,6 +27,8 @@ export default function Home() {
   })
   const [taches, setTaches] = useState<Tache[]>([])
   const [clients, setClients] = useState<Client[]>([])
+  const [clientsSansPlan, setClientsSansPlan] = useState<Client[]>([])
+  const [creatingPlanFor, setCreatingPlanFor] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   const fetchTaches = async () => {
@@ -36,11 +38,12 @@ export default function Home() {
 
   useEffect(() => {
     const fetchCounts = async () => {
-      const [leads, clientsRes, articles, posts] = await Promise.all([
+      const [leads, clientsRes, articles, posts, plansRes] = await Promise.all([
         fetchAdminData('leads'),
         fetchAdminData<Client>('clients', { eq_column: 'statut', eq_value: 'actif' }),
         fetchAdminData('articles', { eq_column: 'status', eq_value: 'brouillon' }),
         fetchAdminData('posts', { eq_column: 'status', eq_value: 'brouillon' }),
+        fetchAdminData<PlanGeneration>('plans_generation'),
       ])
 
       setCounts({
@@ -50,12 +53,34 @@ export default function Home() {
         postsEnAttente: posts.length,
       })
       setClients(clientsRes)
+      const clientIdsAvecPlan = new Set(plansRes.map((p) => p.client_id))
+      setClientsSansPlan(clientsRes.filter((c) => !clientIdsAvecPlan.has(c.id)))
       setLoading(false)
     }
 
     fetchCounts()
     fetchTaches()
   }, [])
+
+  const handleCreatePlan = async (client: Client) => {
+    setCreatingPlanFor(client.id)
+    try {
+      const res = await fetch('/api/plans-generation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: client.id, date_debut: new Date().toISOString().slice(0, 10) }),
+      })
+      if (res.ok) {
+        setClientsSansPlan((prev) => prev.filter((c) => c.id !== client.id))
+      } else {
+        const err = await res.json()
+        alert('Erreur: ' + err.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setCreatingPlanFor(null)
+  }
 
   const updateStatut = async (id: number, statut: string) => {
     await fetch('/api/taches', {
@@ -90,6 +115,36 @@ export default function Home() {
             <p className="text-3xl font-bold text-wine mt-2">{card.value}</p>
           </a>
         ))}
+      </div>
+
+      <div className="card mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Clients sans plan généré ({clientsSansPlan.length})</h2>
+          <Link href="/clients" className="text-wine font-semibold text-sm hover:underline">
+            Voir tous les clients →
+          </Link>
+        </div>
+        {clientsSansPlan.length === 0 ? (
+          <p className="text-gray-500 text-sm">Tous les clients actifs ont un plan généré</p>
+        ) : (
+          <div className="space-y-2">
+            {clientsSansPlan.map((c) => (
+              <div key={c.id} className="flex justify-between items-center border-b pb-2">
+                <div>
+                  <p className="font-medium">{c.nom_domaine}</p>
+                  <p className="text-xs text-gray-500">{c.appellation} · {c.abonnement}</p>
+                </div>
+                <button
+                  onClick={() => handleCreatePlan(c)}
+                  disabled={creatingPlanFor === c.id}
+                  className="btn-primary text-sm"
+                >
+                  {creatingPlanFor === c.id ? 'Envoi...' : 'Créer un plan'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="card mt-8">
