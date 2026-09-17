@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client } from '@/lib/types'
 import ClientEditModal from '@/components/ClientEditModal'
+import { CalendarPlus, Mail } from 'lucide-react'
 
 const abonnementLabels: Record<string, string> = {
   village: 'Village',
@@ -26,6 +27,14 @@ export default function ClientsPage() {
     }
     fetchClients()
   }, [])
+
+  const handleCreatePlan = (client: Client) => {
+    alert('Action à paramétrer prochainement')
+  }
+
+  const handleSendWeeklyEmail = (client: Client) => {
+    alert('Action à paramétrer prochainement')
+  }
 
   return (
     <div className="container-dashboard">
@@ -78,6 +87,20 @@ export default function ClientsPage() {
                       <Link href={`/clients/${client.id}`} className="text-wine font-semibold text-sm hover:underline px-3 py-1">
                         Voir la fiche →
                       </Link>
+                      <button
+                        onClick={() => handleCreatePlan(client)}
+                        title="Créer un plan"
+                        className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
+                      >
+                        <CalendarPlus size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleSendWeeklyEmail(client)}
+                        title="Envoyer le mail hebdomadaire"
+                        className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
+                      >
+                        <Mail size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}
