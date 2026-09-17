@@ -204,6 +204,71 @@ export default function ClientEditModal({ client, isOpen, onClose, onSave }: Cli
             />
           </div>
 
+          {/* ÉLÉMENTS DU FORMULAIRE COMPLET */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">Éléments du formulaire complet</label>
+            <div className="space-y-2">
+              <input
+                type="text"
+                name="slogan"
+                placeholder="Slogan"
+                value={formData.slogan || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+              />
+              <textarea
+                name="presentation"
+                placeholder="Présentation du domaine"
+                value={formData.presentation || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+                rows={2}
+              />
+              <textarea
+                name="positionnement"
+                placeholder="Positionnement"
+                value={formData.positionnement || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+                rows={2}
+              />
+              <textarea
+                name="messages_cles"
+                placeholder="Messages clés"
+                value={formData.messages_cles || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+                rows={2}
+              />
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  name="instagram_handle"
+                  placeholder="Instagram (@handle)"
+                  value={formData.instagram_handle || ''}
+                  onChange={handleChange}
+                  className="px-3 py-2 border rounded-lg text-sm"
+                />
+                <input
+                  type="text"
+                  name="facebook_page"
+                  placeholder="Page Facebook"
+                  value={formData.facebook_page || ''}
+                  onChange={handleChange}
+                  className="px-3 py-2 border rounded-lg text-sm"
+                />
+                <input
+                  type="text"
+                  name="tiktok_handle"
+                  placeholder="TikTok (@handle)"
+                  value={formData.tiktok_handle || ''}
+                  onChange={handleChange}
+                  className="px-3 py-2 border rounded-lg text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* DESCRIPTION */}
           <div>
             <label className="block text-sm font-semibold mb-2">Description longue</label>
