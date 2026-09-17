@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post } from '@/lib/types'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
+import ClientEditModal from '@/components/ClientEditModal'
 
 const abonnementQuotas: Record<string, string> = {
   village: '4 articles + 4 idées story / mois',
@@ -21,6 +22,7 @@ export default function ClientDetailPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [planDate, setPlanDate] = useState('')
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,10 +53,25 @@ export default function ClientDetailPage() {
 
   return (
     <div className="container-dashboard space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">{client.nom_domaine}</h1>
-        <p className="text-gray-600">{client.appellation} — {client.region}</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">{client.nom_domaine}</h1>
+          <p className="text-gray-600">{client.appellation} — {client.region}</p>
+        </div>
+        <button
+          onClick={() => setEditModalOpen(true)}
+          className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+        >
+          Éditer
+        </button>
       </div>
+
+      <ClientEditModal
+        client={client}
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSave={(updatedClient) => setClient(updatedClient)}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card">
