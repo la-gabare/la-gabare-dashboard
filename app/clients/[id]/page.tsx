@@ -56,6 +56,7 @@ export default function ClientDetailPage() {
   const [expandedWeeks, setExpandedWeeks] = useState<Record<string, boolean>>({})
   const [lastPlan, setLastPlan] = useState<PlanGeneration | null>(null)
   const [lastMail, setLastMail] = useState<MailHebdoRequest | null>(null)
+  const [checkingSite, setCheckingSite] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,6 +123,25 @@ export default function ClientDetailPage() {
     }
   }
 
+  const checkSiteConnection = async () => {
+    if (!client?.domaine) {
+      alert('Aucun domaine configuré — remplis "URL du site" dans Éditer d\'abord.')
+      return
+    }
+    setCheckingSite(true)
+    try {
+      const res = await fetch(`/api/public/articles?domain=${encodeURIComponent(client.domaine)}`)
+      const data = await res.json()
+      const count = data.publications?.length || 0
+      alert(count > 0
+        ? `✓ Connexion OK — ${count} article(s) publié(s) trouvé(s) pour ${client.domaine}.`
+        : `⚠️ Connexion OK mais 0 article publié trouvé pour ${client.domaine} (normal si aucun article n'est encore publié).`)
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setCheckingSite(false)
+  }
+
   const toggleMonth = (m: string) => setExpandedMonths((prev) => ({ ...prev, [m]: !prev[m] }))
   const toggleWeek = (key: string) => setExpandedWeeks((prev) => ({ ...prev, [key]: !prev[key] }))
 
@@ -178,7 +198,19 @@ export default function ClientDetailPage() {
             <div className="flex justify-between"><dt className="text-gray-600">Public cible</dt><dd>{client.public_cible || '-'}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-600">Tone de voix</dt><dd>{client.tone_voix || '-'}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-600">Statut</dt><dd><span className={`badge ${client.statut === 'actif' ? 'badge-success' : 'badge-warning'}`}>{client.statut}</span></dd></div>
-            <div className="flex justify-between"><dt className="text-gray-600">Site</dt><dd>{client.site_url ? <a href={client.site_url} target="_blank" rel="noopener noreferrer" className="text-wine hover:underline">{client.site_url}</a> : '-'}</dd></div>
+            <div className="flex justify-between items-center">
+              <dt className="text-gray-600">Site</dt>
+              <dd className="flex items-center gap-2">
+                {client.site_url ? <a href={client.site_url} target="_blank" rel="noopener noreferrer" className="text-wine hover:underline">{client.site_url}</a> : '-'}
+                <button
+                  onClick={checkSiteConnection}
+                  disabled={checkingSite}
+                  className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300 disabled:opacity-50"
+                >
+                  {checkingSite ? '...' : 'Vérifier'}
+                </button>
+              </dd>
+            </div>
             <div className="flex justify-between"><dt className="text-gray-600">Pack site</dt><dd>{client.pack_site ? <span className="badge badge-info">{client.pack_site}</span> : '-'}</dd></div>
           </dl>
         </div>
