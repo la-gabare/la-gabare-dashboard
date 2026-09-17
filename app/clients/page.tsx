@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
-import { Client, Article, Post } from '@/lib/types'
+import { Client, Article, Post, PlanGeneration, MailHebdoRequest } from '@/lib/types'
 import { CalendarPlus, ChevronDown, ChevronRight, Folder } from 'lucide-react'
 
 const abonnementLabels: Record<string, string> = {
@@ -45,6 +45,8 @@ export default function ClientsPage() {
   const [expandedClient, setExpandedClient] = useState<number | null>(null)
   const [planLoading, setPlanLoading] = useState<number | null>(null)
   const [planCache, setPlanCache] = useState<Record<number, PlanItem[]>>({})
+  const [lastPlanCache, setLastPlanCache] = useState<Record<number, PlanGeneration | null>>({})
+  const [mailRequestsCache, setMailRequestsCache] = useState<Record<number, MailHebdoRequest[]>>({})
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({})
   const [expandedWeeks, setExpandedWeeks] = useState<Record<string, boolean>>({})
 
@@ -68,6 +70,8 @@ export default function ClientsPage() {
         }),
       })
       if (res.ok) {
+        const created = await res.json()
+        setLastPlanCache((prev) => ({ ...prev, [client.id]: created }))
         alert('Plan mis en file d\'attente pour ' + client.nom_domaine + '.')
       } else {
         const err = await res.json()
@@ -86,6 +90,8 @@ export default function ClientsPage() {
         body: JSON.stringify({ client_id: client.id, date_debut: dateDebut, date_fin: dateFin }),
       })
       if (res.ok) {
+        const created = await res.json()
+        setMailRequestsCache((prev) => ({ ...prev, [client.id]: [created, ...(prev[client.id] || [])] }))
         alert('Mail hebdomadaire mis en file d\'attente pour ' + client.nom_domaine + '.')
       } else {
         const err = await res.json()
@@ -104,9 +110,11 @@ export default function ClientsPage() {
     setExpandedClient(client.id)
     if (!planCache[client.id]) {
       setPlanLoading(client.id)
-      const [articlesRes, postsRes] = await Promise.all([
+      const [articlesRes, postsRes, plansRes, mailsRes] = await Promise.all([
         fetchAdminData<Article>('articles', { eq_column: 'client_id', eq_value: String(client.id), order_column: 'date_publication_prevue' }),
         fetchAdminData<Post>('posts', { eq_column: 'client_id', eq_value: String(client.id), order_column: 'date_publication_prevue' }),
+        fetchAdminData<PlanGeneration>('plans_generation', { eq_column: 'client_id', eq_value: String(client.id), order_column: 'created_at', order_asc: 'false' }),
+        fetchAdminData<MailHebdoRequest>('mail_hebdo_requests', { eq_column: 'client_id', eq_value: String(client.id), order_column: 'created_at', order_asc: 'false' }),
       ])
       const items: PlanItem[] = [
         ...articlesRes
@@ -117,6 +125,8 @@ export default function ClientsPage() {
           .map((p) => ({ id: `p${p.id}`, type: 'post' as const, label: `${p.reseau} · ${p.format} — ${p.contenu.slice(0, 50)}`, date: p.date_publication_prevue!, status: p.status })),
       ]
       setPlanCache((prev) => ({ ...prev, [client.id]: items }))
+      setLastPlanCache((prev) => ({ ...prev, [client.id]: plansRes[0] || null }))
+      setMailRequestsCache((prev) => ({ ...prev, [client.id]: mailsRes }))
       setPlanLoading(null)
     }
   }
@@ -150,6 +160,8 @@ export default function ClientsPage() {
                 {clients.map((client) => {
                   const items = planCache[client.id] || []
                   const months = Array.from(new Set(items.map((i) => i.date.slice(0, 7)))).sort().reverse()
+                  const lastPlan = lastPlanCache[client.id]
+                  const mailRequests = mailRequestsCache[client.id] || []
                   return (
                     <Fragment key={client.id}>
                       <tr className="border-b hover:bg-gray-50">
@@ -202,10 +214,17 @@ export default function ClientsPage() {
                                     <div key={m} className="border rounded-lg bg-white">
                                       <button
                                         onClick={() => toggleMonth(monthKey)}
-                                        className="w-full flex items-center gap-2 px-4 py-3 font-semibold text-left text-sm"
+                                        className="w-full flex items-center justify-between gap-2 px-4 py-3 font-semibold text-left text-sm"
                                       >
-                                        {expandedMonths[monthKey] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                        Plan de {monthLabel(m)} ({monthItems.length} éléments)
+                                        <span className="flex items-center gap-2">
+                                          {expandedMonths[monthKey] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                          Plan de {monthLabel(m)} ({monthItems.length} éléments)
+                                        </span>
+                                        <span className="text-xs font-normal text-gray-500">
+                                          {lastPlan
+                                            ? `Généré le ${new Date(lastPlan.created_at).toLocaleDateString('fr-FR')} (${lastPlan.status})`
+                                            : 'Jamais généré'}
+                                        </span>
                                       </button>
                                       {expandedMonths[monthKey] && (
                                         <div className="px-4 pb-4 space-y-2">
@@ -214,6 +233,8 @@ export default function ClientsPage() {
                                               .filter((i) => weekOfMonth(i.date) === w)
                                               .sort((a, b) => a.date.localeCompare(b.date))
                                             const weekKey = `${monthKey}-s${w}`
+                                            const { start, end } = weekRange(m, w)
+                                            const lastMailForWeek = mailRequests.find((r) => r.date_debut === start && r.date_fin === end)
                                             return (
                                               <div key={w} className="border rounded-lg bg-gray-50">
                                                 <button
@@ -241,12 +262,14 @@ export default function ClientsPage() {
                                                         </div>
                                                       ))
                                                     )}
-                                                    <div className="pt-2 flex justify-end">
+                                                    <div className="pt-2 flex justify-between items-center">
+                                                      <span className="text-xs text-gray-500">
+                                                        {lastMailForWeek
+                                                          ? `Envoyé le ${new Date(lastMailForWeek.created_at).toLocaleDateString('fr-FR')} (${lastMailForWeek.status})`
+                                                          : 'Jamais envoyé'}
+                                                      </span>
                                                       <button
-                                                        onClick={() => {
-                                                          const { start, end } = weekRange(m, w)
-                                                          handleSendWeeklyEmail(client, start, end)
-                                                        }}
+                                                        onClick={() => handleSendWeeklyEmail(client, start, end)}
                                                         className="px-3 py-1 bg-wine text-white rounded text-xs hover:opacity-90"
                                                       >
                                                         📧 Envoyer le mail hebdomadaire (Semaine {w})
