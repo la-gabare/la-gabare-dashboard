@@ -20,6 +20,7 @@ export default function ClientDetailPage() {
   const [articles, setArticles] = useState<Article[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [planDate, setPlanDate] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,6 +37,14 @@ export default function ClientDetailPage() {
     }
     fetchData()
   }, [id])
+
+  const handleCreatePlan = () => {
+    alert('Action à paramétrer prochainement')
+  }
+
+  const handleSendWeeklyEmail = () => {
+    alert('Action à paramétrer prochainement')
+  }
 
   if (loading) return <div className="container-dashboard">Chargement...</div>
   if (!client) return <div className="container-dashboard">Client introuvable</div>
@@ -74,6 +83,24 @@ export default function ClientDetailPage() {
       </div>
 
       <PaymentLinkGenerator client={client} />
+
+      <div className="card">
+        <h2 className="text-xl font-bold mb-4">Plan éditorial</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="date"
+            value={planDate}
+            onChange={(e) => setPlanDate(e.target.value)}
+            className="px-3 py-2 border rounded-lg"
+          />
+          <button onClick={handleCreatePlan} className="btn-primary">
+            Créer un plan
+          </button>
+          <button onClick={handleSendWeeklyEmail} className="btn-primary">
+            📧 Envoyer le mail hebdomadaire
+          </button>
+        </div>
+      </div>
 
       <div className="card">
         <h2 className="text-xl font-bold mb-4">Articles ({articles.length})</h2>
