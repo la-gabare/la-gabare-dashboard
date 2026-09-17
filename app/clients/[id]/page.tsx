@@ -6,11 +6,30 @@ import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post } from '@/lib/types'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 import ClientEditModal from '@/components/ClientEditModal'
+import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
 
 const abonnementQuotas: Record<string, string> = {
   village: '4 articles + 4 idées story / mois',
   reserve: '8 articles + 8 idées story + 6 images/photos + 2 carrousels / mois',
   grand_cru: '8 articles + 20 idées story + 8 images/photos + 3 carrousels + 1 vidéo / mois',
+}
+
+type PlanItem = {
+  id: string
+  type: 'article' | 'post'
+  label: string
+  date: string
+  status?: string
+}
+
+const weekOfMonth = (dateStr: string) => {
+  const day = parseInt(dateStr.split('-')[2], 10)
+  return Math.min(4, Math.ceil(day / 7))
+}
+
+const monthLabel = (mois: string) => {
+  const label = new Date(mois + '-01T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 export default function ClientDetailPage() {
@@ -24,6 +43,8 @@ export default function ClientDetailPage() {
   const [planDate, setPlanDate] = useState('')
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [creatingPlan, setCreatingPlan] = useState(false)
+  const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({})
+  const [expandedWeeks, setExpandedWeeks] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,8 +89,21 @@ export default function ClientDetailPage() {
     alert('Action à paramétrer prochainement')
   }
 
+  const toggleMonth = (m: string) => setExpandedMonths((prev) => ({ ...prev, [m]: !prev[m] }))
+  const toggleWeek = (key: string) => setExpandedWeeks((prev) => ({ ...prev, [key]: !prev[key] }))
+
   if (loading) return <div className="container-dashboard">Chargement...</div>
   if (!client) return <div className="container-dashboard">Client introuvable</div>
+
+  const planItems: PlanItem[] = [
+    ...articles
+      .filter((a) => a.date_publication_prevue)
+      .map((a) => ({ id: `a${a.id}`, type: 'article' as const, label: a.titre, date: a.date_publication_prevue!, status: a.status })),
+    ...posts
+      .filter((p) => p.date_publication_prevue)
+      .map((p) => ({ id: `p${p.id}`, type: 'post' as const, label: `${p.reseau} · ${p.format} — ${p.contenu.slice(0, 50)}`, date: p.date_publication_prevue!, status: p.status })),
+  ]
+  const months = Array.from(new Set(planItems.map((i) => i.date.slice(0, 7)))).sort().reverse()
 
   return (
     <div className="container-dashboard space-y-8">
@@ -138,6 +172,69 @@ export default function ClientDetailPage() {
           </button>
         </div>
       </div>
+
+      {months.length > 0 && (
+        <div className="card">
+          <h2 className="text-xl font-bold mb-4">Plan du mois</h2>
+          <div className="space-y-2">
+            {months.map((m) => {
+              const monthItems = planItems.filter((i) => i.date.slice(0, 7) === m)
+              return (
+                <div key={m} className="border rounded-lg">
+                  <button
+                    onClick={() => toggleMonth(m)}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-semibold text-left"
+                  >
+                    {expandedMonths[m] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    Plan de {monthLabel(m)} ({monthItems.length} éléments)
+                  </button>
+                  {expandedMonths[m] && (
+                    <div className="px-4 pb-4 space-y-2">
+                      {[1, 2, 3, 4].map((w) => {
+                        const weekItems = monthItems
+                          .filter((i) => weekOfMonth(i.date) === w)
+                          .sort((a, b) => a.date.localeCompare(b.date))
+                        const weekKey = `${m}-s${w}`
+                        return (
+                          <div key={w} className="border rounded-lg bg-gray-50">
+                            <button
+                              onClick={() => toggleWeek(weekKey)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-left"
+                            >
+                              {expandedWeeks[weekKey] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                              <Folder size={14} />
+                              Semaine {w} ({weekItems.length})
+                            </button>
+                            {expandedWeeks[weekKey] && (
+                              <div className="px-3 pb-3 space-y-1">
+                                {weekItems.length === 0 ? (
+                                  <p className="text-xs text-gray-500">Rien cette semaine</p>
+                                ) : (
+                                  weekItems.map((it) => (
+                                    <div key={it.id} className="flex justify-between items-center text-sm border-b py-1">
+                                      <span>
+                                        <span className={`badge ${it.type === 'article' ? 'badge-info' : 'badge-warning'} mr-2`}>
+                                          {it.type === 'article' ? 'Article' : 'Post'}
+                                        </span>
+                                        {it.label}
+                                      </span>
+                                      <span className="text-xs text-gray-500 whitespace-nowrap ml-3">{it.date} · {it.status || 'brouillon'}</span>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h2 className="text-xl font-bold mb-4">Articles ({articles.length})</h2>
