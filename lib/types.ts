@@ -121,6 +121,7 @@ export interface Client {
   date_debut_abonnement?: string
   date_fin_abonnement?: string
   statut?: string
+  domaine?: string
   site_url?: string
   pack_site?: string
   profil_client_complet?: Record<string, unknown>

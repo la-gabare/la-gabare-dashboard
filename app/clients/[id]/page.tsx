@@ -160,6 +160,14 @@ export default function ClientDetailPage() {
         onSave={(updatedClient) => setClient(updatedClient)}
       />
 
+      {!client.domaine && (
+        <div className="card border-yellow-400 bg-yellow-50">
+          <p className="text-sm text-yellow-800">
+            ⚠️ Aucune URL de site renseignée pour ce client — ses articles publiés ne remonteront pas sur son site tant que le champ "URL du site" n'est pas rempli dans <button onClick={() => setEditModalOpen(true)} className="underline font-semibold">Éditer</button>.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card">
           <h2 className="text-xl font-bold mb-4">Fiche client</h2>
