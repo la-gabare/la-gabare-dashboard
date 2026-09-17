@@ -12,6 +12,7 @@ interface ClientEditModalProps {
 
 const statutOptions = ['en_attente_paiement', 'actif', 'inactif']
 const abonnementOptions = ['village', 'reserve', 'grand_cru']
+const packSiteOptions = ['essentiel', 'pro', 'premium']
 
 export default function ClientEditModal({ client, isOpen, onClose, onSave }: ClientEditModalProps) {
   const [baseData, setBaseData] = useState<any>({
@@ -27,6 +28,8 @@ export default function ClientEditModal({ client, isOpen, onClose, onSave }: Cli
     cepages: (client?.cepages || []).join(', '),
     statut: client?.statut || '',
     abonnement: client?.abonnement || '',
+    site_url: client?.site_url || '',
+    pack_site: client?.pack_site || '',
   })
   const [formData, setFormData] = useState<any>(client?.profil_client_complet || {})
   const [isSaving, setIsSaving] = useState(false)
@@ -191,6 +194,25 @@ export default function ClientEditModal({ client, isOpen, onClose, onSave }: Cli
                 <option value="">Abonnement</option>
                 {abonnementOptions.map((a) => (
                   <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+              <input
+                type="url"
+                name="site_url"
+                placeholder="URL du site (https://...)"
+                value={baseData.site_url}
+                onChange={handleBaseChange}
+                className="px-3 py-2 border rounded-lg text-sm"
+              />
+              <select
+                name="pack_site"
+                value={baseData.pack_site}
+                onChange={handleBaseChange}
+                className="px-3 py-2 border rounded-lg text-sm"
+              >
+                <option value="">Pack site</option>
+                {packSiteOptions.map((p) => (
+                  <option key={p} value={p}>{p}</option>
                 ))}
               </select>
             </div>

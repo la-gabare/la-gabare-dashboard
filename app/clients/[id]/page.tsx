@@ -170,6 +170,8 @@ export default function ClientDetailPage() {
             <div className="flex justify-between"><dt className="text-gray-600">Public cible</dt><dd>{client.public_cible || '-'}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-600">Tone de voix</dt><dd>{client.tone_voix || '-'}</dd></div>
             <div className="flex justify-between"><dt className="text-gray-600">Statut</dt><dd><span className={`badge ${client.statut === 'actif' ? 'badge-success' : 'badge-warning'}`}>{client.statut}</span></dd></div>
+            <div className="flex justify-between"><dt className="text-gray-600">Site</dt><dd>{client.site_url ? <a href={client.site_url} target="_blank" rel="noopener noreferrer" className="text-wine hover:underline">{client.site_url}</a> : '-'}</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-600">Pack site</dt><dd>{client.pack_site ? <span className="badge badge-info">{client.pack_site}</span> : '-'}</dd></div>
           </dl>
         </div>
 
