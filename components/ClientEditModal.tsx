@@ -75,6 +75,12 @@ export default function ClientEditModal({ client, isOpen, onClose, onSave }: Cli
           cepages: baseData.cepages
             ? baseData.cepages.split(',').map((c: string) => c.trim()).filter(Boolean)
             : [],
+          // The public article-publishing lookup (and the client space) match
+          // by bare hostname in "domaine", not the full "site_url" — derive
+          // it here so filling in the site URL wires up publishing too.
+          domaine: baseData.site_url
+            ? baseData.site_url.replace(/^https?:\/\//, '').replace(/\/$/, '')
+            : null,
           profil_client_complet: formData,
         }),
       })
