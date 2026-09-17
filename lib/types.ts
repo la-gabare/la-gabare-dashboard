@@ -198,3 +198,22 @@ export interface Publication {
   impressions?: number
   engagements?: number
 }
+
+export interface PlanGeneration {
+  id: number
+  created_at: string
+  client_id: number
+  date_debut?: string
+  status?: string
+  error_message?: string
+}
+
+export interface MailHebdoRequest {
+  id: number
+  created_at: string
+  client_id: number
+  date_debut?: string
+  date_fin?: string
+  status?: string
+  error_message?: string
+}

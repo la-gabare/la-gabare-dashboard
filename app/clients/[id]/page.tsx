@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { fetchAdminData } from '@/lib/admin-data'
-import { Client, Article, Post } from '@/lib/types'
+import { Client, Article, Post, PlanGeneration, MailHebdoRequest } from '@/lib/types'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 import ClientEditModal from '@/components/ClientEditModal'
 import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
@@ -54,18 +54,24 @@ export default function ClientDetailPage() {
   const [creatingPlan, setCreatingPlan] = useState(false)
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({})
   const [expandedWeeks, setExpandedWeeks] = useState<Record<string, boolean>>({})
+  const [lastPlan, setLastPlan] = useState<PlanGeneration | null>(null)
+  const [lastMail, setLastMail] = useState<MailHebdoRequest | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
-      const [clientRes, articlesRes, postsRes] = await Promise.all([
+      const [clientRes, articlesRes, postsRes, plansRes, mailsRes] = await Promise.all([
         fetchAdminData<Client>('clients', { id }),
         fetchAdminData<Article>('articles', { eq_column: 'client_id', eq_value: id, order_column: 'date_publication_prevue' }),
         fetchAdminData<Post>('posts', { eq_column: 'client_id', eq_value: id, order_column: 'date_publication_prevue' }),
+        fetchAdminData<PlanGeneration>('plans_generation', { eq_column: 'client_id', eq_value: id, order_column: 'created_at', order_asc: 'false' }),
+        fetchAdminData<MailHebdoRequest>('mail_hebdo_requests', { eq_column: 'client_id', eq_value: id, order_column: 'created_at', order_asc: 'false' }),
       ])
 
       setClient(clientRes[0] || null)
       setArticles(articlesRes)
       setPosts(postsRes)
+      setLastPlan(plansRes[0] || null)
+      setLastMail(mailsRes[0] || null)
       setLoading(false)
     }
     fetchData()
@@ -83,6 +89,8 @@ export default function ClientDetailPage() {
         }),
       })
       if (res.ok) {
+        const created = await res.json()
+        setLastPlan(created)
         alert('Plan mis en file d\'attente : la génération démarrera sous peu (agent n8n toutes les 15 min).')
       } else {
         const err = await res.json()
@@ -102,6 +110,8 @@ export default function ClientDetailPage() {
         body: JSON.stringify({ client_id: client!.id, date_debut: dateDebut, date_fin: dateFin }),
       })
       if (res.ok) {
+        const created = await res.json()
+        setLastMail(created)
         alert('Mail hebdomadaire mis en file d\'attente : il partira sous peu (agent n8n toutes les 15 min).')
       } else {
         const err = await res.json()
@@ -190,6 +200,20 @@ export default function ClientDetailPage() {
           <button onClick={handleCreatePlan} className="btn-primary" disabled={creatingPlan}>
             {creatingPlan ? 'Envoi...' : 'Créer un plan'}
           </button>
+        </div>
+        <div className="mt-3 text-sm text-gray-600 space-y-1">
+          <p>
+            Dernier plan généré :{' '}
+            {lastPlan
+              ? `${new Date(lastPlan.created_at).toLocaleString('fr-FR')} (${lastPlan.status})`
+              : 'jamais'}
+          </p>
+          <p>
+            Dernier mail hebdomadaire envoyé :{' '}
+            {lastMail
+              ? `${new Date(lastMail.created_at).toLocaleString('fr-FR')} (${lastMail.status})`
+              : 'jamais'}
+          </p>
         </div>
       </div>
 
