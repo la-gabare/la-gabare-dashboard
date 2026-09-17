@@ -9,8 +9,8 @@ import ClientEditModal from '@/components/ClientEditModal'
 
 const abonnementQuotas: Record<string, string> = {
   village: '4 articles + 4 idées story / mois',
-  reserve: '6 articles + 6 posts + 2 carrousels + 8 idées story / mois',
-  grand_cru: '8 articles + 8 posts + 3 carrousels + 1 reel + 5 story / mois',
+  reserve: '8 articles + 8 idées story + 6 images/photos + 2 carrousels / mois',
+  grand_cru: '8 articles + 20 idées story + 8 images/photos + 3 carrousels + 1 vidéo / mois',
 }
 
 export default function ClientDetailPage() {
@@ -23,6 +23,7 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true)
   const [planDate, setPlanDate] = useState('')
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [creatingPlan, setCreatingPlan] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,8 +41,27 @@ export default function ClientDetailPage() {
     fetchData()
   }, [id])
 
-  const handleCreatePlan = () => {
-    alert('Action à paramétrer prochainement')
+  const handleCreatePlan = async () => {
+    setCreatingPlan(true)
+    try {
+      const res = await fetch('/api/plans-generation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: client!.id,
+          date_debut: planDate || new Date().toISOString().slice(0, 10),
+        }),
+      })
+      if (res.ok) {
+        alert('Plan mis en file d\'attente : la génération démarrera sous peu (agent n8n toutes les 15 min).')
+      } else {
+        const err = await res.json()
+        alert('Erreur: ' + err.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setCreatingPlan(false)
   }
 
   const handleSendWeeklyEmail = () => {
@@ -110,8 +130,8 @@ export default function ClientDetailPage() {
             onChange={(e) => setPlanDate(e.target.value)}
             className="px-3 py-2 border rounded-lg"
           />
-          <button onClick={handleCreatePlan} className="btn-primary">
-            Créer un plan
+          <button onClick={handleCreatePlan} className="btn-primary" disabled={creatingPlan}>
+            {creatingPlan ? 'Envoi...' : 'Créer un plan'}
           </button>
           <button onClick={handleSendWeeklyEmail} className="btn-primary">
             📧 Envoyer le mail hebdomadaire

@@ -25,8 +25,25 @@ export default function ClientsPage() {
     fetchClients()
   }, [])
 
-  const handleCreatePlan = (client: Client) => {
-    alert('Action à paramétrer prochainement')
+  const handleCreatePlan = async (client: Client) => {
+    try {
+      const res = await fetch('/api/plans-generation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: client.id,
+          date_debut: new Date().toISOString().slice(0, 10),
+        }),
+      })
+      if (res.ok) {
+        alert('Plan mis en file d\'attente pour ' + client.nom_domaine + '.')
+      } else {
+        const err = await res.json()
+        alert('Erreur: ' + err.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
   }
 
   const handleSendWeeklyEmail = (client: Client) => {
