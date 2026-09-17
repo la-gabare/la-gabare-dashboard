@@ -27,6 +27,7 @@ export default function PostsPanel() {
   })
   const [uploading, setUploading] = useState(false)
   const [contentMode, setContentMode] = useState<'markdown' | 'html'>('markdown')
+  const [publishingId, setPublishingId] = useState<number | null>(null)
 
   const fetchData = async () => {
     setLoading(true)
@@ -130,6 +131,30 @@ export default function PostsPanel() {
   }
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || `#${id}`
+
+  const publishPost = async (id: number) => {
+    if (!confirm('Publier ce post sur Instagram/Facebook maintenant ?')) return
+    setPublishingId(id)
+    try {
+      const res = await fetch('/api/admin-publish-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: id }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert('✓ Publié')
+        fetchData()
+      } else {
+        alert('Erreur: ' + data.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setPublishingId(null)
+  }
+
+  const isVideo = (url: string) => /\.(mp4|mov|webm)$/i.test(url)
 
   return (
     <div>
@@ -270,6 +295,7 @@ export default function PostsPanel() {
             <thead className="bg-gray-100 border-b">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Client</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Média</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Contenu</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Réseau/Format</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Date prévue</th>
@@ -281,6 +307,19 @@ export default function PostsPanel() {
               {posts.map((p) => (
                 <tr key={p.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm">{clientName(p.client_id)}</td>
+                  <td className="px-4 py-3">
+                    {p.media_url ? (
+                      isVideo(p.media_url) ? (
+                        <video src={p.media_url} className="w-14 h-14 object-cover rounded" muted />
+                      ) : (
+                        <a href={p.media_url} target="_blank" rel="noopener noreferrer">
+                          <img src={p.media_url} alt="" className="w-14 h-14 object-cover rounded" />
+                        </a>
+                      )
+                    ) : (
+                      <span className="text-xs text-gray-400">Aucun média</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-sm max-w-xs">
                     <p className="truncate">{p.contenu}</p>
                     {p.consignes_media && (
@@ -302,7 +341,16 @@ export default function PostsPanel() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 space-x-2 whitespace-nowrap">
+                    {p.media_url && p.status !== 'publie' && (
+                      <button
+                        onClick={() => publishPost(p.id)}
+                        disabled={publishingId === p.id}
+                        className="px-3 py-1 bg-wine text-white rounded text-sm hover:opacity-90 disabled:opacity-50"
+                      >
+                        {publishingId === p.id ? 'Publication...' : '🚀 Publier'}
+                      </button>
+                    )}
                     <button
                       onClick={() => deleteAdminPost(p.id)}
                       className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
