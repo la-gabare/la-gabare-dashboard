@@ -1,7 +1,22 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
+import { Tache, Client } from '@/lib/types'
+
+const prioriteBadge: Record<string, string> = {
+  basse: 'badge-info',
+  normale: 'badge-warning',
+  haute: 'badge-danger',
+}
+
+const statuts = ['a_faire', 'en_cours', 'terminee']
+const statutLabels: Record<string, string> = {
+  a_faire: 'À faire',
+  en_cours: 'En cours',
+  terminee: 'Terminée',
+}
 
 export default function Home() {
   const [counts, setCounts] = useState({
@@ -10,28 +25,48 @@ export default function Home() {
     articlesEnAttente: 0,
     postsEnAttente: 0,
   })
+  const [taches, setTaches] = useState<Tache[]>([])
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
+
+  const fetchTaches = async () => {
+    const data = await fetchAdminData<Tache>('taches', { order_column: 'created_at', order_asc: 'false' })
+    setTaches(data.filter((t) => t.statut !== 'terminee'))
+  }
 
   useEffect(() => {
     const fetchCounts = async () => {
-      const [leads, clients, articles, posts] = await Promise.all([
+      const [leads, clientsRes, articles, posts] = await Promise.all([
         fetchAdminData('leads'),
-        fetchAdminData('clients', { eq_column: 'statut', eq_value: 'actif' }),
+        fetchAdminData<Client>('clients', { eq_column: 'statut', eq_value: 'actif' }),
         fetchAdminData('articles', { eq_column: 'status', eq_value: 'brouillon' }),
         fetchAdminData('posts', { eq_column: 'status', eq_value: 'brouillon' }),
       ])
 
       setCounts({
         leads: leads.length,
-        clients: clients.length,
+        clients: clientsRes.length,
         articlesEnAttente: articles.length,
         postsEnAttente: posts.length,
       })
+      setClients(clientsRes)
       setLoading(false)
     }
 
     fetchCounts()
+    fetchTaches()
   }, [])
+
+  const updateStatut = async (id: number, statut: string) => {
+    await fetch('/api/taches', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, statut }),
+    })
+    fetchTaches()
+  }
+
+  const clientName = (id?: number) => (id ? clients.find((c) => c.id === id)?.nom_domaine : null)
 
   if (loading) {
     return <div className="container-dashboard">Chargement...</div>
@@ -55,6 +90,52 @@ export default function Home() {
             <p className="text-3xl font-bold text-wine mt-2">{card.value}</p>
           </a>
         ))}
+      </div>
+
+      <div className="card mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Actions à faire ({taches.length})</h2>
+          <Link href="/taches" className="text-wine font-semibold text-sm hover:underline">
+            Voir toutes les tâches →
+          </Link>
+        </div>
+        {taches.length === 0 ? (
+          <p className="text-gray-500 text-sm">Aucune action en attente</p>
+        ) : (
+          <div className="space-y-2">
+            {taches.map((t) => (
+              <div key={t.id} className="flex justify-between items-center border-b pb-2">
+                <div>
+                  <p className="font-medium">
+                    {t.titre}
+                    {clientName(t.client_id) && (
+                      <span className="text-gray-500 font-normal"> — {clientName(t.client_id)}</span>
+                    )}
+                  </p>
+                  {t.description && <p className="text-xs text-gray-500 mt-1 max-w-xl">{t.description}</p>}
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-3">
+                  <span className={`badge ${prioriteBadge[t.priorite] || 'badge-info'}`}>{t.priorite}</span>
+                  <select
+                    value={t.statut}
+                    onChange={(e) => updateStatut(t.id, e.target.value)}
+                    className="px-2 py-1 border rounded text-sm"
+                  >
+                    {statuts.map((s) => (
+                      <option key={s} value={s}>{statutLabels[s]}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => updateStatut(t.id, 'terminee')}
+                    className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+                  >
+                    Terminer
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
