@@ -4,7 +4,7 @@ import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post } from '@/lib/types'
-import { CalendarPlus, Mail, ChevronDown, ChevronRight, Folder } from 'lucide-react'
+import { CalendarPlus, ChevronDown, ChevronRight, Folder } from 'lucide-react'
 
 const abonnementLabels: Record<string, string> = {
   village: 'Village',
@@ -28,6 +28,15 @@ const weekOfMonth = (dateStr: string) => {
 const monthLabel = (mois: string) => {
   const label = new Date(mois + '-01T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
   return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+const weekRange = (mois: string, w: number) => {
+  const [y, m] = mois.split('-').map(Number)
+  const daysInMonth = new Date(y, m, 0).getDate()
+  const start = (w - 1) * 7 + 1
+  const end = Math.min(w < 4 ? w * 7 : daysInMonth, daysInMonth)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return { start: `${mois}-${pad(start)}`, end: `${mois}-${pad(end)}` }
 }
 
 export default function ClientsPage() {
@@ -69,12 +78,12 @@ export default function ClientsPage() {
     }
   }
 
-  const handleSendWeeklyEmail = async (client: Client) => {
+  const handleSendWeeklyEmail = async (client: Client, dateDebut: string, dateFin: string) => {
     try {
       const res = await fetch('/api/mail-hebdo-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_id: client.id }),
+        body: JSON.stringify({ client_id: client.id, date_debut: dateDebut, date_fin: dateFin }),
       })
       if (res.ok) {
         alert('Mail hebdomadaire mis en file d\'attente pour ' + client.nom_domaine + '.')
@@ -175,13 +184,6 @@ export default function ClientsPage() {
                           >
                             <CalendarPlus size={16} />
                           </button>
-                          <button
-                            onClick={() => handleSendWeeklyEmail(client)}
-                            title="Envoyer le mail hebdomadaire"
-                            className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
-                          >
-                            <Mail size={16} />
-                          </button>
                         </td>
                       </tr>
                       {expandedClient === client.id && (
@@ -239,6 +241,17 @@ export default function ClientsPage() {
                                                         </div>
                                                       ))
                                                     )}
+                                                    <div className="pt-2 flex justify-end">
+                                                      <button
+                                                        onClick={() => {
+                                                          const { start, end } = weekRange(m, w)
+                                                          handleSendWeeklyEmail(client, start, end)
+                                                        }}
+                                                        className="px-3 py-1 bg-wine text-white rounded text-xs hover:opacity-90"
+                                                      >
+                                                        📧 Envoyer le mail hebdomadaire (Semaine {w})
+                                                      </button>
+                                                    </div>
                                                   </div>
                                                 )}
                                               </div>

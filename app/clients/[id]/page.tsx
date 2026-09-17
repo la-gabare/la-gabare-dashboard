@@ -32,6 +32,15 @@ const monthLabel = (mois: string) => {
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
+const weekRange = (mois: string, w: number) => {
+  const [y, m] = mois.split('-').map(Number)
+  const daysInMonth = new Date(y, m, 0).getDate()
+  const start = (w - 1) * 7 + 1
+  const end = Math.min(w < 4 ? w * 7 : daysInMonth, daysInMonth)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return { start: `${mois}-${pad(start)}`, end: `${mois}-${pad(end)}` }
+}
+
 export default function ClientDetailPage() {
   const params = useParams()
   const id = params.id as string
@@ -85,12 +94,12 @@ export default function ClientDetailPage() {
     setCreatingPlan(false)
   }
 
-  const handleSendWeeklyEmail = async () => {
+  const handleSendWeeklyEmail = async (dateDebut: string, dateFin: string) => {
     try {
       const res = await fetch('/api/mail-hebdo-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_id: client!.id }),
+        body: JSON.stringify({ client_id: client!.id, date_debut: dateDebut, date_fin: dateFin }),
       })
       if (res.ok) {
         alert('Mail hebdomadaire mis en file d\'attente : il partira sous peu (agent n8n toutes les 15 min).')
@@ -181,9 +190,6 @@ export default function ClientDetailPage() {
           <button onClick={handleCreatePlan} className="btn-primary" disabled={creatingPlan}>
             {creatingPlan ? 'Envoi...' : 'Créer un plan'}
           </button>
-          <button onClick={handleSendWeeklyEmail} className="btn-primary">
-            📧 Envoyer le mail hebdomadaire
-          </button>
         </div>
       </div>
 
@@ -236,6 +242,17 @@ export default function ClientDetailPage() {
                                     </div>
                                   ))
                                 )}
+                                <div className="pt-2 flex justify-end">
+                                  <button
+                                    onClick={() => {
+                                      const { start, end } = weekRange(m, w)
+                                      handleSendWeeklyEmail(start, end)
+                                    }}
+                                    className="px-3 py-1 bg-wine text-white rounded text-xs hover:opacity-90"
+                                  >
+                                    📧 Envoyer le mail hebdomadaire (Semaine {w})
+                                  </button>
+                                </div>
                               </div>
                             )}
                           </div>
