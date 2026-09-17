@@ -28,6 +28,7 @@ export default function PostsPanel() {
   const [uploading, setUploading] = useState(false)
   const [contentMode, setContentMode] = useState<'markdown' | 'html'>('markdown')
   const [publishingId, setPublishingId] = useState<number | null>(null)
+  const [enhancingId, setEnhancingId] = useState<number | null>(null)
 
   const fetchData = async () => {
     setLoading(true)
@@ -155,6 +156,37 @@ export default function PostsPanel() {
   }
 
   const isVideo = (url: string) => /\.(mp4|mov|webm)$/i.test(url)
+
+  const enhancePost = async (id: number) => {
+    if (!confirm('Améliorer cette photo avec l\'IA ? Elle remplacera le média envoyé par le client.')) return
+    setEnhancingId(id)
+    try {
+      const res = await fetch('/api/enhance-post-media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: id }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert('✓ Photo améliorée')
+        fetchData()
+      } else {
+        alert('Erreur: ' + data.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setEnhancingId(null)
+  }
+
+  const schedulePost = async (id: number) => {
+    await fetch('/api/posts', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: 'programme' }),
+    })
+    fetchData()
+  }
 
   return (
     <div>
@@ -343,13 +375,30 @@ export default function PostsPanel() {
                   </td>
                   <td className="px-4 py-3 space-x-2 whitespace-nowrap">
                     {p.media_url && p.status !== 'publie' && (
-                      <button
-                        onClick={() => publishPost(p.id)}
-                        disabled={publishingId === p.id}
-                        className="px-3 py-1 bg-wine text-white rounded text-sm hover:opacity-90 disabled:opacity-50"
-                      >
-                        {publishingId === p.id ? 'Publication...' : '🚀 Publier'}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => enhancePost(p.id)}
+                          disabled={enhancingId === p.id}
+                          className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
+                        >
+                          {enhancingId === p.id ? 'Amélioration...' : '✨ Améliorer'}
+                        </button>
+                        {p.status !== 'programme' && (
+                          <button
+                            onClick={() => schedulePost(p.id)}
+                            className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                          >
+                            📅 Programmer
+                          </button>
+                        )}
+                        <button
+                          onClick={() => publishPost(p.id)}
+                          disabled={publishingId === p.id}
+                          className="px-3 py-1 bg-wine text-white rounded text-sm hover:opacity-90 disabled:opacity-50"
+                        >
+                          {publishingId === p.id ? 'Publication...' : '🚀 Publier'}
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={() => deleteAdminPost(p.id)}
