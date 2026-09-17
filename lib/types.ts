@@ -166,9 +166,19 @@ export interface Newsletter {
   created_at: string
   client_id: number
   mois: string
+  titre?: string
   contenu?: string
   articles_inclus?: number[]
   status?: string
+  sent_at?: string
+}
+
+export interface NewsletterAbonne {
+  id: number
+  created_at: string
+  client_id: number
+  email: string
+  nom?: string
 }
 
 export interface Tache {

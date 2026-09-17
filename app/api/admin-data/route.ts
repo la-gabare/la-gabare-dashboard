@@ -16,6 +16,7 @@ const ALLOWED_TABLES = [
   'mail_hebdo_requests',
   'client_google_accounts',
   'avis_google',
+  'newsletter_abonnes',
 ]
 
 export async function GET(req: NextRequest) {
