@@ -482,7 +482,20 @@ export default function CreateurSitePage() {
         </div>
 
         <div className="space-y-2 border rounded-lg p-3">
-          <label className="block text-sm font-semibold">Mise en page (optionnel)</label>
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-semibold">Mise en page (optionnel)</label>
+            <button
+              type="button"
+              onClick={() => {
+                const others = layoutOptions.filter((o) => o.value !== form.style_mise_en_page)
+                const pick = (others.length ? others : layoutOptions)[Math.floor(Math.random() * (others.length ? others.length : layoutOptions.length))]
+                setForm({ ...form, style_mise_en_page: pick.value })
+              }}
+              className="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50"
+            >
+              🎲 Aléatoire
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             {layoutOptions.map((opt) => (
               <button
@@ -509,7 +522,20 @@ export default function CreateurSitePage() {
         </div>
 
         <div className="space-y-2 border rounded-lg p-3">
-          <label className="block text-sm font-semibold">Polices (optionnel)</label>
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-semibold">Polices (optionnel)</label>
+            <button
+              type="button"
+              onClick={() => {
+                const others = fontPairings.filter((f) => f.name !== form.style_polices)
+                const pick = (others.length ? others : fontPairings)[Math.floor(Math.random() * (others.length ? others.length : fontPairings.length))]
+                setForm({ ...form, style_polices: pick.name })
+              }}
+              className="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50"
+            >
+              🎲 Aléatoire
+            </button>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {fontPairings.map((f) => (
               <button
