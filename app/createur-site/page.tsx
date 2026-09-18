@@ -17,6 +17,44 @@ const colorPalettes = [
   { name: 'Blanc minéral', principale: '#2B2B28', secondaire: '#FFFFFF', accent: '#A8A296' },
   { name: 'Champagne doré', principale: '#3E3226', secondaire: '#FAF6EC', accent: '#E0B84B' },
 ]
+const fontPairings = [
+  { name: 'Or vieilli (par défaut)', identity: 'Playfair Display', body: 'DM Sans' },
+  { name: 'Cormorant & Lato', identity: 'Cormorant Garamond', body: 'Lato' },
+  { name: 'Marcellus & Work Sans', identity: 'Marcellus', body: 'Work Sans' },
+  { name: 'Fraunces & Inter', identity: 'Fraunces', body: 'Inter' },
+  { name: 'Libre Baskerville & Nunito', identity: 'Libre Baskerville', body: 'Nunito Sans' },
+  { name: 'Bodoni Moda & Karla', identity: 'Bodoni Moda', body: 'Karla' },
+  { name: 'EB Garamond & Mulish', identity: 'EB Garamond', body: 'Mulish' },
+  { name: 'Abril Fatface & Poppins', identity: 'Abril Fatface', body: 'Poppins' },
+  { name: 'Crimson Pro & Manrope', identity: 'Crimson Pro', body: 'Manrope' },
+  { name: 'Cinzel & Jost', identity: 'Cinzel', body: 'Jost' },
+]
+const GOOGLE_FONTS_PREVIEW_URL =
+  'https://fonts.googleapis.com/css2?' +
+  [
+    'family=Playfair+Display:wght@600;700',
+    'family=DM+Sans:wght@400;500',
+    'family=Cormorant+Garamond:wght@600;700',
+    'family=Lato:wght@400',
+    'family=Marcellus',
+    'family=Work+Sans:wght@400;500',
+    'family=Fraunces:wght@600;700',
+    'family=Inter:wght@400;500',
+    'family=Libre+Baskerville:wght@400;700',
+    'family=Nunito+Sans:wght@400;600',
+    'family=Bodoni+Moda:wght@600;700',
+    'family=Karla:wght@400;500',
+    'family=EB+Garamond:wght@600;700',
+    'family=Mulish:wght@400;500',
+    'family=Abril+Fatface',
+    'family=Poppins:wght@400;500',
+    'family=Crimson+Pro:wght@600;700',
+    'family=Manrope:wght@400;500',
+    'family=Cinzel:wght@600;700',
+    'family=Jost:wght@400;500',
+  ].join('&') +
+  '&display=swap'
+
 const layoutOptions = [
   {
     value: 'classique',
@@ -129,6 +167,7 @@ export default function CreateurSitePage() {
     couleur_accent: '',
     couleurs_notes: '',
     style_mise_en_page: '',
+    style_polices: '',
     media_urls: [] as string[],
   })
 
@@ -147,6 +186,15 @@ export default function CreateurSitePage() {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    if (document.querySelector('link[data-font-preview]')) return
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = GOOGLE_FONTS_PREVIEW_URL
+    link.setAttribute('data-font-preview', 'true')
+    document.head.appendChild(link)
+  }, [])
+
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || `#${id}`
 
   const handleClientChange = (clientId: string) => {
@@ -163,6 +211,7 @@ export default function CreateurSitePage() {
         couleur_accent: '',
         couleurs_notes: '',
         style_mise_en_page: '',
+        style_polices: '',
       }))
       return
     }
@@ -233,6 +282,11 @@ export default function CreateurSitePage() {
         .filter(Boolean)
         .join(' — ') || null
 
+      const chosenFonts = fontPairings.find((f) => f.name === form.style_polices)
+      const polices_souhaitees = chosenFonts
+        ? `Titres : ${chosenFonts.identity}, Texte : ${chosenFonts.body}`
+        : null
+
       const res = await fetch('/api/sites-generes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -245,6 +299,7 @@ export default function CreateurSitePage() {
           demande: form.demande || null,
           couleurs_souhaitees,
           style_mise_en_page: form.style_mise_en_page || null,
+          polices_souhaitees,
           media_urls: form.media_urls,
         }),
       })
@@ -261,6 +316,7 @@ export default function CreateurSitePage() {
           couleur_accent: '',
           couleurs_notes: '',
           style_mise_en_page: '',
+          style_polices: '',
           media_urls: [],
         })
         alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
@@ -449,6 +505,35 @@ export default function CreateurSitePage() {
           </div>
           <p className="text-xs text-gray-500">
             Laisse sans sélection pour que l&apos;IA choisisse la mise en page la plus adaptée au client.
+          </p>
+        </div>
+
+        <div className="space-y-2 border rounded-lg p-3">
+          <label className="block text-sm font-semibold">Polices (optionnel)</label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {fontPairings.map((f) => (
+              <button
+                key={f.name}
+                type="button"
+                onClick={() => setForm({ ...form, style_polices: form.style_polices === f.name ? '' : f.name })}
+                className={`text-left px-3 py-2 border rounded-lg transition ${
+                  form.style_polices === f.name
+                    ? 'border-wine bg-wine/5 ring-1 ring-wine'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-lg leading-tight truncate" style={{ fontFamily: `'${f.identity}', serif` }}>
+                  Domaine Exemple
+                </div>
+                <div className="text-xs text-gray-600 truncate" style={{ fontFamily: `'${f.body}', sans-serif` }}>
+                  Vinificateurs depuis 1962
+                </div>
+                <div className="text-xs text-gray-400 mt-1">{f.name}</div>
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500">
+            Laisse sans sélection pour que l&apos;IA choisisse les polices les plus adaptées au client.
           </p>
         </div>
 

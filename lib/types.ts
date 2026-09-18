@@ -192,6 +192,7 @@ export interface SiteGenere {
   demande?: string
   couleurs_souhaitees?: string
   style_mise_en_page?: string
+  polices_souhaitees?: string
   media_urls?: string[]
   html_genere?: string
   status?: string
