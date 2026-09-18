@@ -5,6 +5,18 @@ import { fetchAdminData } from '@/lib/admin-data'
 import { Client, SiteGenere } from '@/lib/types'
 
 const packs = ['essentiel', 'pro', 'premium']
+const colorPalettes = [
+  { name: 'Or vieilli (par défaut)', principale: '#4A3728', secondaire: '#F8F4EF', accent: '#C8A96E' },
+  { name: 'Bordeaux profond', principale: '#3B0A14', secondaire: '#F5EDE7', accent: '#9C2B3A' },
+  { name: 'Vert bouteille', principale: '#1F3B2C', secondaire: '#F4F1E8', accent: '#7A8B69' },
+  { name: 'Ardoise & cuivre', principale: '#2E3238', secondaire: '#EFEAE3', accent: '#B87333' },
+  { name: 'Rosé poudré', principale: '#4A3540', secondaire: '#FBF3F0', accent: '#D98A9B' },
+  { name: 'Terre de Sienne', principale: '#5C3A21', secondaire: '#F6EEE1', accent: '#D97D3D' },
+  { name: 'Nuit étoilée', principale: '#10131A', secondaire: '#EDEFF3', accent: '#C9A66B' },
+  { name: 'Lavande de Provence', principale: '#3A3552', secondaire: '#F5F1F8', accent: '#8E7CC3' },
+  { name: 'Blanc minéral', principale: '#2B2B28', secondaire: '#FFFFFF', accent: '#A8A296' },
+  { name: 'Champagne doré', principale: '#3E3226', secondaire: '#FAF6EC', accent: '#E0B84B' },
+]
 const layoutOptions = [
   {
     value: 'classique',
@@ -325,6 +337,44 @@ export default function CreateurSitePage() {
         />
         <div className="space-y-2 border rounded-lg p-3">
           <label className="block text-sm font-semibold">Palette de couleurs (optionnel)</label>
+
+          <div className="space-y-1.5">
+            <div className="text-xs font-medium text-gray-600">Palettes suggérées (clique pour appliquer)</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {colorPalettes.map((p) => {
+                const active =
+                  form.couleur_principale === p.principale &&
+                  form.couleur_secondaire === p.secondaire &&
+                  form.couleur_accent === p.accent
+                return (
+                  <button
+                    key={p.name}
+                    type="button"
+                    title={p.name}
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        couleur_principale: p.principale,
+                        couleur_secondaire: p.secondaire,
+                        couleur_accent: p.accent,
+                      })
+                    }
+                    className={`flex flex-col items-center gap-1 px-2 py-2 border rounded-lg text-center transition ${
+                      active ? 'border-wine ring-1 ring-wine' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="flex gap-0.5">
+                      <span className="w-4 h-4 rounded-full border border-white shadow-sm" style={{ background: p.principale }} />
+                      <span className="w-4 h-4 rounded-full border border-white shadow-sm" style={{ background: p.secondaire }} />
+                      <span className="w-4 h-4 rounded-full border border-white shadow-sm" style={{ background: p.accent }} />
+                    </span>
+                    <span className="text-xs leading-tight">{p.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             <div className="flex items-center gap-2">
               <input
