@@ -24,6 +24,7 @@ export default function CreateurSitePage() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [previewSite, setPreviewSite] = useState<SiteGenere | null>(null)
+  const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState({
     client_id: '',
     pack: 'essentiel',
@@ -31,6 +32,7 @@ export default function CreateurSitePage() {
     message_principal: '',
     elements_avant: '',
     demande: '',
+    media_urls: [] as string[],
   })
 
   const fetchData = async () => {
@@ -50,6 +52,37 @@ export default function CreateurSitePage() {
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || `#${id}`
 
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || !files.length) return
+
+    setUploading(true)
+    const uploaded: string[] = []
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('type', 'site-creator')
+        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        const data = await res.json()
+        if (res.ok) {
+          uploaded.push(data.url)
+        } else {
+          alert(`Erreur upload ${file.name}: ${data.error || 'inconnue'}`)
+        }
+      }
+      setForm((f) => ({ ...f, media_urls: [...f.media_urls, ...uploaded] }))
+    } catch (err) {
+      alert('Erreur upload: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setUploading(false)
+    e.target.value = ''
+  }
+
+  const removeMediaUrl = (url: string) => {
+    setForm((f) => ({ ...f, media_urls: f.media_urls.filter((u) => u !== url) }))
+  }
+
   const generate = async () => {
     if (!form.client_id) {
       alert('Sélectionne un client')
@@ -67,10 +100,11 @@ export default function CreateurSitePage() {
           message_principal: form.message_principal || null,
           elements_avant: form.elements_avant || null,
           demande: form.demande || null,
+          media_urls: form.media_urls,
         }),
       })
       if (res.ok) {
-        setForm({ client_id: '', pack: 'essentiel', slogan: '', message_principal: '', elements_avant: '', demande: '' })
+        setForm({ client_id: '', pack: 'essentiel', slogan: '', message_principal: '', elements_avant: '', demande: '', media_urls: [] })
         alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
         fetchData()
       } else {
@@ -150,6 +184,40 @@ export default function CreateurSitePage() {
           rows={3}
           className="w-full px-3 py-2 border rounded-lg"
         />
+
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold">Photos / vidéos du domaine</label>
+          <div className="flex gap-2">
+            <input
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              onChange={handleMediaUpload}
+              disabled={uploading}
+              className="flex-1 px-3 py-2 border rounded-lg"
+            />
+            {uploading && <span className="px-3 py-2 text-sm text-gray-600">Envoi...</span>}
+          </div>
+          {form.media_urls.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {form.media_urls.map((url) => (
+                <div key={url} className="relative">
+                  {/\.(mp4|mov|webm)$/i.test(url) ? (
+                    <video src={url} className="w-16 h-16 object-cover rounded border" muted />
+                  ) : (
+                    <img src={url} alt="" className="w-16 h-16 object-cover rounded border" />
+                  )}
+                  <button
+                    onClick={() => removeMediaUrl(url)}
+                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <button onClick={generate} disabled={generating} className="btn-primary">
           {generating ? 'Envoi...' : '✨ Générer'}
