@@ -228,6 +228,30 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
+      {client.profil_client_complet && Object.keys(client.profil_client_complet).length > 0 && (
+        <div className="card">
+          <h2 className="text-xl font-bold mb-4">Formulaire complet</h2>
+          <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+            {Object.entries(client.profil_client_complet).map(([key, value]) => {
+              const label = key
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, (c) => c.toUpperCase())
+              const displayValue = Array.isArray(value)
+                ? value.join(', ')
+                : typeof value === 'object' && value !== null
+                  ? JSON.stringify(value)
+                  : String(value ?? '-')
+              return (
+                <div key={key} className="flex justify-between gap-4 border-b pb-1">
+                  <dt className="text-gray-600 shrink-0">{label}</dt>
+                  <dd className="text-right">{displayValue || '-'}</dd>
+                </div>
+              )
+            })}
+          </dl>
+        </div>
+      )}
+
       <PaymentLinkGenerator client={client} />
 
       <div className="card">
