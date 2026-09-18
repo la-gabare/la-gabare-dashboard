@@ -52,6 +52,27 @@ export default function CreateurSitePage() {
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || `#${id}`
 
+  const handleClientChange = (clientId: string) => {
+    if (!clientId) {
+      setForm((f) => ({ ...f, client_id: '', slogan: '', message_principal: '', elements_avant: '', demande: '' }))
+      return
+    }
+
+    const client = clients.find((c) => c.id === parseInt(clientId))
+    const profil = (client?.profil_client_complet || {}) as Record<string, any>
+
+    const elements = [profil.cuvees_principales, client?.points_forts].filter(Boolean).join(' — ')
+
+    setForm((f) => ({
+      ...f,
+      client_id: clientId,
+      slogan: profil.slogan || '',
+      message_principal: profil.messages_cles || profil.positionnement || '',
+      elements_avant: elements,
+      demande: profil.remarques || '',
+    }))
+  }
+
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || !files.length) return
@@ -137,7 +158,7 @@ export default function CreateurSitePage() {
         <div className="grid grid-cols-2 gap-3">
           <select
             value={form.client_id}
-            onChange={(e) => setForm({ ...form, client_id: e.target.value })}
+            onChange={(e) => handleClientChange(e.target.value)}
             className="px-3 py-2 border rounded-lg"
           >
             <option value="">Sélectionner un client</option>
