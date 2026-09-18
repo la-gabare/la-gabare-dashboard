@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Home, Inbox, Users, BookOpen, Mail, BarChart3, CheckSquare } from 'lucide-react'
+import { Home, Inbox, Users, BookOpen, Mail, BarChart3, CheckSquare, Sparkles } from 'lucide-react'
 
 export default function Sidebar() {
   const navItems = [
@@ -11,6 +11,7 @@ export default function Sidebar() {
     { icon: BookOpen, label: 'Contenu', href: '/contenu' },
     { icon: CheckSquare, label: 'Tâches', href: '/taches' },
     { icon: Mail, label: 'Newsletters', href: '/newsletters' },
+    { icon: Sparkles, label: 'Créateur de site', href: '/createur-site' },
     { icon: BarChart3, label: 'Analytics', href: '/analytics' },
   ]
 

@@ -1,0 +1,237 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { fetchAdminData } from '@/lib/admin-data'
+import { Client, SiteGenere } from '@/lib/types'
+
+const packs = ['essentiel', 'pro', 'premium']
+const statusLabels: Record<string, string> = {
+  en_attente: 'En attente',
+  en_cours: 'Génération en cours',
+  a_valider: 'À valider',
+  erreur: 'Erreur',
+}
+const statusBadge: Record<string, string> = {
+  en_attente: 'badge-warning',
+  en_cours: 'badge-warning',
+  a_valider: 'badge-success',
+  erreur: 'badge-danger',
+}
+
+export default function CreateurSitePage() {
+  const [clients, setClients] = useState<Client[]>([])
+  const [sites, setSites] = useState<SiteGenere[]>([])
+  const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [previewSite, setPreviewSite] = useState<SiteGenere | null>(null)
+  const [form, setForm] = useState({
+    client_id: '',
+    pack: 'essentiel',
+    slogan: '',
+    message_principal: '',
+    elements_avant: '',
+    demande: '',
+  })
+
+  const fetchData = async () => {
+    setLoading(true)
+    const [clientsRes, sitesRes] = await Promise.all([
+      fetchAdminData<Client>('clients', { order_column: 'nom_domaine' }),
+      fetchAdminData<SiteGenere>('sites_generes', { order_column: 'created_at', order_asc: 'false' }),
+    ])
+    setClients(clientsRes)
+    setSites(sitesRes)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || `#${id}`
+
+  const generate = async () => {
+    if (!form.client_id) {
+      alert('Sélectionne un client')
+      return
+    }
+    setGenerating(true)
+    try {
+      const res = await fetch('/api/sites-generes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: parseInt(form.client_id),
+          pack: form.pack,
+          slogan: form.slogan || null,
+          message_principal: form.message_principal || null,
+          elements_avant: form.elements_avant || null,
+          demande: form.demande || null,
+        }),
+      })
+      if (res.ok) {
+        setForm({ client_id: '', pack: 'essentiel', slogan: '', message_principal: '', elements_avant: '', demande: '' })
+        alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
+        fetchData()
+      } else {
+        const err = await res.json()
+        alert('Erreur: ' + err.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setGenerating(false)
+  }
+
+  const deleteSite = async (id: number) => {
+    if (!confirm('Supprimer cette génération ?')) return
+    await fetch('/api/sites-generes', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    fetchData()
+  }
+
+  return (
+    <div className="container-dashboard">
+      <h1 className="text-3xl font-bold mb-8">Créateur de site</h1>
+
+      <div className="card mb-8 space-y-3">
+        <h2 className="text-xl font-bold mb-2">Générer un site</h2>
+
+        <div className="grid grid-cols-2 gap-3">
+          <select
+            value={form.client_id}
+            onChange={(e) => setForm({ ...form, client_id: e.target.value })}
+            className="px-3 py-2 border rounded-lg"
+          >
+            <option value="">Sélectionner un client</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>{c.nom_domaine}</option>
+            ))}
+          </select>
+          <select
+            value={form.pack}
+            onChange={(e) => setForm({ ...form, pack: e.target.value })}
+            className="px-3 py-2 border rounded-lg"
+          >
+            {packs.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </div>
+
+        <input
+          type="text"
+          placeholder="Slogan souhaité (optionnel)"
+          value={form.slogan}
+          onChange={(e) => setForm({ ...form, slogan: e.target.value })}
+          className="w-full px-3 py-2 border rounded-lg"
+        />
+        <textarea
+          placeholder="Message principal à transmettre"
+          value={form.message_principal}
+          onChange={(e) => setForm({ ...form, message_principal: e.target.value })}
+          rows={2}
+          className="w-full px-3 py-2 border rounded-lg"
+        />
+        <textarea
+          placeholder="Éléments à mettre en avant (cuvées, savoir-faire, terroir, distinctions...)"
+          value={form.elements_avant}
+          onChange={(e) => setForm({ ...form, elements_avant: e.target.value })}
+          rows={2}
+          className="w-full px-3 py-2 border rounded-lg"
+        />
+        <textarea
+          placeholder="Demande personnalisée (style, ton, remarques particulières...)"
+          value={form.demande}
+          onChange={(e) => setForm({ ...form, demande: e.target.value })}
+          rows={3}
+          className="w-full px-3 py-2 border rounded-lg"
+        />
+
+        <button onClick={generate} disabled={generating} className="btn-primary">
+          {generating ? 'Envoi...' : '✨ Générer'}
+        </button>
+      </div>
+
+      <div className="card">
+        <h2 className="text-xl font-bold mb-4">Générations</h2>
+        {loading ? (
+          <p className="text-gray-500">Chargement...</p>
+        ) : sites.length === 0 ? (
+          <p className="text-gray-500">Aucune génération pour le moment</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Client</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Pack</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sites.map((s) => (
+                  <tr key={s.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm">{clientName(s.client_id)}</td>
+                    <td className="px-4 py-3">
+                      <span className="badge badge-info">{s.pack}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm">{new Date(s.created_at).toLocaleString('fr-FR')}</td>
+                    <td className="px-4 py-3">
+                      <span className={`badge ${statusBadge[s.status || ''] || 'badge-info'}`}>
+                        {statusLabels[s.status || ''] || s.status}
+                      </span>
+                      {s.error_message && (
+                        <p className="text-xs text-red-500 mt-1 max-w-xs truncate" title={s.error_message}>{s.error_message}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 space-x-2 whitespace-nowrap">
+                      {s.html_genere && (
+                        <button
+                          onClick={() => setPreviewSite(s)}
+                          className="px-3 py-1 bg-wine text-white rounded text-sm hover:opacity-90"
+                        >
+                          👁 Aperçu
+                        </button>
+                      )}
+                      <button
+                        onClick={() => deleteSite(s.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                      >
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {previewSite && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setPreviewSite(null)}
+        >
+          <div className="bg-white rounded-lg w-full max-w-5xl h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="font-bold">Aperçu — {clientName(previewSite.client_id)} ({previewSite.pack})</h3>
+              <button onClick={() => setPreviewSite(null)} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Fermer</button>
+            </div>
+            <iframe
+              srcDoc={previewSite.html_genere}
+              className="flex-1 w-full"
+              title="Aperçu du site généré"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

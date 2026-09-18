@@ -181,6 +181,20 @@ export interface NewsletterAbonne {
   nom?: string
 }
 
+export interface SiteGenere {
+  id: number
+  created_at: string
+  client_id: number
+  pack: string
+  slogan?: string
+  message_principal?: string
+  elements_avant?: string
+  demande?: string
+  html_genere?: string
+  status?: string
+  error_message?: string
+}
+
 export interface Tache {
   id: number
   created_at: string
