@@ -32,6 +32,10 @@ export default function CreateurSitePage() {
     message_principal: '',
     elements_avant: '',
     demande: '',
+    couleur_principale: '',
+    couleur_secondaire: '',
+    couleur_accent: '',
+    couleurs_notes: '',
     media_urls: [] as string[],
   })
 
@@ -54,7 +58,18 @@ export default function CreateurSitePage() {
 
   const handleClientChange = (clientId: string) => {
     if (!clientId) {
-      setForm((f) => ({ ...f, client_id: '', slogan: '', message_principal: '', elements_avant: '', demande: '' }))
+      setForm((f) => ({
+        ...f,
+        client_id: '',
+        slogan: '',
+        message_principal: '',
+        elements_avant: '',
+        demande: '',
+        couleur_principale: '',
+        couleur_secondaire: '',
+        couleur_accent: '',
+        couleurs_notes: '',
+      }))
       return
     }
 
@@ -70,6 +85,10 @@ export default function CreateurSitePage() {
       message_principal: profil.messages_cles || profil.positionnement || '',
       elements_avant: elements,
       demande: profil.remarques || '',
+      couleur_principale: '',
+      couleur_secondaire: '',
+      couleur_accent: '',
+      couleurs_notes: profil.couleurs_souhaitees || '',
     }))
   }
 
@@ -111,6 +130,15 @@ export default function CreateurSitePage() {
     }
     setGenerating(true)
     try {
+      const swatches = [
+        form.couleur_principale && `principale ${form.couleur_principale}`,
+        form.couleur_secondaire && `secondaire ${form.couleur_secondaire}`,
+        form.couleur_accent && `accent ${form.couleur_accent}`,
+      ].filter(Boolean)
+      const couleurs_souhaitees = [swatches.length ? `Palette : ${swatches.join(', ')}` : '', form.couleurs_notes]
+        .filter(Boolean)
+        .join(' — ') || null
+
       const res = await fetch('/api/sites-generes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,11 +149,24 @@ export default function CreateurSitePage() {
           message_principal: form.message_principal || null,
           elements_avant: form.elements_avant || null,
           demande: form.demande || null,
+          couleurs_souhaitees,
           media_urls: form.media_urls,
         }),
       })
       if (res.ok) {
-        setForm({ client_id: '', pack: 'essentiel', slogan: '', message_principal: '', elements_avant: '', demande: '', media_urls: [] })
+        setForm({
+          client_id: '',
+          pack: 'essentiel',
+          slogan: '',
+          message_principal: '',
+          elements_avant: '',
+          demande: '',
+          couleur_principale: '',
+          couleur_secondaire: '',
+          couleur_accent: '',
+          couleurs_notes: '',
+          media_urls: [],
+        })
         alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
         fetchData()
       } else {
@@ -198,6 +239,58 @@ export default function CreateurSitePage() {
           rows={2}
           className="w-full px-3 py-2 border rounded-lg"
         />
+        <div className="space-y-2 border rounded-lg p-3">
+          <label className="block text-sm font-semibold">Palette de couleurs (optionnel)</label>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={form.couleur_principale || '#4A3728'}
+                onChange={(e) => setForm({ ...form, couleur_principale: e.target.value })}
+                className="w-10 h-10 rounded border cursor-pointer"
+              />
+              <div className="text-sm">
+                <div className="font-medium">Principale</div>
+                <div className="text-gray-500">{form.couleur_principale || 'auto'}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={form.couleur_secondaire || '#F8F4EF'}
+                onChange={(e) => setForm({ ...form, couleur_secondaire: e.target.value })}
+                className="w-10 h-10 rounded border cursor-pointer"
+              />
+              <div className="text-sm">
+                <div className="font-medium">Secondaire</div>
+                <div className="text-gray-500">{form.couleur_secondaire || 'auto'}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={form.couleur_accent || '#C8A96E'}
+                onChange={(e) => setForm({ ...form, couleur_accent: e.target.value })}
+                className="w-10 h-10 rounded border cursor-pointer"
+              />
+              <div className="text-sm">
+                <div className="font-medium">Accent</div>
+                <div className="text-gray-500">{form.couleur_accent || 'auto'}</div>
+              </div>
+            </div>
+          </div>
+          <input
+            type="text"
+            placeholder="Notes sur les couleurs / l'ambiance souhaitée (ex : tons chauds, terre et or, sobre...)"
+            value={form.couleurs_notes}
+            onChange={(e) => setForm({ ...form, couleurs_notes: e.target.value })}
+            className="w-full px-3 py-2 border rounded-lg"
+          />
+          <p className="text-xs text-gray-500">
+            Laisse les couleurs sur &quot;auto&quot; pour que l&apos;IA propose une palette adaptée au client. Choisis une couleur pour l&apos;imposer.
+          </p>
+        </div>
+
         <textarea
           placeholder="Demande personnalisée (style, ton, remarques particulières...)"
           value={form.demande}

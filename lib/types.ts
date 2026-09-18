@@ -190,6 +190,7 @@ export interface SiteGenere {
   message_principal?: string
   elements_avant?: string
   demande?: string
+  couleurs_souhaitees?: string
   media_urls?: string[]
   html_genere?: string
   status?: string
