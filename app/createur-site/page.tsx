@@ -27,6 +27,64 @@ const layoutOptions = [
     desc: 'Contrastes marqués, blocs pleine largeur, forte mise en avant visuelle.',
   },
 ]
+
+function LayoutPreview({ variant }: { variant: string }) {
+  const stroke = '#D8D0C6'
+  const dark = '#4A3728'
+  const accent = '#C8A96E'
+  const light = '#F1ECE4'
+
+  if (variant === 'moderne') {
+    return (
+      <svg viewBox="0 0 96 56" className="w-full h-14 rounded border bg-white">
+        <rect x="0" y="0" width="96" height="10" fill="white" stroke={stroke} strokeWidth="1" />
+        <rect x="34" y="3.5" width="12" height="3" fill={dark} />
+        <rect x="30" y="20" width="36" height="3" fill={dark} />
+        <rect x="24" y="27" width="48" height="1.5" fill={stroke} />
+        <rect x="30" y="34" width="14" height="8" fill={light} />
+        <rect x="52" y="34" width="14" height="8" fill={light} />
+      </svg>
+    )
+  }
+  if (variant === 'chaleureux') {
+    return (
+      <svg viewBox="0 0 96 56" className="w-full h-14 rounded border bg-white">
+        <rect x="0" y="0" width="96" height="9" fill={light} stroke={stroke} strokeWidth="1" />
+        <rect x="4" y="13" width="40" height="16" fill="none" stroke={stroke} strokeWidth="1" strokeDasharray="2 1.5" />
+        <rect x="48" y="13" width="44" height="16" fill="none" stroke={stroke} strokeWidth="1" strokeDasharray="2 1.5" />
+        <rect x="8" y="17" width="14" height="3" fill={dark} />
+        <rect x="52" y="17" width="14" height="3" fill={dark} />
+        <rect x="4" y="33" width="40" height="16" fill="none" stroke={stroke} strokeWidth="1" strokeDasharray="2 1.5" />
+        <rect x="48" y="33" width="44" height="16" fill="none" stroke={stroke} strokeWidth="1" strokeDasharray="2 1.5" />
+        <rect x="8" y="37" width="10" height="3" fill={accent} />
+        <rect x="52" y="37" width="10" height="3" fill={accent} />
+      </svg>
+    )
+  }
+  if (variant === 'affirme') {
+    return (
+      <svg viewBox="0 0 96 56" className="w-full h-14 rounded border bg-white">
+        <rect x="0" y="0" width="96" height="16" fill={dark} />
+        <rect x="6" y="6" width="24" height="4" fill={accent} />
+        <rect x="0" y="20" width="46" height="18" fill={accent} opacity="0.85" />
+        <rect x="50" y="20" width="46" height="18" fill={light} />
+        <rect x="0" y="42" width="96" height="14" fill={dark} opacity="0.9" />
+      </svg>
+    )
+  }
+  // classique (default)
+  return (
+    <svg viewBox="0 0 96 56" className="w-full h-14 rounded border bg-white">
+      <rect x="0" y="0" width="96" height="9" fill="white" stroke={stroke} strokeWidth="1" />
+      <rect x="40" y="3" width="16" height="3" fill={dark} />
+      <rect x="24" y="20" width="48" height="4" fill={dark} />
+      <rect x="42" y="27" width="12" height="1.5" fill={accent} />
+      <rect x="18" y="34" width="60" height="3" fill={stroke} />
+      <rect x="24" y="41" width="48" height="3" fill={stroke} />
+    </svg>
+  )
+}
+
 const statusLabels: Record<string, string> = {
   en_attente: 'En attente',
   en_cours: 'Génération en cours',
@@ -327,12 +385,13 @@ export default function CreateurSitePage() {
                 onClick={() =>
                   setForm({ ...form, style_mise_en_page: form.style_mise_en_page === opt.value ? '' : opt.value })
                 }
-                className={`text-left px-3 py-2 border rounded-lg transition ${
+                className={`text-left px-3 py-2 border rounded-lg transition space-y-2 ${
                   form.style_mise_en_page === opt.value
                     ? 'border-wine bg-wine/5 ring-1 ring-wine'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
+                <LayoutPreview variant={opt.value} />
                 <div className="font-medium text-sm">{opt.label}</div>
                 <div className="text-xs text-gray-500">{opt.desc}</div>
               </button>
