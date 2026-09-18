@@ -5,6 +5,28 @@ import { fetchAdminData } from '@/lib/admin-data'
 import { Client, SiteGenere } from '@/lib/types'
 
 const packs = ['essentiel', 'pro', 'premium']
+const layoutOptions = [
+  {
+    value: 'classique',
+    label: 'Classique & élégant',
+    desc: 'Sections centrées, espacements généreux, ambiance patrimoniale et intemporelle.',
+  },
+  {
+    value: 'moderne',
+    label: 'Moderne & épuré',
+    desc: 'Beaucoup de blanc, mise en page minimaliste, typographie fine et aérée.',
+  },
+  {
+    value: 'chaleureux',
+    label: 'Chaleureux & artisanal',
+    desc: 'Ambiance terroir, sections resserrées, bordures et touches décoratives.',
+  },
+  {
+    value: 'affirme',
+    label: 'Affirmé & contemporain',
+    desc: 'Contrastes marqués, blocs pleine largeur, forte mise en avant visuelle.',
+  },
+]
 const statusLabels: Record<string, string> = {
   en_attente: 'En attente',
   en_cours: 'Génération en cours',
@@ -36,6 +58,7 @@ export default function CreateurSitePage() {
     couleur_secondaire: '',
     couleur_accent: '',
     couleurs_notes: '',
+    style_mise_en_page: '',
     media_urls: [] as string[],
   })
 
@@ -69,6 +92,7 @@ export default function CreateurSitePage() {
         couleur_secondaire: '',
         couleur_accent: '',
         couleurs_notes: '',
+        style_mise_en_page: '',
       }))
       return
     }
@@ -150,6 +174,7 @@ export default function CreateurSitePage() {
           elements_avant: form.elements_avant || null,
           demande: form.demande || null,
           couleurs_souhaitees,
+          style_mise_en_page: form.style_mise_en_page || null,
           media_urls: form.media_urls,
         }),
       })
@@ -165,6 +190,7 @@ export default function CreateurSitePage() {
           couleur_secondaire: '',
           couleur_accent: '',
           couleurs_notes: '',
+          style_mise_en_page: '',
           media_urls: [],
         })
         alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
@@ -288,6 +314,32 @@ export default function CreateurSitePage() {
           />
           <p className="text-xs text-gray-500">
             Laisse les couleurs sur &quot;auto&quot; pour que l&apos;IA propose une palette adaptée au client. Choisis une couleur pour l&apos;imposer.
+          </p>
+        </div>
+
+        <div className="space-y-2 border rounded-lg p-3">
+          <label className="block text-sm font-semibold">Mise en page (optionnel)</label>
+          <div className="grid grid-cols-2 gap-3">
+            {layoutOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() =>
+                  setForm({ ...form, style_mise_en_page: form.style_mise_en_page === opt.value ? '' : opt.value })
+                }
+                className={`text-left px-3 py-2 border rounded-lg transition ${
+                  form.style_mise_en_page === opt.value
+                    ? 'border-wine bg-wine/5 ring-1 ring-wine'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-medium text-sm">{opt.label}</div>
+                <div className="text-xs text-gray-500">{opt.desc}</div>
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500">
+            Laisse sans sélection pour que l&apos;IA choisisse la mise en page la plus adaptée au client.
           </p>
         </div>
 

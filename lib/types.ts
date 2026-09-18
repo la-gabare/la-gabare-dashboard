@@ -191,6 +191,7 @@ export interface SiteGenere {
   elements_avant?: string
   demande?: string
   couleurs_souhaitees?: string
+  style_mise_en_page?: string
   media_urls?: string[]
   html_genere?: string
   status?: string
