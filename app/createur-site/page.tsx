@@ -880,12 +880,21 @@ export default function CreateurSitePage() {
                     </td>
                     <td className="px-4 py-3 space-x-2 whitespace-nowrap">
                       {s.html_genere && (
-                        <button
-                          onClick={() => setPreviewSite(s)}
-                          className="px-3 py-1 bg-wine text-white rounded text-sm hover:opacity-90"
-                        >
-                          👁 Aperçu
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setPreviewSite(s)}
+                            className="px-3 py-1 bg-wine text-white rounded text-sm hover:opacity-90"
+                          >
+                            👁 Aperçu
+                          </button>
+                          <a
+                            href={`/api/sites-generes/download?id=${s.id}`}
+                            className="inline-block px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-800"
+                            title="Archive ZIP prête à héberger : index.html, css, js et images"
+                          >
+                            ⬇ Télécharger
+                          </a>
+                        </>
                       )}
                       <button
                         onClick={() => deleteSite(s.id)}
