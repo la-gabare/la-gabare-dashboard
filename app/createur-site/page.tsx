@@ -181,13 +181,19 @@ function LayoutPreview({ variant }: { variant: string }) {
 const statusLabels: Record<string, string> = {
   en_attente: 'En attente',
   en_cours: 'Génération en cours',
-  a_valider: 'À valider',
+  a_valider: 'Aperçu à valider',
+  validee: 'Validé — site complet en file',
+  completion: 'Construction du site complet',
+  pret: 'Site complet prêt',
   erreur: 'Erreur',
 }
 const statusBadge: Record<string, string> = {
   en_attente: 'badge-warning',
   en_cours: 'badge-warning',
   a_valider: 'badge-success',
+  validee: 'badge-warning',
+  completion: 'badge-warning',
+  pret: 'badge-success',
   erreur: 'badge-danger',
 }
 
@@ -430,6 +436,31 @@ export default function CreateurSitePage() {
       alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
     }
     setGenerating(false)
+  }
+
+  const validerSite = async (s: SiteGenere) => {
+    if (
+      !confirm(
+        "Valider cet aperçu ?\n\nLe site complet sera construit à partir du modèle du pack (pages, dashboard, connexion). Cela relance une génération."
+      )
+    )
+      return
+    const res = await fetch('/api/sites-generes/valider', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: s.id }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert('Erreur: ' + (data.error || 'inconnue'))
+      return
+    }
+    alert(
+      `Site validé.\n\nIdentifiants du dashboard à transmettre au client :\n\n` +
+        `Adresse : ${data.admin_file}\nMot de passe : ${data.admin_password}\n\n` +
+        `Ces identifiants restent consultables ici, ils ne changeront plus.`
+    )
+    fetchData()
   }
 
   const deleteSite = async (id: number) => {
@@ -887,12 +918,25 @@ export default function CreateurSitePage() {
                           >
                             👁 Aperçu
                           </button>
+                          {s.status === 'a_valider' && (
+                            <button
+                              onClick={() => validerSite(s)}
+                              className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                              title="Construire le site complet à partir du modèle du pack"
+                            >
+                              ✅ Valider
+                            </button>
+                          )}
                           <a
                             href={`/api/sites-generes/download?id=${s.id}`}
                             className="inline-block px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-800"
-                            title="Archive ZIP prête à héberger : index.html, css, js et images"
+                            title={
+                              s.status === 'pret'
+                                ? 'Site complet : toutes les pages, le dashboard et la connexion'
+                                : 'Aperçu seul : la page d accueil. Valide pour obtenir le site complet.'
+                            }
                           >
-                            ⬇ Télécharger
+                            ⬇ {s.status === 'pret' ? 'Site complet' : 'Aperçu'}
                           </a>
                         </>
                       )}
