@@ -55,6 +55,8 @@ const GOOGLE_FONTS_PREVIEW_URL =
   ].join('&') +
   '&display=swap'
 
+type Cuvee = { nom: string; description: string; photo_url: string }
+
 const templateOptions = [
   { value: 1, label: 'Classique', desc: 'Accroche, chiffres clés, présentation sur deux colonnes puis grille de cuvées.', preview: 'classique' },
   { value: 2, label: 'Moderne', desc: 'Sections asymétriques alternées, grandes images pleine largeur.', preview: 'affirme' },
@@ -223,7 +225,34 @@ export default function CreateurSitePage() {
     hero_url: '',
     da_urls: [] as string[],
     media_urls: [] as string[],
+    cuvees: [] as Cuvee[],
   })
+
+  const ajouterCuvee = () =>
+    setForm((f) => ({ ...f, cuvees: [...f.cuvees, { nom: '', description: '', photo_url: '' }] }))
+
+  const modifierCuvee = (i: number, champ: keyof Cuvee, valeur: string) =>
+    setForm((f) => ({
+      ...f,
+      cuvees: f.cuvees.map((c, idx) => (idx === i ? { ...c, [champ]: valeur } : c)),
+    }))
+
+  const supprimerCuvee = (i: number) =>
+    setForm((f) => ({ ...f, cuvees: f.cuvees.filter((_, idx) => idx !== i) }))
+
+  const uploadPhotoCuvee = async (e: React.ChangeEvent<HTMLInputElement>, i: number) => {
+    const files = e.target.files
+    if (!files || !files.length) return
+    setUploading(true)
+    try {
+      const [url] = await sendFiles([files[0]], 'site-cuvee')
+      if (url) modifierCuvee(i, 'photo_url', url)
+    } catch (err) {
+      alert('Erreur upload: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setUploading(false)
+    e.target.value = ''
+  }
 
   const randomizeAll = () => {
     const pickFrom = <T,>(list: T[], current: T) => {
@@ -403,6 +432,7 @@ export default function CreateurSitePage() {
           hero_url: form.hero_url || null,
           da_urls: form.da_urls,
           media_urls: form.media_urls,
+          cuvees: form.cuvees.filter((c) => c.nom.trim() || c.description.trim()),
         }),
       })
       if (res.ok) {
@@ -425,6 +455,7 @@ export default function CreateurSitePage() {
           hero_url: '',
           da_urls: [],
           media_urls: [],
+          cuvees: [],
         })
         alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
         fetchData()
@@ -742,6 +773,81 @@ export default function CreateurSitePage() {
           rows={3}
           className="w-full px-3 py-2 border rounded-lg"
         />
+
+        <div className="space-y-3 border rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-semibold">Cuvées ({form.cuvees.length})</label>
+            <button
+              type="button"
+              onClick={ajouterCuvee}
+              className="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50"
+            >
+              + Ajouter une cuvée
+            </button>
+          </div>
+
+          {form.cuvees.length === 0 && (
+            <p className="text-xs text-gray-500">
+              Sans cuvée renseignée, l&apos;IA en inventera à partir du profil du domaine. Ajoute-les pour que la page
+              cuvées soit exacte.
+            </p>
+          )}
+
+          {form.cuvees.map((c, i) => (
+            <div key={i} className="border rounded-lg p-3 space-y-2 bg-gray-50">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Nom de la cuvée (ex : Cuvée Vieilles Vignes)"
+                    value={c.nom}
+                    onChange={(e) => modifierCuvee(i, 'nom', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                  <textarea
+                    placeholder="Description : cépage, millésime, élevage, notes de dégustation, accords..."
+                    value={c.description}
+                    onChange={(e) => modifierCuvee(i, 'description', e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                </div>
+                <div className="w-32 shrink-0 space-y-2">
+                  {c.photo_url ? (
+                    <div className="relative">
+                      <img src={c.photo_url} alt="" className="w-full h-28 object-cover rounded border bg-white" />
+                      <button
+                        type="button"
+                        onClick={() => modifierCuvee(i, 'photo_url', '')}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="h-28 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-white">
+                      Pas de photo
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => uploadPhotoCuvee(e, i)}
+                    disabled={uploading}
+                    className="w-full text-xs"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => supprimerCuvee(i)}
+                className="text-xs text-red-600 hover:underline"
+              >
+                Supprimer cette cuvée
+              </button>
+            </div>
+          ))}
+        </div>
 
         <div className="space-y-4 border rounded-lg p-3">
           <div className="flex items-center justify-between">
