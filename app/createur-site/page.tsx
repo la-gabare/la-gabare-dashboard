@@ -515,18 +515,23 @@ export default function CreateurSitePage() {
   }
 
   const genererPromptWoocommerceFromForm = async () => {
-    if (!form.cuvees.length) {
-      alert('Ajoute au moins une cuvée pour générer le prompt boutique.')
+    if (!form.client_id) {
+      alert('Sélectionne un client d\'abord.')
       return
     }
     const client = clients.find((c) => c.id === Number(form.client_id))
     const profil = (client?.profil_client_complet || {}) as Record<string, any>
     const cuvees = form.cuvees
 
+    const templateLabel = templateOptions.find((t) => t.value === form.template_choisi)?.label || 'Auto'
+    const skinLabel = skinOptions.find((s) => s.value === form.skin_choisi)?.label || 'Auto'
+    const fontLabel = fontPairings.find((f) => f.name === form.style_polices)?.name || 'Auto'
+
     const lignes = [
       'Tu crées une boutique WooCommerce pour un domaine viticole.',
+      'Elle doit avoir EXACTEMENT le même style et les mêmes couleurs que le site vitrine généré.',
       '',
-      '=== INFORMATIONS DU DOMAINE ===',
+      '=== INFORMATIONS COMPLÈTES DU DOMAINE ===',
       `Nom : ${client?.nom_domaine || 'Domaine'}`,
       `Région : ${client?.region || ''}`,
       `Appellation : ${client?.appellation || ''}`,
@@ -540,15 +545,27 @@ export default function CreateurSitePage() {
       profil.slogan && `Slogan : ${profil.slogan}`,
       profil.messages_cles && `Messages clés : ${profil.messages_cles}`,
       '',
+      '=== STYLES ET IDENTITÉ VISUELLE (À REPRODUIRE EXACTEMENT) ===',
+      `Structure de page : ${templateLabel}`,
+      `Style des éléments : ${skinLabel}`,
+      `Polices : ${fontLabel}`,
+      form.couleur_principale && `Couleur principale : ${form.couleur_principale}`,
+      form.couleur_accent && `Couleur accent : ${form.couleur_accent}`,
+      form.couleur_secondaire && `Couleur secondaire : ${form.couleur_secondaire}`,
+      '',
       '=== CUVÉES À CRÉER EN TANT QUE PRODUITS WOOCOMMERCE ===',
     ].filter(Boolean)
 
-    cuvees.forEach((c, i) => {
-      lignes.push(`${i + 1}. ${c.nom || `Cuvée ${i + 1}`}`)
-      if (c.description) lignes.push(`   Description : ${c.description}`)
-      if (c.photo_url) lignes.push(`   Photo : ${c.photo_url}`)
-      lignes.push('')
-    })
+    if (cuvees.length === 0) {
+      lignes.push('Aucune cuvée fournie. Crée 3-5 produits typiques pour ce domaine.')
+    } else {
+      cuvees.forEach((c, i) => {
+        lignes.push(`${i + 1}. ${c.nom || `Cuvée ${i + 1}`}`)
+        if (c.description) lignes.push(`   Description : ${c.description}`)
+        if (c.photo_url) lignes.push(`   Photo : ${c.photo_url}`)
+        lignes.push('')
+      })
+    }
 
     lignes.push(
       '=== STRUCTURE WOOCOMMERCE À CRÉER ===',
@@ -563,21 +580,23 @@ export default function CreateurSitePage() {
       '7. Étiquettes : cépage, millésime, terroir',
       '8. Stock : à mettre à jour après chaque vente',
       '',
-      '=== CONFIGURATION BOUTIQUE ===',
+      '=== CONFIGURATION BOUTIQUE (STYLE IDENTIQUE AU SITE VITRINE) ===',
       `Page d'accueil : "Nos cuvées à la vente"`,
-      'Logo : même logo que le site vitrine',
-      'Couleurs : reprendre la palette du site',
+      'Logo : EXACT même logo que le site vitrine',
+      'Couleurs : EXACT même palette que le site vitrine',
+      'Boutons et cartes : EXACT même style que le site vitrine',
+      'Polices : EXACT mêmes polices que le site vitrine',
       'Paiement : PayPal et/ou Stripe',
       'Livraison : zones géographiques et tarifs',
-      'Ton : ' + (client?.tone_voix || 'authentique et professionnel'),
+      'Ton : ' + (client?.tone_voix || 'authentique'),
       '',
-      'Crée les fiches produit WooCommerce prêtes à copier-coller.'
+      'Crée les fiches produit WooCommerce avec le même design que le site vitrine.'
     )
 
     const txt = `PROMPT WOOCOMMERCE — ${client?.nom_domaine || 'Domaine'}\n\n${lignes.join('\n')}`
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(txt)
-      alert('Prompt copié ✅\n\nColle-le sur Hostinger dans Claude pour créer la boutique.')
+      alert('Prompt copié ✅\n\nColle-le sur Hostinger dans Claude pour créer la boutique avec le même design.')
     } else {
       prompt('Copie ce prompt :', txt)
     }
@@ -1083,12 +1102,12 @@ export default function CreateurSitePage() {
           >
             🎲 Tout aléatoire
           </button>
-          {form.cuvees.length > 0 && (
+          {form.client_id && (
             <button
               type="button"
               onClick={genererPromptWoocommerceFromForm}
               className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
-              title="Génère le prompt pour créer la boutique WooCommerce"
+              title="Génère le prompt pour la boutique WooCommerce avec les styles du site"
             >
               📋 Prompt boutique
             </button>
