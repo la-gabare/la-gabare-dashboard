@@ -519,7 +519,7 @@ export default function CreateurSitePage() {
       alert('Ajoute au moins une cuvée pour générer le prompt boutique.')
       return
     }
-    const client = clients.find((c) => c.id === form.client_id)
+    const client = clients.find((c) => c.id === Number(form.client_id))
     const profil = (client?.profil_client_complet || {}) as Record<string, any>
     const cuvees = form.cuvees
 
