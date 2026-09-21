@@ -206,6 +206,7 @@ export default function CreateurSitePage() {
   const [generating, setGenerating] = useState(false)
   const [previewSite, setPreviewSite] = useState<SiteGenere | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [promptModal, setPromptModal] = useState<{ visible: boolean; prompt: string }>({ visible: false, prompt: '' })
   const [form, setForm] = useState({
     client_id: '',
     pack: 'essentiel',
@@ -594,12 +595,7 @@ export default function CreateurSitePage() {
     )
 
     const txt = `PROMPT WOOCOMMERCE — ${client?.nom_domaine || 'Domaine'}\n\n${lignes.join('\n')}`
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(txt)
-      alert('Prompt copié ✅\n\nColle-le sur Hostinger dans Claude pour créer la boutique avec le même design.')
-    } else {
-      prompt('Copie ce prompt :', txt)
-    }
+    setPromptModal({ visible: true, prompt: txt })
   }
 
   const genererPromptWoocommerce = async (s: SiteGenere) => {
@@ -1219,6 +1215,48 @@ export default function CreateurSitePage() {
               className="flex-1 w-full"
               title="Aperçu du site généré"
             />
+          </div>
+        </div>
+      )}
+
+      {promptModal.visible && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setPromptModal({ visible: false, prompt: '' })}
+        >
+          <div className="bg-white rounded-lg w-full max-w-3xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="font-bold">Aperçu du Prompt WooCommerce</h3>
+              <button onClick={() => setPromptModal({ visible: false, prompt: '' })} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Fermer</button>
+            </div>
+            <textarea
+              value={promptModal.prompt}
+              onChange={(e) => setPromptModal({ ...promptModal, prompt: e.target.value })}
+              className="flex-1 p-4 font-mono text-sm border-b resize-none"
+              placeholder="Prompt WooCommerce"
+            />
+            <div className="flex justify-end gap-2 p-4">
+              <button
+                onClick={() => setPromptModal({ visible: false, prompt: '' })}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(promptModal.prompt)
+                    alert('Prompt copié ✅\n\nColle-le sur Hostinger dans Claude pour créer la boutique avec le même design.')
+                  } else {
+                    prompt('Copie ce prompt :', promptModal.prompt)
+                  }
+                  setPromptModal({ visible: false, prompt: '' })
+                }}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              >
+                Copier
+              </button>
+            </div>
           </div>
         </div>
       )}
