@@ -65,8 +65,8 @@ export async function GET(req: NextRequest) {
     'Paiement : intégrer avec PayPal et/ou Stripe',
     'Livraison : zones géographiques et tarifs à définir',
     '',
-    'Produis les fiches produit WooCommerce pour chaque cuvée, prêtes à copier-coller.',
-  ]
+    'Produis les fiches produit WooCommerce pour chaque cuvée, prêtes à copier-coller.'
+  )
 
   return NextResponse.json({
     prompt: lignes.join('\n'),
