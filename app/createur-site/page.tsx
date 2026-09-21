@@ -326,13 +326,33 @@ export default function CreateurSitePage() {
 
     const elements = [profil.cuvees_principales, client?.points_forts].filter(Boolean).join(' — ')
 
+    // Remplir la demande avec TOUS les infos du client
+    const demandeBlocs = [
+      `=== FICHE COMPLÈTE DU CLIENT ===`,
+      `Domaine : ${client?.nom_domaine}`,
+      `Région : ${client?.region}`,
+      `Appellation : ${client?.appellation}`,
+      `Cépages : ${client?.cepages}`,
+      `Type de vin : ${client?.type_vin}`,
+      client?.histoire && `Histoire : ${client.histoire}`,
+      client?.points_forts && `Points forts : ${client.points_forts}`,
+      client?.public_cible && `Public cible : ${client.public_cible}`,
+      client?.style && `Style : ${client.style}`,
+      client?.tone_voix && `Ton de voix : ${client.tone_voix}`,
+      profil.slogan && `Slogan souhaité : ${profil.slogan}`,
+      profil.messages_cles && `Messages clés : ${profil.messages_cles}`,
+      profil.positionnement && `Positionnement : ${profil.positionnement}`,
+      profil.cuvees_principales && `Cuvées principales : ${profil.cuvees_principales}`,
+      profil.remarques && `Remarques additionnelles : ${profil.remarques}`,
+    ].filter(Boolean)
+
     setForm((f) => ({
       ...f,
       client_id: clientId,
       slogan: profil.slogan || '',
       message_principal: profil.messages_cles || profil.positionnement || '',
       elements_avant: elements,
-      demande: profil.remarques || '',
+      demande: demandeBlocs.join('\n'),
       couleur_principale: '',
       couleur_secondaire: '',
       couleur_accent: '',
@@ -500,45 +520,60 @@ export default function CreateurSitePage() {
       return
     }
     const client = clients.find((c) => c.id === form.client_id)
+    const profil = (client?.profil_client_complet || {}) as Record<string, any>
     const cuvees = form.cuvees
+
     const lignes = [
       'Tu crées une boutique WooCommerce pour un domaine viticole.',
       '',
       '=== INFORMATIONS DU DOMAINE ===',
       `Nom : ${client?.nom_domaine || 'Domaine'}`,
-      `Appellation : ${client?.appellation || ''}`,
       `Région : ${client?.region || ''}`,
+      `Appellation : ${client?.appellation || ''}`,
       `Cépages : ${client?.cepages || ''}`,
+      `Type : ${client?.type_vin || ''}`,
+      client?.histoire && `Histoire : ${client.histoire}`,
+      client?.points_forts && `Points forts : ${client.points_forts}`,
+      client?.public_cible && `Public cible : ${client.public_cible}`,
+      client?.style && `Style souhaité : ${client.style}`,
+      client?.tone_voix && `Ton : ${client.tone_voix}`,
+      profil.slogan && `Slogan : ${profil.slogan}`,
+      profil.messages_cles && `Messages clés : ${profil.messages_cles}`,
       '',
       '=== CUVÉES À CRÉER EN TANT QUE PRODUITS WOOCOMMERCE ===',
-    ]
+    ].filter(Boolean)
+
     cuvees.forEach((c, i) => {
       lignes.push(`${i + 1}. ${c.nom || `Cuvée ${i + 1}`}`)
       if (c.description) lignes.push(`   Description : ${c.description}`)
       if (c.photo_url) lignes.push(`   Photo : ${c.photo_url}`)
       lignes.push('')
     })
+
     lignes.push(
       '=== STRUCTURE WOOCOMMERCE À CRÉER ===',
       '',
       'Pour chaque cuvée :',
-      '1. Nom du produit : exactement tel que fourni',
+      '1. Nom : exactement tel que fourni',
       '2. Prix : laisse vide (à remplir manuellement)',
-      '3. Description courte : 50-100 mots, style gustatif et accords mets-vins',
-      '4. Description longue : la description complète fournie si disponible',
-      '5. Image : si une photo est fournie, la mettre en avant',
-      '6. Catégories : Vins Rouges / Vins Blancs / Rosés',
+      '3. Description courte : 50-100 mots, style gustatif et accords',
+      '4. Description longue : description complète fournie',
+      '5. Image : si photo fournie, la mettre en avant',
+      '6. Catégories : Vins Rouges / Blancs / Rosés',
       '7. Étiquettes : cépage, millésime, terroir',
-      '8. Stock : à mettre à jour',
-      '9. Attributs : variantes si plusieurs formats',
+      '8. Stock : à mettre à jour après chaque vente',
       '',
       '=== CONFIGURATION BOUTIQUE ===',
       `Page d'accueil : "Nos cuvées à la vente"`,
-      'Logo : même que le site vitrine',
-      'Couleurs : palette du site (accent/or)',
+      'Logo : même logo que le site vitrine',
+      'Couleurs : reprendre la palette du site',
       'Paiement : PayPal et/ou Stripe',
-      'Livraison : zones et tarifs à définir'
+      'Livraison : zones géographiques et tarifs',
+      'Ton : ' + (client?.tone_voix || 'authentique et professionnel'),
+      '',
+      'Crée les fiches produit WooCommerce prêtes à copier-coller.'
     )
+
     const txt = `PROMPT WOOCOMMERCE — ${client?.nom_domaine || 'Domaine'}\n\n${lignes.join('\n')}`
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(txt)
