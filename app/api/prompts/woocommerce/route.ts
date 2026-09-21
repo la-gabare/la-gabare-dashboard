@@ -59,13 +59,13 @@ export async function GET(req: NextRequest) {
     '9. Attributs : créer des variantes si plusieurs millésimes/formats',
     '',
     '=== CONFIGURATION BOUTIQUE ===',
-    `Page d'accueil boutique : "Nos cuvées à la vente"`,
-    `Logo : utiliser le même logo que le site vitrine`,
-    `Couleurs : reprendre la palette du site (accent/or)`,
-    `Paiement : intégrer avec PayPal et/ou Stripe`,
-    `Livraison : zones géographiques et tarifs à définir`,
+    'Page d\'accueil boutique : "Nos cuvées à la vente"',
+    'Logo : utiliser le même logo que le site vitrine',
+    'Couleurs : reprendre la palette du site (accent/or)',
+    'Paiement : intégrer avec PayPal et/ou Stripe',
+    'Livraison : zones géographiques et tarifs à définir',
     '',
-    `Produis les fiches produit WooCommerce pour chaque cuvée, prêtes à copier-coller.`,
+    'Produis les fiches produit WooCommerce pour chaque cuvée, prêtes à copier-coller.',
   ]
 
   return NextResponse.json({
