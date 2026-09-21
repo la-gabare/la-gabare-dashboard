@@ -494,6 +494,60 @@ export default function CreateurSitePage() {
     fetchData()
   }
 
+  const genererPromptWoocommerceFromForm = async () => {
+    if (!form.cuvees.length) {
+      alert('Ajoute au moins une cuvée pour générer le prompt boutique.')
+      return
+    }
+    const client = clients.find((c) => c.id === form.client_id)
+    const cuvees = form.cuvees
+    const lignes = [
+      'Tu crées une boutique WooCommerce pour un domaine viticole.',
+      '',
+      '=== INFORMATIONS DU DOMAINE ===',
+      `Nom : ${client?.nom_domaine || 'Domaine'}`,
+      `Appellation : ${client?.appellation || ''}`,
+      `Région : ${client?.region || ''}`,
+      `Cépages : ${client?.cepages || ''}`,
+      '',
+      '=== CUVÉES À CRÉER EN TANT QUE PRODUITS WOOCOMMERCE ===',
+    ]
+    cuvees.forEach((c, i) => {
+      lignes.push(`${i + 1}. ${c.nom || `Cuvée ${i + 1}`}`)
+      if (c.description) lignes.push(`   Description : ${c.description}`)
+      if (c.photo_url) lignes.push(`   Photo : ${c.photo_url}`)
+      lignes.push('')
+    })
+    lignes.push(
+      '=== STRUCTURE WOOCOMMERCE À CRÉER ===',
+      '',
+      'Pour chaque cuvée :',
+      '1. Nom du produit : exactement tel que fourni',
+      '2. Prix : laisse vide (à remplir manuellement)',
+      '3. Description courte : 50-100 mots, style gustatif et accords mets-vins',
+      '4. Description longue : la description complète fournie si disponible',
+      '5. Image : si une photo est fournie, la mettre en avant',
+      '6. Catégories : Vins Rouges / Vins Blancs / Rosés',
+      '7. Étiquettes : cépage, millésime, terroir',
+      '8. Stock : à mettre à jour',
+      '9. Attributs : variantes si plusieurs formats',
+      '',
+      '=== CONFIGURATION BOUTIQUE ===',
+      `Page d'accueil : "Nos cuvées à la vente"`,
+      'Logo : même que le site vitrine',
+      'Couleurs : palette du site (accent/or)',
+      'Paiement : PayPal et/ou Stripe',
+      'Livraison : zones et tarifs à définir'
+    )
+    const txt = `PROMPT WOOCOMMERCE — ${client?.nom_domaine || 'Domaine'}\n\n${lignes.join('\n')}`
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(txt)
+      alert('Prompt copié ✅\n\nColle-le sur Hostinger dans Claude pour créer la boutique.')
+    } else {
+      prompt('Copie ce prompt :', txt)
+    }
+  }
+
   const genererPromptWoocommerce = async (s: SiteGenere) => {
     const res = await fetch(`/api/prompts/woocommerce?id=${s.id}`)
     if (!res.ok) {
@@ -994,6 +1048,16 @@ export default function CreateurSitePage() {
           >
             🎲 Tout aléatoire
           </button>
+          {form.cuvees.length > 0 && (
+            <button
+              type="button"
+              onClick={genererPromptWoocommerceFromForm}
+              className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
+              title="Génère le prompt pour créer la boutique WooCommerce"
+            >
+              📋 Prompt boutique
+            </button>
+          )}
         </div>
       </div>
 
