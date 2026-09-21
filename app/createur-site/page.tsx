@@ -494,6 +494,22 @@ export default function CreateurSitePage() {
     fetchData()
   }
 
+  const genererPromptWoocommerce = async (s: SiteGenere) => {
+    const res = await fetch(`/api/prompts/woocommerce?id=${s.id}`)
+    if (!res.ok) {
+      alert('Erreur: ' + (await res.text()))
+      return
+    }
+    const data = await res.json()
+    const txt = `PROMPT WOOCOMMERCE — ${data.domaine}\n\n${data.prompt}`
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(txt)
+      alert('Prompt copié dans le presse-papiers ✅\n\nColle-le sur Hostinger dans Claude ou ton IA préférée.')
+    } else {
+      prompt('Copie ce prompt :', txt)
+    }
+  }
+
   const deleteSite = async (id: number) => {
     if (!confirm('Supprimer cette génération ?')) return
     await fetch('/api/sites-generes', {
@@ -1044,6 +1060,15 @@ export default function CreateurSitePage() {
                           >
                             ⬇ {s.status === 'pret' ? 'Site complet' : 'Aperçu'}
                           </a>
+                          {s.status === 'pret' && (
+                            <button
+                              onClick={() => genererPromptWoocommerce(s)}
+                              className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+                              title="Générer un prompt pour créer la boutique WooCommerce"
+                            >
+                              🛒 Prompt boutique
+                            </button>
+                          )}
                         </>
                       )}
                       <button
