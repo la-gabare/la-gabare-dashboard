@@ -482,7 +482,6 @@ export default function CreateurSitePage() {
         `**Cépages:** ${client?.cepages}`,
         `**Type de vins:** ${client?.type_vin}`,
         `**Email contact:** ${client?.email_contact || ''}`,
-        `**Téléphone:** ${client?.telephone || ''}`,
         client?.histoire ? `**Histoire du domaine:**\n${client.histoire}` : '',
         client?.points_forts ? `**Points forts:**\n${client.points_forts}` : '',
         client?.public_cible ? `**Public cible:** ${client.public_cible}` : '',
