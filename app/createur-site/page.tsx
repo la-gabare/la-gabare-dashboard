@@ -353,9 +353,15 @@ export default function CreateurSitePage() {
       lignes.push('Aucune cuvée fournie. Crée 3-5 produits typiques pour ce domaine.')
     } else {
       cuvees.forEach((c, i) => {
-        lignes.push(`${i + 1}. ${c.nom || `Cuvée ${i + 1}`}`)
-        if (c.description) lignes.push(`   Description : ${c.description}`)
-        if (c.photo_url) lignes.push(`   Photo : ${c.photo_url}`)
+        lignes.push(`**${i + 1}. ${c.nom || `Cuvée ${i + 1}`}**`)
+        if (c.prix) lignes.push(`Prix: €${c.prix}`)
+        if (c.alcool) lignes.push(`Alcool: ${c.alcool}%`)
+        if (c.description) lignes.push(`Description: ${c.description}`)
+        if (c.aromes_primaires?.length) lignes.push(`Arômes primaires: ${c.aromes_primaires.join(', ')}`)
+        if (c.aromes_secondaires?.length) lignes.push(`Arômes secondaires: ${c.aromes_secondaires.join(', ')}`)
+        if (c.aromes_tertiaires?.length) lignes.push(`Arômes tertiaires: ${c.aromes_tertiaires.join(', ')}`)
+        if (c.cepages?.length) lignes.push(`Cépages: ${c.cepages.join(', ')}`)
+        if (c.photo_url) lignes.push(`Image: ${c.photo_url}`)
         lignes.push('')
       })
     }
@@ -382,6 +388,8 @@ export default function CreateurSitePage() {
       'Paiement : PayPal et/ou Stripe',
       'Livraison : zones géographiques et tarifs',
       'Ton : ' + (client?.tone_voix || 'authentique'),
+      '',
+      form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT:** Chaque produit doit inclure un lien retour vers sa fiche cuvée correspondante sur le site vitrine' : '',
       '',
       'Crée les fiches produit WooCommerce avec le même design que le site vitrine.'
     )
@@ -441,7 +449,13 @@ export default function CreateurSitePage() {
       } else {
         form.cuvees.forEach((c, i) => {
           lignes.push(`**${i + 1}. ${c.nom}**`)
-          if (c.description) lignes.push(c.description)
+          if (c.prix) lignes.push(`Prix: €${c.prix}`)
+          if (c.alcool) lignes.push(`Alcool: ${c.alcool}%`)
+          if (c.description) lignes.push(`Description:\n${c.description}`)
+          if (c.aromes_primaires?.length) lignes.push(`Arômes primaires: ${c.aromes_primaires.join(', ')}`)
+          if (c.aromes_secondaires?.length) lignes.push(`Arômes secondaires: ${c.aromes_secondaires.join(', ')}`)
+          if (c.aromes_tertiaires?.length) lignes.push(`Arômes tertiaires: ${c.aromes_tertiaires.join(', ')}`)
+          if (c.cepages?.length) lignes.push(`Cépages: ${c.cepages.join(', ')}`)
           if (c.photo_url) lignes.push(`Image: ${c.photo_url}`)
           lignes.push('')
         })
@@ -460,9 +474,12 @@ export default function CreateurSitePage() {
         'Pages obligatoires:',
         '- Accueil (hero, présentation, cuvées en grille/carousel)',
         '- Présentation du domaine',
-        '- Nos cuvées (avec détails, photos, descriptions)',
+        '- Nos cuvées (avec détails, photos, descriptions, prix, alcool, arômes, cépages)',
+        '- Fiche cuvée détaillée (photo, description complète, prix, alcool %, arômes primaires/secondaires/tertiaires, cépages)',
         '- Contact (formulaire + localisation)',
         '- Blog/Actualités (optionnel)',
+        '',
+        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT:** Ajouter un bouton "Acheter cette cuvée" sur chaque fiche cuvée qui redirige vers la boutique WooCommerce' : '',
         '',
         '## INSTRUCTIONS TECHNIQUES',
         '',
