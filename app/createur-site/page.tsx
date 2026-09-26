@@ -864,7 +864,7 @@ export default function CreateurSitePage() {
                     </div>
                     <div className="tag-suggestions">
                       {cepagesList
-                        .filter((c) => !c.cepages?.includes(c) && c.toLowerCase().includes(searchAromes.cepages.toLowerCase()))
+                        .filter((cepage) => !c.cepages?.includes(cepage) && cepage.toLowerCase().includes(searchAromes.cepages.toLowerCase()))
                         .map((cepage) => (
                           <div key={cepage} className="tag-option" onClick={() => { setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, cepages: [...(cv.cepages || []), cepage] } : cv) })); setSearchAromes((s) => ({ ...s, cepages: '' })); }}>
                             + {cepage}
