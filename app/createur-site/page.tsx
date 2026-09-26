@@ -479,7 +479,6 @@ export default function CreateurSitePage() {
         `**Nom du domaine:** ${client?.nom_domaine}`,
         `**Région:** ${client?.region}`,
         `**Appellation:** ${client?.appellation}`,
-        `**Localité:** ${client?.localite || ''}`,
         `**Cépages:** ${client?.cepages}`,
         `**Type de vins:** ${client?.type_vin}`,
         `**Email contact:** ${client?.email_contact || ''}`,
