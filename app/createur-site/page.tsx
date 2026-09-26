@@ -58,127 +58,18 @@ const GOOGLE_FONTS_PREVIEW_URL =
 type Cuvee = { nom: string; description: string; photo_url: string }
 
 const templateOptions = [
-  { value: 1, label: 'Classique', desc: 'Accroche, chiffres clés, présentation sur deux colonnes puis grille de cuvées.', preview: 'classique' },
-  { value: 2, label: 'Moderne', desc: 'Sections asymétriques alternées, grandes images pleine largeur.', preview: 'affirme' },
-  { value: 3, label: 'Épuré', desc: 'Très peu de blocs, texte centré, beaucoup de blanc.', preview: 'moderne' },
-  { value: 4, label: 'Riche', desc: 'Cartes d’information et large grille de cuvées, pour les domaines qui ont beaucoup à montrer.', preview: 'chaleureux' },
+  { value: 1, label: 'Classique' },
+  { value: 2, label: 'Moderne' },
+  { value: 3, label: 'Épuré' },
+  { value: 4, label: 'Riche' },
 ]
 
 const skinOptions = [
-  { value: 1, label: 'Classique grave', desc: 'Boutons à angle droit en petites capitales, cartes à filet fin.' },
-  { value: 2, label: 'Contemporain doux', desc: 'Boutons en pilule, cartes arrondies avec ombre portée.' },
-  { value: 3, label: 'Éditorial brut', desc: 'Bordures épaisses, capitales, cartes qui s’inversent au survol.' },
-  { value: 4, label: 'Minimal souligné', desc: 'Boutons réduits à un mot souligné, cartes sans cadre.' },
+  { value: 1, label: 'Classique grave' },
+  { value: 2, label: 'Contemporain doux' },
+  { value: 3, label: 'Éditorial brut' },
+  { value: 4, label: 'Minimal souligné' },
 ]
-
-function SkinPreview({ variant }: { variant: number }) {
-  const stroke = '#D8D0C6'
-  const dark = '#4A3728'
-  const accent = '#C8A96E'
-  const light = '#F1ECE4'
-  const common = { viewBox: '0 0 96 40', className: 'w-full h-10 rounded border bg-white' }
-
-  if (variant === 2) {
-    return (
-      <svg {...common}>
-        <rect x="6" y="6" width="34" height="11" rx="5.5" fill={dark} />
-        <rect x="14" y="10.5" width="18" height="2.5" rx="1.25" fill={light} />
-        <rect x="48" y="4" width="42" height="32" rx="6" fill="white" stroke={stroke} />
-        <rect x="48" y="4" width="42" height="13" rx="6" fill={light} />
-        <rect x="54" y="23" width="22" height="2.5" rx="1.25" fill={dark} />
-        <rect x="54" y="29" width="14" height="2.5" rx="1.25" fill={accent} />
-      </svg>
-    )
-  }
-  if (variant === 3) {
-    return (
-      <svg {...common}>
-        <rect x="6" y="6" width="34" height="11" fill="none" stroke={dark} strokeWidth="2" />
-        <rect x="13" y="10.5" width="20" height="2.5" fill={dark} />
-        <rect x="48" y="4" width="42" height="32" fill="none" stroke={dark} strokeWidth="2" />
-        <rect x="54" y="22" width="24" height="3" fill={dark} />
-        <rect x="54" y="29" width="15" height="2.5" fill={accent} />
-      </svg>
-    )
-  }
-  if (variant === 4) {
-    return (
-      <svg {...common}>
-        <rect x="8" y="10" width="26" height="2.5" fill={dark} />
-        <rect x="8" y="15" width="26" height="1" fill={dark} />
-        <rect x="48" y="8" width="42" height="1" fill={stroke} />
-        <rect x="52" y="16" width="24" height="3" fill={dark} />
-        <rect x="52" y="24" width="14" height="2.5" fill={accent} />
-      </svg>
-    )
-  }
-  return (
-    <svg {...common}>
-      <rect x="6" y="6" width="34" height="11" fill={dark} />
-      <rect x="13" y="10.5" width="20" height="2.5" fill={light} />
-      <rect x="48" y="4" width="42" height="32" fill="white" stroke={stroke} />
-      <rect x="54" y="22" width="24" height="3" fill={dark} />
-      <rect x="54" y="29" width="15" height="2.5" fill={accent} />
-    </svg>
-  )
-}
-
-function LayoutPreview({ variant }: { variant: string }) {
-  const stroke = '#D8D0C6'
-  const dark = '#4A3728'
-  const accent = '#C8A96E'
-  const light = '#F1ECE4'
-
-  if (variant === 'moderne') {
-    return (
-      <svg viewBox="0 0 96 56" className="w-full h-14 rounded border bg-white">
-        <rect x="0" y="0" width="96" height="10" fill="white" stroke={stroke} strokeWidth="1" />
-        <rect x="34" y="3.5" width="12" height="3" fill={dark} />
-        <rect x="30" y="20" width="36" height="3" fill={dark} />
-        <rect x="24" y="27" width="48" height="1.5" fill={stroke} />
-        <rect x="30" y="34" width="14" height="8" fill={light} />
-        <rect x="52" y="34" width="14" height="8" fill={light} />
-      </svg>
-    )
-  }
-  if (variant === 'chaleureux') {
-    return (
-      <svg viewBox="0 0 96 56" className="w-full h-14 rounded border bg-white">
-        <rect x="0" y="0" width="96" height="9" fill={light} stroke={stroke} strokeWidth="1" />
-        <rect x="4" y="13" width="40" height="16" fill="none" stroke={stroke} strokeWidth="1" strokeDasharray="2 1.5" />
-        <rect x="48" y="13" width="44" height="16" fill="none" stroke={stroke} strokeWidth="1" strokeDasharray="2 1.5" />
-        <rect x="8" y="17" width="14" height="3" fill={dark} />
-        <rect x="52" y="17" width="14" height="3" fill={dark} />
-        <rect x="4" y="33" width="40" height="16" fill="none" stroke={stroke} strokeWidth="1" strokeDasharray="2 1.5" />
-        <rect x="48" y="33" width="44" height="16" fill="none" stroke={stroke} strokeWidth="1" strokeDasharray="2 1.5" />
-        <rect x="8" y="37" width="10" height="3" fill={accent} />
-        <rect x="52" y="37" width="10" height="3" fill={accent} />
-      </svg>
-    )
-  }
-  if (variant === 'affirme') {
-    return (
-      <svg viewBox="0 0 96 56" className="w-full h-14 rounded border bg-white">
-        <rect x="0" y="0" width="96" height="16" fill={dark} />
-        <rect x="6" y="6" width="24" height="4" fill={accent} />
-        <rect x="0" y="20" width="46" height="18" fill={accent} opacity="0.85" />
-        <rect x="50" y="20" width="46" height="18" fill={light} />
-        <rect x="0" y="42" width="96" height="14" fill={dark} opacity="0.9" />
-      </svg>
-    )
-  }
-  // classique (default)
-  return (
-    <svg viewBox="0 0 96 56" className="w-full h-14 rounded border bg-white">
-      <rect x="0" y="0" width="96" height="9" fill="white" stroke={stroke} strokeWidth="1" />
-      <rect x="40" y="3" width="16" height="3" fill={dark} />
-      <rect x="24" y="20" width="48" height="4" fill={dark} />
-      <rect x="42" y="27" width="12" height="1.5" fill={accent} />
-      <rect x="18" y="34" width="60" height="3" fill={stroke} />
-      <rect x="24" y="41" width="48" height="3" fill={stroke} />
-    </svg>
-  )
-}
 
 const statusLabels: Record<string, string> = {
   en_attente: 'En attente',
@@ -188,15 +79,6 @@ const statusLabels: Record<string, string> = {
   completion: 'Construction du site complet',
   pret: 'Site complet prêt',
   erreur: 'Erreur',
-}
-const statusBadge: Record<string, string> = {
-  en_attente: 'badge-warning',
-  en_cours: 'badge-warning',
-  a_valider: 'badge-success',
-  validee: 'badge-warning',
-  completion: 'badge-warning',
-  pret: 'badge-success',
-  erreur: 'badge-danger',
 }
 
 export default function CreateurSitePage() {
@@ -241,42 +123,6 @@ export default function CreateurSitePage() {
   const supprimerCuvee = (i: number) =>
     setForm((f) => ({ ...f, cuvees: f.cuvees.filter((_, idx) => idx !== i) }))
 
-  const uploadPhotoCuvee = async (e: React.ChangeEvent<HTMLInputElement>, i: number) => {
-    const files = e.target.files
-    if (!files || !files.length) return
-    setUploading(true)
-    try {
-      const [url] = await sendFiles([files[0]], 'site-cuvee')
-      if (url) modifierCuvee(i, 'photo_url', url)
-    } catch (err) {
-      alert('Erreur upload: ' + (err instanceof Error ? err.message : 'inconnue'))
-    }
-    setUploading(false)
-    e.target.value = ''
-  }
-
-  const randomizeAll = () => {
-    const pickFrom = <T,>(list: T[], current: T) => {
-      const others = list.filter((x) => x !== current)
-      const pool = others.length ? others : list
-      return pool[Math.floor(Math.random() * pool.length)]
-    }
-    const palette = pickFrom(
-      colorPalettes,
-      colorPalettes.find((p) => p.principale === form.couleur_principale) || colorPalettes[0]
-    )
-    const fonts = pickFrom(fontPairings, fontPairings.find((f) => f.name === form.style_polices) || fontPairings[0])
-    setForm((f) => ({
-      ...f,
-      template_choisi: pickFrom(templateOptions.map((t) => t.value), f.template_choisi as number),
-      skin_choisi: pickFrom(skinOptions.map((s) => s.value), f.skin_choisi as number),
-      couleur_principale: palette.principale,
-      couleur_secondaire: palette.secondaire,
-      couleur_accent: palette.accent,
-      style_polices: fonts.name,
-    }))
-  }
-
   const fetchData = async () => {
     setLoading(true)
     const [clientsRes, sitesRes] = await Promise.all([
@@ -301,218 +147,43 @@ export default function CreateurSitePage() {
     document.head.appendChild(link)
   }, [])
 
-  const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || `#${id}`
-
-  const handleClientChange = (clientId: string) => {
-    if (!clientId) {
-      setForm((f) => ({
-        ...f,
-        client_id: '',
-        slogan: '',
-        message_principal: '',
-        elements_avant: '',
-        demande: '',
-        couleur_principale: '',
-        couleur_secondaire: '',
-        couleur_accent: '',
-        couleurs_notes: '',
-        style_mise_en_page: '',
-        style_polices: '',
-      }))
-      return
+  const handleClientChange = async (clientId: string) => {
+    setForm((f) => ({ ...f, client_id: clientId }))
+    const client = clients.find((c) => c.id === Number(clientId))
+    if (client) {
+      const infosClient = [
+        client.nom_domaine,
+        client.region,
+        client.appellation,
+        client.cepages,
+        client.type_vin,
+      ]
+        .filter(Boolean)
+        .join(' — ')
+      setForm((f) => ({ ...f, demande: infosClient }))
     }
+  }
 
-    const client = clients.find((c) => c.id === parseInt(clientId))
-    const profil = (client?.profil_client_complet || {}) as Record<string, any>
-
-    const elements = [profil.cuvees_principales, client?.points_forts].filter(Boolean).join(' — ')
-
-    // Remplir la demande avec TOUS les infos du client
-    const demandeBlocs = [
-      `=== FICHE COMPLÈTE DU CLIENT ===`,
-      `Domaine : ${client?.nom_domaine}`,
-      `Région : ${client?.region}`,
-      `Appellation : ${client?.appellation}`,
-      `Cépages : ${client?.cepages}`,
-      `Type de vin : ${client?.type_vin}`,
-      client?.histoire && `Histoire : ${client.histoire}`,
-      client?.points_forts && `Points forts : ${client.points_forts}`,
-      client?.public_cible && `Public cible : ${client.public_cible}`,
-      client?.style && `Style : ${client.style}`,
-      client?.tone_voix && `Ton de voix : ${client.tone_voix}`,
-      profil.slogan && `Slogan souhaité : ${profil.slogan}`,
-      profil.messages_cles && `Messages clés : ${profil.messages_cles}`,
-      profil.positionnement && `Positionnement : ${profil.positionnement}`,
-      profil.cuvees_principales && `Cuvées principales : ${profil.cuvees_principales}`,
-      profil.remarques && `Remarques additionnelles : ${profil.remarques}`,
-    ].filter(Boolean)
-
+  const randomizeAll = () => {
+    const pickFrom = <T,>(list: T[], current: T) => {
+      const others = list.filter((x) => x !== current)
+      const pool = others.length ? others : list
+      return pool[Math.floor(Math.random() * pool.length)]
+    }
+    const palette = pickFrom(
+      colorPalettes,
+      colorPalettes.find((p) => p.principale === form.couleur_principale) || colorPalettes[0]
+    )
+    const fonts = pickFrom(fontPairings, fontPairings.find((f) => f.name === form.style_polices) || fontPairings[0])
     setForm((f) => ({
       ...f,
-      client_id: clientId,
-      slogan: profil.slogan || '',
-      message_principal: profil.messages_cles || profil.positionnement || '',
-      elements_avant: elements,
-      demande: demandeBlocs.join('\n'),
-      couleur_principale: '',
-      couleur_secondaire: '',
-      couleur_accent: '',
-      couleurs_notes: profil.couleurs_souhaitees || '',
+      template_choisi: pickFrom(templateOptions.map((t) => t.value), f.template_choisi as number),
+      skin_choisi: pickFrom(skinOptions.map((s) => s.value), f.skin_choisi as number),
+      couleur_principale: palette.principale,
+      couleur_secondaire: palette.secondaire,
+      couleur_accent: palette.accent,
+      style_polices: fonts.name,
     }))
-  }
-
-  const sendFiles = async (files: File[], type: string) => {
-    const uploaded: string[] = []
-    for (const file of files) {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', type)
-      const res = await fetch('/api/upload', { method: 'POST', body: formData })
-      const data = await res.json()
-      if (res.ok) uploaded.push(data.url)
-      else alert(`Erreur upload ${file.name}: ${data.error || 'inconnue'}`)
-    }
-    return uploaded
-  }
-
-  const handleSingleUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: 'logo_url' | 'hero_url'
-  ) => {
-    const files = e.target.files
-    if (!files || !files.length) return
-    setUploading(true)
-    try {
-      const [url] = await sendFiles([files[0]], `site-${field.replace('_url', '')}`)
-      if (url) setForm((f) => ({ ...f, [field]: url }))
-    } catch (err) {
-      alert('Erreur upload: ' + (err instanceof Error ? err.message : 'inconnue'))
-    }
-    setUploading(false)
-    e.target.value = ''
-  }
-
-  const handleMultiUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: 'da_urls' | 'media_urls'
-  ) => {
-    const files = e.target.files
-    if (!files || !files.length) return
-    setUploading(true)
-    try {
-      const urls = await sendFiles(Array.from(files), field === 'da_urls' ? 'site-da' : 'site-creator')
-      setForm((f) => ({ ...f, [field]: [...f[field], ...urls] }))
-    } catch (err) {
-      alert('Erreur upload: ' + (err instanceof Error ? err.message : 'inconnue'))
-    }
-    setUploading(false)
-    e.target.value = ''
-  }
-
-  const removeMediaUrl = (url: string, field: 'da_urls' | 'media_urls' = 'media_urls') => {
-    setForm((f) => ({ ...f, [field]: f[field].filter((u) => u !== url) }))
-  }
-
-  const generate = async () => {
-    if (!form.client_id) {
-      alert('Sélectionne un client')
-      return
-    }
-    setGenerating(true)
-    try {
-      const swatches = [
-        form.couleur_principale && `principale ${form.couleur_principale}`,
-        form.couleur_secondaire && `secondaire ${form.couleur_secondaire}`,
-        form.couleur_accent && `accent ${form.couleur_accent}`,
-      ].filter(Boolean)
-      const couleurs_souhaitees = [swatches.length ? `Palette : ${swatches.join(', ')}` : '', form.couleurs_notes]
-        .filter(Boolean)
-        .join(' — ') || null
-
-      const chosenFonts = fontPairings.find((f) => f.name === form.style_polices)
-      const polices_souhaitees = chosenFonts
-        ? `Titres : ${chosenFonts.identity}, Texte : ${chosenFonts.body}`
-        : null
-
-      const res = await fetch('/api/sites-generes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: parseInt(form.client_id),
-          pack: form.pack,
-          slogan: form.slogan || null,
-          message_principal: form.message_principal || null,
-          elements_avant: form.elements_avant || null,
-          demande: form.demande || null,
-          couleurs_souhaitees,
-          style_mise_en_page: form.style_mise_en_page || null,
-          polices_souhaitees,
-          template_choisi: form.template_choisi,
-          skin_choisi: form.skin_choisi,
-          logo_url: form.logo_url || null,
-          hero_url: form.hero_url || null,
-          da_urls: form.da_urls,
-          media_urls: form.media_urls,
-          cuvees: form.cuvees.filter((c) => c.nom.trim() || c.description.trim()),
-        }),
-      })
-      if (res.ok) {
-        setForm({
-          client_id: '',
-          pack: 'essentiel',
-          slogan: '',
-          message_principal: '',
-          elements_avant: '',
-          demande: '',
-          couleur_principale: '',
-          couleur_secondaire: '',
-          couleur_accent: '',
-          couleurs_notes: '',
-          style_mise_en_page: '',
-          style_polices: '',
-          template_choisi: null,
-          skin_choisi: null,
-          logo_url: '',
-          hero_url: '',
-          da_urls: [],
-          media_urls: [],
-          cuvees: [],
-        })
-        alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
-        fetchData()
-      } else {
-        const err = await res.json()
-        alert('Erreur: ' + err.error)
-      }
-    } catch (err) {
-      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
-    }
-    setGenerating(false)
-  }
-
-  const validerSite = async (s: SiteGenere) => {
-    if (
-      !confirm(
-        "Valider cet aperçu ?\n\nLe site complet sera construit à partir du modèle du pack (pages, dashboard, connexion). Cela relance une génération."
-      )
-    )
-      return
-    const res = await fetch('/api/sites-generes/valider', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: s.id }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      alert('Erreur: ' + (data.error || 'inconnue'))
-      return
-    }
-    alert(
-      `Site validé.\n\nIdentifiants du dashboard à transmettre au client :\n\n` +
-        `Adresse : ${data.admin_file}\nMot de passe : ${data.admin_password}\n\n` +
-        `Ces identifiants restent consultables ici, ils ne changeront plus.`
-    )
-    fetchData()
   }
 
   const genererPromptWoocommerceFromForm = async () => {
@@ -598,661 +269,445 @@ export default function CreateurSitePage() {
     setPromptModal({ visible: true, prompt: txt })
   }
 
-  const genererPromptWoocommerce = async (s: SiteGenere) => {
-    const res = await fetch(`/api/prompts/woocommerce?id=${s.id}`)
-    if (!res.ok) {
-      alert('Erreur: ' + (await res.text()))
+  const generate = async () => {
+    if (!form.client_id) {
+      alert('Sélectionne un client.')
       return
     }
-    const data = await res.json()
-    const txt = `PROMPT WOOCOMMERCE — ${data.domaine}\n\n${data.prompt}`
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(txt)
-      alert('Prompt copié dans le presse-papiers ✅\n\nColle-le sur Hostinger dans Claude ou ton IA préférée.')
-    } else {
-      prompt('Copie ce prompt :', txt)
+    setGenerating(true)
+    try {
+      const res = await fetch('/api/sites-generes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        setForm({
+          client_id: '',
+          pack: 'essentiel',
+          slogan: '',
+          message_principal: '',
+          elements_avant: '',
+          demande: '',
+          couleur_principale: '',
+          couleur_secondaire: '',
+          couleur_accent: '',
+          couleurs_notes: '',
+          style_mise_en_page: '',
+          style_polices: '',
+          template_choisi: null,
+          skin_choisi: null,
+          logo_url: '',
+          hero_url: '',
+          da_urls: [],
+          media_urls: [],
+          cuvees: [],
+        })
+        alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
+        fetchData()
+      } else {
+        const err = await res.json()
+        alert('Erreur: ' + err.error)
+      }
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
     }
+    setGenerating(false)
   }
 
-  const deleteSite = async (id: number) => {
-    if (!confirm('Supprimer cette génération ?')) return
-    await fetch('/api/sites-generes', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    })
-    fetchData()
-  }
+  const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || 'Domaine'
+
+  const currentClient = clients.find((c) => c.id === Number(form.client_id))
 
   return (
-    <div className="container-dashboard">
-      <h1 className="text-3xl font-bold mb-8">Créateur de site</h1>
+    <div className="min-h-screen" style={{ background: '#1a1a1a' }}>
+      <style>{`
+        .gen-wrap { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .gen-header { margin-bottom: 2rem; }
+        .gen-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; margin-bottom: .5rem; color: #F5F2EC; }
+        .gen-header p { color: rgba(245,242,236,.6); font-size: .95rem; }
 
-      <div className="card mb-8 space-y-3">
-        <h2 className="text-xl font-bold mb-2">Générer un site</h2>
+        .gen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        @media (max-width: 1000px) { .gen-grid { grid-template-columns: 1fr; } }
 
-        <div className="grid grid-cols-2 gap-3">
-          <select
-            value={form.client_id}
-            onChange={(e) => handleClientChange(e.target.value)}
-            className="px-3 py-2 border rounded-lg"
-          >
-            <option value="">Sélectionner un client</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>{c.nom_domaine}</option>
-            ))}
-          </select>
-          <select
-            value={form.pack}
-            onChange={(e) => setForm({ ...form, pack: e.target.value })}
-            className="px-3 py-2 border rounded-lg"
-          >
-            {packs.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
+        .gen-panel { background: rgba(255,255,255,.015); border: 1px solid rgba(176,141,87,.2); border-radius: 12px; padding: 1.5rem; }
+        .gen-panel h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: #b08d57; margin-bottom: 1rem; padding-bottom: .8rem; border-bottom: 1px solid rgba(176,141,87,.2); }
+        .gen-panel h3 { font-size: .95rem; color: #F5F2EC; margin-top: 1.2rem; margin-bottom: .6rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: #b08d57; margin-bottom: .4rem; font-weight: 500; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: .7rem; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.12); color: #f5f2ec; border-radius: 8px; font-family: inherit; font-size: .9rem; outline: none; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #b08d57; background: rgba(0,0,0,.7); }
+        .form-textarea { min-height: 80px; font-family: monospace; font-size: .85rem; resize: vertical; }
+
+        .clients-list { max-height: 280px; overflow-y: auto; background: rgba(0,0,0,.3); border-radius: 8px; margin-bottom: 1rem; border: 1px solid rgba(176,141,87,.15); }
+        .client-item { padding: .7rem 1rem; border-bottom: 1px solid rgba(255,255,255,.08); cursor: pointer; transition: background .2s; }
+        .client-item:hover { background: rgba(176,141,87,.15); }
+        .client-item.active { background: rgba(176,141,87,.25); color: #b08d57; font-weight: 500; }
+        .client-item small { display: block; font-size: .75rem; color: rgba(245,242,236,.5); margin-top: .2rem; }
+
+        .style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .style-option { padding: 1rem; background: rgba(0,0,0,.3); border: 2px solid rgba(176,141,87,.2); border-radius: 8px; cursor: pointer; transition: all .2s; }
+        .style-option:hover { border-color: #b08d57; background: rgba(176,141,87,.1); }
+        .style-option.active { border-color: #b08d57; background: rgba(176,141,87,.25); }
+        .style-option label { display: block; font-weight: 600; color: #F5F2EC; margin-bottom: .3rem; cursor: pointer; }
+        .style-option small { color: rgba(245,242,236,.6); font-size: .8rem; }
+
+        .cuvee-item { background: rgba(176,141,87,.08); border-left: 3px solid #b08d57; padding: 1rem; margin-bottom: .8rem; border-radius: 4px; }
+        .cuvee-item h4 { margin: 0 0 .5rem 0; color: #b08d57; font-weight: 500; font-size: .95rem; }
+        .cuvee-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+
+        .btn-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+        .btn { padding: .65rem 1.2rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; font-family: inherit; font-size: .85rem; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #b08d57; color: #1a1a1a; }
+        .btn-primary:hover { background: #c9a971; }
+        .btn-secondary { background: rgba(255,255,255,.1); color: #f5f2ec; border: 1px solid rgba(255,255,255,.25); }
+        .btn-secondary:hover { border-color: #b08d57; color: #b08d57; }
+        .btn:disabled { opacity: .6; cursor: not-allowed; }
+
+        .sites-list { max-height: 500px; overflow-y: auto; }
+        .site-card { padding: 1rem; background: rgba(176,141,87,.08); border-left: 3px solid #b08d57; margin-bottom: .8rem; border-radius: 4px; }
+        .site-card h4 { margin: 0 0 .4rem 0; color: #F5F2EC; font-weight: 600; }
+        .site-card small { display: block; color: rgba(245,242,236,.6); margin-bottom: .6rem; }
+        .site-status { display: inline-block; padding: .3rem .8rem; background: rgba(176,141,87,.3); color: #b08d57; border-radius: 4px; font-size: .75rem; font-weight: 600; text-transform: uppercase; }
+        .site-actions { display: flex; gap: .5rem; margin-top: .6rem; flex-wrap: wrap; }
+        .site-actions button { padding: .4rem .8rem; font-size: .8rem; }
+      `}</style>
+
+      <div className="gen-wrap">
+        <div className="gen-header">
+          <h1>Créateur de site</h1>
+          <p>Sélectionne un client → Configure les styles et cuvées → Génère l'aperçu</p>
         </div>
 
-        <input
-          type="text"
-          placeholder="Slogan souhaité (optionnel)"
-          value={form.slogan}
-          onChange={(e) => setForm({ ...form, slogan: e.target.value })}
-          className="w-full px-3 py-2 border rounded-lg"
-        />
-        <textarea
-          placeholder="Message principal à transmettre"
-          value={form.message_principal}
-          onChange={(e) => setForm({ ...form, message_principal: e.target.value })}
-          rows={2}
-          className="w-full px-3 py-2 border rounded-lg"
-        />
-        <textarea
-          placeholder="Éléments à mettre en avant (cuvées, savoir-faire, terroir, distinctions...)"
-          value={form.elements_avant}
-          onChange={(e) => setForm({ ...form, elements_avant: e.target.value })}
-          rows={2}
-          className="w-full px-3 py-2 border rounded-lg"
-        />
-        <div className="space-y-2 border rounded-lg p-3">
-          <label className="block text-sm font-semibold">Palette de couleurs (optionnel)</label>
+        <div className="gen-grid">
+          {/* COLONNE 1 : CLIENT & STYLES */}
+          <div className="gen-panel">
+            <h2>1. Client et styles</h2>
 
-          <div className="space-y-1.5">
-            <div className="text-xs font-medium text-gray-600">Palettes suggérées (clique pour appliquer)</div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-              {colorPalettes.map((p) => {
-                const active =
-                  form.couleur_principale === p.principale &&
-                  form.couleur_secondaire === p.secondaire &&
-                  form.couleur_accent === p.accent
-                return (
-                  <button
-                    key={p.name}
-                    type="button"
-                    title={p.name}
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        couleur_principale: p.principale,
-                        couleur_secondaire: p.secondaire,
-                        couleur_accent: p.accent,
-                      })
-                    }
-                    className={`flex flex-col items-center gap-1 px-2 py-2 border rounded-lg text-center transition ${
-                      active ? 'border-wine ring-1 ring-wine' : 'border-gray-200 hover:border-gray-300'
-                    }`}
+            <h3>Sélectionner le client</h3>
+            <div className="clients-list">
+              {loading ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(245,242,236,.5)' }}>Chargement...</div>
+              ) : (
+                clients.map((c) => (
+                  <div
+                    key={c.id}
+                    className={`client-item ${form.client_id === String(c.id) ? 'active' : ''}`}
+                    onClick={() => handleClientChange(String(c.id))}
                   >
-                    <span className="flex gap-0.5">
-                      <span className="w-4 h-4 rounded-full border border-white shadow-sm" style={{ background: p.principale }} />
-                      <span className="w-4 h-4 rounded-full border border-white shadow-sm" style={{ background: p.secondaire }} />
-                      <span className="w-4 h-4 rounded-full border border-white shadow-sm" style={{ background: p.accent }} />
-                    </span>
-                    <span className="text-xs leading-tight">{p.name}</span>
-                  </button>
-                )
-              })}
+                    <strong>{c.nom_domaine}</strong>
+                    <small>{c.appellation} • {c.region}</small>
+                  </div>
+                ))
+              )}
             </div>
-          </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={form.couleur_principale || '#4A3728'}
-                onChange={(e) => setForm({ ...form, couleur_principale: e.target.value })}
-                className="w-10 h-10 rounded border cursor-pointer"
-              />
-              <div className="text-sm">
-                <div className="font-medium">Principale</div>
-                <div className="text-gray-500">{form.couleur_principale || 'auto'}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={form.couleur_secondaire || '#F8F4EF'}
-                onChange={(e) => setForm({ ...form, couleur_secondaire: e.target.value })}
-                className="w-10 h-10 rounded border cursor-pointer"
-              />
-              <div className="text-sm">
-                <div className="font-medium">Secondaire</div>
-                <div className="text-gray-500">{form.couleur_secondaire || 'auto'}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={form.couleur_accent || '#C8A96E'}
-                onChange={(e) => setForm({ ...form, couleur_accent: e.target.value })}
-                className="w-10 h-10 rounded border cursor-pointer"
-              />
-              <div className="text-sm">
-                <div className="font-medium">Accent</div>
-                <div className="text-gray-500">{form.couleur_accent || 'auto'}</div>
-              </div>
-            </div>
-          </div>
-          <input
-            type="text"
-            placeholder="Notes sur les couleurs / l'ambiance souhaitée (ex : tons chauds, terre et or, sobre...)"
-            value={form.couleurs_notes}
-            onChange={(e) => setForm({ ...form, couleurs_notes: e.target.value })}
-            className="w-full px-3 py-2 border rounded-lg"
-          />
-          <p className="text-xs text-gray-500">
-            Laisse les couleurs sur &quot;auto&quot; pour que l&apos;IA propose une palette adaptée au client. Choisis une couleur pour l&apos;imposer.
-          </p>
-        </div>
-
-        <div className="space-y-2 border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-semibold">Structure de la page (optionnel)</label>
-            <button
-              type="button"
-              onClick={() => {
-                setForm((f) => {
-                  const others = templateOptions.filter((o) => o.value !== f.template_choisi)
-                  return { ...f, template_choisi: others[Math.floor(Math.random() * others.length)].value }
-                })
-              }}
-              className="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50"
-            >
-              🎲 Aléatoire
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {templateOptions.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() =>
-                  setForm((f) => ({ ...f, template_choisi: f.template_choisi === opt.value ? null : opt.value }))
-                }
-                className={`text-left px-3 py-2 border rounded-lg transition space-y-2 ${
-                  form.template_choisi === opt.value
-                    ? 'border-wine bg-wine/5 ring-1 ring-wine'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <LayoutPreview variant={opt.preview} />
-                <div className="font-medium text-sm">{opt.label}</div>
-                <div className="text-xs text-gray-500">{opt.desc}</div>
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500">
-            Laisse sans sélection pour que l&apos;IA choisisse la structure la plus adaptée au client.
-          </p>
-        </div>
-
-        <div className="space-y-2 border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-semibold">Style des éléments (optionnel)</label>
-            <button
-              type="button"
-              onClick={() => {
-                setForm((f) => {
-                  const others = skinOptions.filter((o) => o.value !== f.skin_choisi)
-                  return { ...f, skin_choisi: others[Math.floor(Math.random() * others.length)].value }
-                })
-              }}
-              className="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50"
-            >
-              🎲 Aléatoire
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {skinOptions.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, skin_choisi: f.skin_choisi === opt.value ? null : opt.value }))}
-                className={`text-left px-3 py-2 border rounded-lg transition space-y-2 ${
-                  form.skin_choisi === opt.value
-                    ? 'border-wine bg-wine/5 ring-1 ring-wine'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <SkinPreview variant={opt.value} />
-                <div className="font-medium text-sm">{opt.label}</div>
-                <div className="text-xs text-gray-500">{opt.desc}</div>
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500">
-            Détermine la forme des boutons, des cartes et des titres. Indépendant de la structure : les deux se combinent.
-          </p>
-        </div>
-
-        <div className="space-y-2 border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-semibold">Polices (optionnel)</label>
-            <button
-              type="button"
-              onClick={() => {
-                const others = fontPairings.filter((f) => f.name !== form.style_polices)
-                const pick = (others.length ? others : fontPairings)[Math.floor(Math.random() * (others.length ? others.length : fontPairings.length))]
-                setForm({ ...form, style_polices: pick.name })
-              }}
-              className="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50"
-            >
-              🎲 Aléatoire
-            </button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {fontPairings.map((f) => (
-              <button
-                key={f.name}
-                type="button"
-                onClick={() => setForm({ ...form, style_polices: form.style_polices === f.name ? '' : f.name })}
-                className={`text-left px-3 py-2 border rounded-lg transition ${
-                  form.style_polices === f.name
-                    ? 'border-wine bg-wine/5 ring-1 ring-wine'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-lg leading-tight truncate" style={{ fontFamily: `'${f.identity}', serif` }}>
-                  Domaine Exemple
+            {currentClient && (
+              <>
+                <h3>Infos client</h3>
+                <div className="form-group">
+                  <label className="form-label">Domaine</label>
+                  <input type="text" className="form-input" value={currentClient.nom_domaine} disabled />
                 </div>
-                <div className="text-xs text-gray-600 truncate" style={{ fontFamily: `'${f.body}', sans-serif` }}>
-                  Vinificateurs depuis 1962
+                <div className="form-group">
+                  <label className="form-label">Appellation</label>
+                  <input type="text" className="form-input" value={currentClient.appellation || ''} disabled />
                 </div>
-                <div className="text-xs text-gray-400 mt-1">{f.name}</div>
+                <div className="form-group">
+                  <label className="form-label">Type de vin</label>
+                  <input type="text" className="form-input" value={currentClient.type_vin || ''} disabled />
+                </div>
+              </>
+            )}
+
+            <h3>Mise en page</h3>
+            <div className="style-grid">
+              {templateOptions.map((t) => (
+                <div
+                  key={t.value}
+                  className={`style-option ${form.template_choisi === t.value ? 'active' : ''}`}
+                  onClick={() => setForm((f) => ({ ...f, template_choisi: t.value }))}
+                >
+                  <label>{t.label}</label>
+                </div>
+              ))}
+            </div>
+
+            <h3>Style des éléments</h3>
+            <div className="style-grid">
+              {skinOptions.map((s) => (
+                <div
+                  key={s.value}
+                  className={`style-option ${form.skin_choisi === s.value ? 'active' : ''}`}
+                  onClick={() => setForm((f) => ({ ...f, skin_choisi: s.value }))}
+                >
+                  <label>{s.label}</label>
+                </div>
+              ))}
+            </div>
+
+            <h3>Palette de couleurs</h3>
+            <div className="form-group">
+              <select
+                className="form-select"
+                value={colorPalettes.findIndex((p) => p.principale === form.couleur_principale)}
+                onChange={(e) => {
+                  const palette = colorPalettes[parseInt(e.target.value)]
+                  if (palette) {
+                    setForm((f) => ({
+                      ...f,
+                      couleur_principale: palette.principale,
+                      couleur_secondaire: palette.secondaire,
+                      couleur_accent: palette.accent,
+                    }))
+                  }
+                }}
+              >
+                {colorPalettes.map((p, i) => (
+                  <option key={i} value={i}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {form.couleur_principale && (
+              <div style={{ display: 'flex', gap: '.5rem', marginTop: '.5rem' }}>
+                <div style={{ width: '30px', height: '30px', background: form.couleur_principale, borderRadius: '4px', border: '1px solid rgba(255,255,255,.2)' }} />
+                <div style={{ width: '30px', height: '30px', background: form.couleur_accent, borderRadius: '4px', border: '1px solid rgba(255,255,255,.2)' }} />
+                <div style={{ width: '30px', height: '30px', background: form.couleur_secondaire, borderRadius: '4px', border: '1px solid rgba(255,255,255,.2)' }} />
+              </div>
+            )}
+
+            <h3>Polices</h3>
+            <div className="form-group">
+              <select
+                className="form-select"
+                value={form.style_polices || ''}
+                onChange={(e) => setForm((f) => ({ ...f, style_polices: e.target.value }))}
+              >
+                <option value="">Choisir...</option>
+                {fontPairings.map((f) => (
+                  <option key={f.name} value={f.name}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="btn-row" style={{ marginTop: '1.5rem' }}>
+              <button onClick={randomizeAll} className="btn btn-secondary" title="Tire au sort tous les styles">
+                🎲 Aléatoire
               </button>
-            ))}
+            </div>
           </div>
-          <p className="text-xs text-gray-500">
-            Laisse sans sélection pour que l&apos;IA choisisse les polices les plus adaptées au client.
-          </p>
-        </div>
 
-        <textarea
-          placeholder="Demande personnalisée (style, ton, remarques particulières...)"
-          value={form.demande}
-          onChange={(e) => setForm({ ...form, demande: e.target.value })}
-          rows={3}
-          className="w-full px-3 py-2 border rounded-lg"
-        />
+          {/* COLONNE 2 : CONTENU & MÉDIA */}
+          <div className="gen-panel">
+            <h2>2. Contenu et médias</h2>
 
-        <div className="space-y-3 border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-semibold">Cuvées ({form.cuvees.length})</label>
-            <button
-              type="button"
-              onClick={ajouterCuvee}
-              className="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50"
-            >
+            <h3>Pack</h3>
+            <div className="form-group">
+              <select className="form-select" value={form.pack} onChange={(e) => setForm((f) => ({ ...f, pack: e.target.value }))}>
+                {packs.map((p) => (
+                  <option key={p} value={p}>
+                    {p.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <h3>Infos du site</h3>
+            <div className="form-group">
+              <label className="form-label">Slogan</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Ex. Vins authentiques du terroir"
+                value={form.slogan}
+                onChange={(e) => setForm((f) => ({ ...f, slogan: e.target.value }))}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Demande / Notes</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Infos client, notes spéciales..."
+                value={form.demande}
+                onChange={(e) => setForm((f) => ({ ...f, demande: e.target.value }))}
+              />
+            </div>
+
+            <h3>Cuvées (4 min.)</h3>
+            <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
+              {form.cuvees.map((c, i) => (
+                <div key={i} className="cuvee-item">
+                  <h4>Cuvée {i + 1}</h4>
+                  <div className="cuvee-fields">
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Nom"
+                      value={c.nom}
+                      onChange={(e) => modifierCuvee(i, 'nom', e.target.value)}
+                    />
+                    <textarea
+                      className="form-textarea"
+                      placeholder="Description"
+                      style={{ minHeight: '50px' }}
+                      value={c.description}
+                      onChange={(e) => modifierCuvee(i, 'description', e.target.value)}
+                    />
+                  </div>
+                  {c.photo_url && (
+                    <img src={c.photo_url} alt="" style={{ width: '50px', height: '50px', marginTop: '.5rem', borderRadius: '4px', objectFit: 'cover' }} />
+                  )}
+                  <div className="btn-row" style={{ marginTop: '.5rem' }}>
+                    <button onClick={() => supprimerCuvee(i)} className="btn btn-secondary" style={{ fontSize: '.75rem', padding: '.4rem .8rem' }}>
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={ajouterCuvee} className="btn btn-secondary" style={{ width: '100%', marginBottom: '1rem' }}>
               + Ajouter une cuvée
             </button>
-          </div>
 
-          {form.cuvees.length === 0 && (
-            <p className="text-xs text-gray-500">
-              Sans cuvée renseignée, l&apos;IA en inventera à partir du profil du domaine. Ajoute-les pour que la page
-              cuvées soit exacte.
-            </p>
-          )}
-
-          {form.cuvees.map((c, i) => (
-            <div key={i} className="border rounded-lg p-3 space-y-2 bg-gray-50">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Nom de la cuvée (ex : Cuvée Vieilles Vignes)"
-                    value={c.nom}
-                    onChange={(e) => modifierCuvee(i, 'nom', e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                  />
-                  <textarea
-                    placeholder="Description : cépage, millésime, élevage, notes de dégustation, accords..."
-                    value={c.description}
-                    onChange={(e) => modifierCuvee(i, 'description', e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                  />
-                </div>
-                <div className="w-32 shrink-0 space-y-2">
-                  {c.photo_url ? (
-                    <div className="relative">
-                      <img src={c.photo_url} alt="" className="w-full h-28 object-cover rounded border bg-white" />
-                      <button
-                        type="button"
-                        onClick={() => modifierCuvee(i, 'photo_url', '')}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="h-28 border border-dashed rounded flex items-center justify-center text-xs text-gray-400 bg-white">
-                      Pas de photo
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => uploadPhotoCuvee(e, i)}
-                    disabled={uploading}
-                    className="w-full text-xs"
-                  />
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => supprimerCuvee(i)}
-                className="text-xs text-red-600 hover:underline"
-              >
-                Supprimer cette cuvée
-              </button>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-4 border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-semibold">Visuels</label>
-            {uploading && <span className="text-sm text-gray-600">Envoi...</span>}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="block text-xs font-medium">Logo du domaine</label>
+            <h3>Logo & Hero</h3>
+            <div className="form-group">
+              <label className="form-label">Logo</label>
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleSingleUpload(e, 'logo_url')}
-                disabled={uploading}
-                className="w-full px-3 py-2 border rounded-lg text-sm"
+                className="form-input"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    const url = URL.createObjectURL(file)
+                    setForm((f) => ({ ...f, logo_url: url }))
+                  }
+                }}
               />
-              {form.logo_url && (
-                <div className="relative inline-block">
-                  <img src={form.logo_url} alt="" className="h-16 object-contain rounded border bg-white p-1" />
-                  <button
-                    onClick={() => setForm((f) => ({ ...f, logo_url: '' }))}
-                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <p className="text-xs text-gray-500">En-tête, pied de page et portail d&apos;âge. PNG transparent ou SVG de préférence.</p>
+              {form.logo_url && <img src={form.logo_url} alt="" style={{ width: '50px', marginTop: '.5rem' }} />}
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-xs font-medium">Photo principale (hero)</label>
+            <div className="form-group">
+              <label className="form-label">Image héro</label>
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleSingleUpload(e, 'hero_url')}
-                disabled={uploading}
-                className="w-full px-3 py-2 border rounded-lg text-sm"
+                className="form-input"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    const url = URL.createObjectURL(file)
+                    setForm((f) => ({ ...f, hero_url: url }))
+                  }
+                }}
               />
-              {form.hero_url && (
-                <div className="relative inline-block">
-                  <img src={form.hero_url} alt="" className="h-16 w-28 object-cover rounded border" />
-                  <button
-                    onClick={() => setForm((f) => ({ ...f, hero_url: '' }))}
-                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              <p className="text-xs text-gray-500">Grande image d&apos;accueil. Privilégie une photo large et lumineuse.</p>
+              {form.hero_url && <img src={form.hero_url} alt="" style={{ width: '80px', marginTop: '.5rem', borderRadius: '4px' }} />}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-xs font-medium">Éléments de direction artistique</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => handleMultiUpload(e, 'da_urls')}
-              disabled={uploading}
-              className="w-full px-3 py-2 border rounded-lg text-sm"
-            />
-            {form.da_urls.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {form.da_urls.map((url) => (
-                  <div key={url} className="relative">
-                    <img src={url} alt="" className="w-16 h-16 object-cover rounded border" />
-                    <button
-                      onClick={() => removeMediaUrl(url, 'da_urls')}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <p className="text-xs text-gray-500">
-              Étiquettes, motifs, textures, extraits de charte. Servent de référence à l&apos;IA pour la palette et l&apos;ambiance.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-xs font-medium">Photos / vidéos du domaine</label>
-            <input
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              onChange={(e) => handleMultiUpload(e, 'media_urls')}
-              disabled={uploading}
-              className="w-full px-3 py-2 border rounded-lg text-sm"
-            />
-            {form.media_urls.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {form.media_urls.map((url) => (
-                  <div key={url} className="relative">
-                    {/\.(mp4|mov|webm)$/i.test(url) ? (
-                      <video src={url} className="w-16 h-16 object-cover rounded border" muted />
-                    ) : (
-                      <img src={url} alt="" className="w-16 h-16 object-cover rounded border" />
-                    )}
-                    <button
-                      onClick={() => removeMediaUrl(url, 'media_urls')}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-none"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <p className="text-xs text-gray-500">Vignes, chai, caveau, cuvées. Illustrent les sections de présentation.</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button onClick={generate} disabled={generating} className="btn-primary">
-            {generating ? 'Envoi...' : '✨ Générer'}
-          </button>
-          <button
-            type="button"
-            onClick={randomizeAll}
-            className="px-3 py-2 border rounded-lg hover:bg-gray-50 text-sm"
-            title="Tire au sort la structure, le style des éléments, la palette et les polices"
-          >
-            🎲 Tout aléatoire
-          </button>
-          {form.client_id && (
-            <button
-              type="button"
-              onClick={genererPromptWoocommerceFromForm}
-              className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
-              title="Génère le prompt pour la boutique WooCommerce avec les styles du site"
-            >
-              📋 Prompt boutique
+        {/* ACTIONS & RÉSULTATS */}
+        <div className="gen-panel" style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+            <button onClick={generate} disabled={generating || !form.client_id} className="btn btn-primary">
+              {generating ? 'Envoi...' : '✨ Générer'}
             </button>
-          )}
+            {form.client_id && (
+              <button onClick={genererPromptWoocommerceFromForm} className="btn btn-secondary">
+                📋 Prompt boutique
+              </button>
+            )}
+          </div>
+
+          <h2 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Aperçus générés</h2>
+          <div className="sites-list">
+            {sites.length === 0 ? (
+              <p style={{ color: 'rgba(245,242,236,.5)', textAlign: 'center', padding: '2rem' }}>Aucun site généré.</p>
+            ) : (
+              sites.slice(0, 10).map((s) => (
+                <div key={s.id} className="site-card">
+                  <h4>{clientName(s.client_id)}</h4>
+                  <small>
+                    {s.pack.toUpperCase()} • {new Date(s.created_at).toLocaleDateString('fr-FR')}
+                  </small>
+                  <div className="site-status">{statusLabels[s.status as keyof typeof statusLabels] || s.status}</div>
+                  <div className="site-actions">
+                    {s.html_genere && (
+                      <button onClick={() => setPreviewSite(s)} className="btn btn-secondary">
+                        Voir aperçu
+                      </button>
+                    )}
+                    {s.status === 'a_valider' && (
+                      <button onClick={() => alert('Validation en cours...')} className="btn btn-primary" style={{ fontSize: '.8rem' }}>
+                        ✓ Valider
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="card">
-        <h2 className="text-xl font-bold mb-4">Générations</h2>
-        {loading ? (
-          <p className="text-gray-500">Chargement...</p>
-        ) : sites.length === 0 ? (
-          <p className="text-gray-500">Aucune génération pour le moment</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Client</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Pack</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Statut</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sites.map((s) => (
-                  <tr key={s.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{clientName(s.client_id)}</td>
-                    <td className="px-4 py-3">
-                      <span className="badge badge-info">{s.pack}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{new Date(s.created_at).toLocaleString('fr-FR')}</td>
-                    <td className="px-4 py-3">
-                      <span className={`badge ${statusBadge[s.status || ''] || 'badge-info'}`}>
-                        {statusLabels[s.status || ''] || s.status}
-                      </span>
-                      {s.error_message && (
-                        <p className="text-xs text-red-500 mt-1 max-w-xs truncate" title={s.error_message}>{s.error_message}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 space-x-2 whitespace-nowrap">
-                      {s.html_genere && (
-                        <>
-                          <button
-                            onClick={() => setPreviewSite(s)}
-                            className="px-3 py-1 bg-wine text-white rounded text-sm hover:opacity-90"
-                          >
-                            👁 Aperçu
-                          </button>
-                          {s.status === 'a_valider' && (
-                            <button
-                              onClick={() => validerSite(s)}
-                              className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                              title="Construire le site complet à partir du modèle du pack"
-                            >
-                              ✅ Valider
-                            </button>
-                          )}
-                          <a
-                            href={`/api/sites-generes/download?id=${s.id}`}
-                            className="inline-block px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-800"
-                            title={
-                              s.status === 'pret'
-                                ? 'Site complet : toutes les pages, le dashboard et la connexion'
-                                : 'Aperçu seul : la page d accueil. Valide pour obtenir le site complet.'
-                            }
-                          >
-                            ⬇ {s.status === 'pret' ? 'Site complet' : 'Aperçu'}
-                          </a>
-                          {s.status === 'pret' && (
-                            <button
-                              onClick={() => genererPromptWoocommerce(s)}
-                              className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
-                              title="Générer un prompt pour créer la boutique WooCommerce"
-                            >
-                              🛒 Prompt boutique
-                            </button>
-                          )}
-                        </>
-                      )}
-                      <button
-                        onClick={() => deleteSite(s.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                      >
-                        Supprimer
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
+      {/* MODALS */}
       {previewSite && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setPreviewSite(null)}
         >
           <div className="bg-white rounded-lg w-full max-w-5xl h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="font-bold">Aperçu — {clientName(previewSite.client_id)} ({previewSite.pack})</h3>
-              <button onClick={() => setPreviewSite(null)} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Fermer</button>
+              <h3 className="font-bold text-gray-900">Aperçu — {clientName(previewSite.client_id)}</h3>
+              <button onClick={() => setPreviewSite(null)} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                Fermer
+              </button>
             </div>
-            <iframe
-              srcDoc={previewSite.html_genere}
-              className="flex-1 w-full"
-              title="Aperçu du site généré"
-            />
+            <iframe srcDoc={previewSite.html_genere} className="flex-1 w-full" title="Aperçu du site généré" />
           </div>
         </div>
       )}
 
       {promptModal.visible && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setPromptModal({ visible: false, prompt: '' })}
         >
-          <div className="bg-white rounded-lg w-full max-w-3xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="bg-white rounded-lg w-full max-w-3xl max-h-[80vh] flex flex-col text-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center p-4 border-b">
               <h3 className="font-bold">Aperçu du Prompt WooCommerce</h3>
-              <button onClick={() => setPromptModal({ visible: false, prompt: '' })} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Fermer</button>
+              <button onClick={() => setPromptModal({ visible: false, prompt: '' })} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                Fermer
+              </button>
             </div>
             <textarea
               value={promptModal.prompt}
               onChange={(e) => setPromptModal({ ...promptModal, prompt: e.target.value })}
-              className="flex-1 p-4 font-mono text-sm border-b resize-none"
-              placeholder="Prompt WooCommerce"
+              className="flex-1 p-4 font-mono text-sm border-b resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <div className="flex justify-end gap-2 p-4">
-              <button
-                onClick={() => setPromptModal({ visible: false, prompt: '' })}
-                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
-              >
+              <button onClick={() => setPromptModal({ visible: false, prompt: '' })} className="px-4 py-2 border rounded hover:bg-gray-50">
                 Annuler
               </button>
               <button
                 onClick={async () => {
                   if (navigator.clipboard) {
                     await navigator.clipboard.writeText(promptModal.prompt)
-                    alert('Prompt copié ✅\n\nColle-le sur Hostinger dans Claude pour créer la boutique avec le même design.')
-                  } else {
-                    prompt('Copie ce prompt :', promptModal.prompt)
+                    alert('Prompt copié ✅')
                   }
                   setPromptModal({ visible: false, prompt: '' })
                 }}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Copier
               </button>
