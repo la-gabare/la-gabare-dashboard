@@ -878,11 +878,11 @@ export default function CreateurSitePage() {
         <div className="gen-panel" style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
             <button onClick={generate} disabled={generating || !form.client_id} className="btn btn-primary">
-              {generating ? 'Envoi...' : '✨ Générer'}
+              {generating ? 'Envoi...' : '🌐 Site principal'}
             </button>
             {form.client_id && (
               <button onClick={genererPromptWoocommerceFromForm} className="btn btn-secondary">
-                📋 Prompt boutique
+                🛍️ Boutique client
               </button>
             )}
           </div>
