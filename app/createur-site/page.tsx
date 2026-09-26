@@ -465,7 +465,7 @@ export default function CreateurSitePage() {
         `**Créé pour:** ${client?.nom_domaine}`,
         `**Pack:** ${form.pack.toUpperCase()}`,
         `**Date:** ${new Date().toLocaleDateString('fr-FR')}`,
-      ]
+      )
 
       const prompt = lignesWoo.join('\n')
       setPromptModal({ visible: true, prompt })
@@ -561,7 +561,7 @@ export default function CreateurSitePage() {
         form.demande ? `**Notes client:** ${form.demande}` : '',
         `**Créé pour:** ${client?.nom_domaine}`,
         `**Date:** ${new Date().toLocaleDateString('fr-FR')}`,
-      ]
+      )
 
       const prompt = lignes.join('\n')
       setPromptModal({ visible: true, prompt })
