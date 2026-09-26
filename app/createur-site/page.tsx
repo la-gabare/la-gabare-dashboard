@@ -281,105 +281,212 @@ export default function CreateurSitePage() {
     const skinLabel = skinOptions.find((s) => s.value === form.skin_choisi)?.label || 'Non spécifié'
     const fontLabel = fontPairings.find((f) => f.name === form.style_polices)?.name || 'Non spécifié'
 
-    const lignes = [
-      'Tu crées un site Web complet pour un domaine viticole.',
-      '',
-      '## IDENTITÉ & BRANDING DU DOMAINE',
-      '',
-      `**Nom du domaine:** ${client?.nom_domaine}`,
-      `**Région:** ${client?.region}`,
-      `**Appellation:** ${client?.appellation}`,
-      `**Localité:** ${client?.localite || ''}`,
-      `**Cépages:** ${client?.cepages}`,
-      `**Type de vins:** ${client?.type_vin}`,
-      `**Email contact:** ${client?.email_contact || ''}`,
-      `**Téléphone:** ${client?.telephone || ''}`,
-      client?.histoire ? `**Histoire du domaine:**\n${client.histoire}` : '',
-      client?.points_forts ? `**Points forts:**\n${client.points_forts}` : '',
-      client?.public_cible ? `**Public cible:** ${client.public_cible}` : '',
-      client?.style ? `**Style souhaité:** ${client.style}` : '',
-      client?.tone_voix ? `**Ton de communication:** ${client.tone_voix}` : '',
-      profil.slogan ? `**Slogan site:** ${profil.slogan}` : form.slogan ? `**Slogan site:** ${form.slogan}` : '',
-      profil.messages_cles ? `**Messages clés:**\n${profil.messages_cles}` : '',
-      '',
-      '## STYLES & MISE EN PAGE',
-      '',
-      `**Pack:** ${form.pack.toUpperCase()}`,
-      `**Structure de page:** ${templateLabel}`,
-      `**Style des éléments:** ${skinLabel}`,
-      `**Polices:** ${fontLabel}`,
-      `**Couleur principale:** ${form.couleur_principale}`,
-      `**Couleur accent:** ${form.couleur_accent}`,
-      `**Couleur secondaire:** ${form.couleur_secondaire}`,
-      '',
-      '## CUVÉES À INTÉGRER',
-      '',
-    ].filter(Boolean)
+    // PACK PRO/PREMIUM: WOOCOMMERCE
+    if (form.pack === 'pro' || form.pack === 'premium') {
+      const lignesWoo = [
+        'Tu crées une boutique WooCommerce complète pour un domaine viticole.',
+        'Elle doit avoir EXACTEMENT le même design et les mêmes couleurs que le site vitrine.',
+        '',
+        '## IDENTITÉ & BRANDING',
+        '',
+        `**Nom du domaine:** ${client?.nom_domaine}`,
+        `**Région:** ${client?.region}`,
+        `**Appellation:** ${client?.appellation}`,
+        `**Cépages:** ${client?.cepages}`,
+        `**Type de vins:** ${client?.type_vin}`,
+        `**Ton de communication:** ${client?.tone_voix || 'authentique'}`,
+        client?.histoire ? `**Histoire:**\n${client.histoire}` : '',
+        client?.points_forts ? `**Points forts:**\n${client.points_forts}` : '',
+        '',
+        '## DESIGN & STYLES (À REPRODUIRE EXACTEMENT)',
+        '',
+        `**Polices:** ${fontLabel}`,
+        `**Couleur principale:** ${form.couleur_principale}`,
+        `**Couleur accent:** ${form.couleur_accent}`,
+        `**Couleur secondaire:** ${form.couleur_secondaire}`,
+        `**Style des éléments:** ${skinLabel}`,
+        `**Logo:** ${form.logo_url || 'Même logo que le site vitrine'}`,
+        '',
+        '## CUVÉES EN VENTE',
+        '',
+      ].filter(Boolean)
 
-    if (form.cuvees.length === 0) {
-      lignes.push('Pas de cuvées fournies. Crée 4-6 cuvées représentatives du domaine.')
+      if (form.cuvees.length === 0) {
+        lignesWoo.push('Pas de cuvées fournies. Crée 4-6 produits représentatifs.')
+      } else {
+        form.cuvees.forEach((c, i) => {
+          lignesWoo.push(`**${i + 1}. ${c.nom}**`)
+          if (c.description) lignesWoo.push(`Description: ${c.description}`)
+          if (c.photo_url) lignesWoo.push(`Photo: ${c.photo_url}`)
+          lignesWoo.push('Prix: À définir')
+          lignesWoo.push('')
+        })
+      }
+
+      lignesWoo.push(
+        '## STRUCTURE WOOCOMMERCE',
+        '',
+        'Pages:',
+        '- Accueil boutique (présentation + grille de produits)',
+        '- Fiche produit (description, prix, images, ajouter au panier)',
+        '- Panier (affichage articles, modification quantités)',
+        '- Checkout (formulaire adresse, paiement)',
+        '- Page merci (confirmation commande)',
+        '- Mentions légales, CGV, Contact',
+        '',
+        '## PRODUITS',
+        '',
+        'Pour chaque cuvée (produit):',
+        '- Nom: exact comme fourni',
+        '- Description courte: 50-100 mots (accords mets-vins)',
+        '- Description longue: description complète',
+        '- Photo: haute résolution',
+        '- Catégories: Vins Rouges / Blancs / Rosés',
+        '- Tags: cépage, millésime, terroir',
+        '- Prix: champ visible pour remplissage manuel',
+        '- Stock: champ gérable',
+        '',
+        '## PAIEMENT & LIVRAISON',
+        '',
+        'Paiement:',
+        '- Stripe (structure prête, sans clés réelles)',
+        '- PayPal (structure prête, sans clés réelles)',
+        '- À la main (virement/chèque avec instructions)',
+        '',
+        'Livraison:',
+        '- Retrait au domaine: gratuit',
+        '- Livraison France: tarifs par zones',
+        '- Livraison Europe: optionnel',
+        '- Port offert dès 6 bouteilles',
+        '',
+        '## INSTRUCTIONS TECHNIQUES',
+        '',
+        '1. Crée WooCommerce avec thème personnalisé',
+        `2. Polices: ${fontLabel}`,
+        `3. Couleurs CSS: principale ${form.couleur_principale}, accent ${form.couleur_accent}`,
+        `4. Style des éléments: ${skinLabel}`,
+        '5. Responsive mobile/tablet/desktop',
+        '6. Lazy-loading images',
+        '7. Page produit SEO (meta descriptions)',
+        '8. Loi Evin (L3323-4): pas d\'ambiance festive, pas de personnes qui boivent',
+        '9. Intégration paiement structure prête',
+        '10. Emails confirmations commande',
+        '',
+        '## LIVRABLES',
+        '',
+        '- Theme WordPress/WooCommerce personnalisé',
+        '- `/wp-content/themes/custom/` avec style.css',
+        '- Toutes les pages (accueil, produits, panier, checkout, etc.)',
+        '- Documentation configuration paiement',
+        '- ZIP prêt à déployer',
+        '',
+        '## NOTES',
+        '',
+        form.demande ? `**Notes client:** ${form.demande}` : '',
+        `**Créé pour:** ${client?.nom_domaine}`,
+        `**Pack:** ${form.pack.toUpperCase()}`,
+        `**Date:** ${new Date().toLocaleDateString('fr-FR')}`,
+      ]
+
+      const prompt = lignesWoo.join('\n')
+      setPromptModal({ visible: true, prompt })
     } else {
-      form.cuvees.forEach((c, i) => {
-        lignes.push(`**${i + 1}. ${c.nom}**`)
-        if (c.description) lignes.push(c.description)
-        if (c.photo_url) lignes.push(`Image: ${c.photo_url}`)
-        lignes.push('')
-      })
+      // PACK ESSENTIEL: SITE VITRINE
+      const lignes = [
+        'Tu crées un site Web complet pour un domaine viticole.',
+        '',
+        '## IDENTITÉ & BRANDING DU DOMAINE',
+        '',
+        `**Nom du domaine:** ${client?.nom_domaine}`,
+        `**Région:** ${client?.region}`,
+        `**Appellation:** ${client?.appellation}`,
+        `**Localité:** ${client?.localite || ''}`,
+        `**Cépages:** ${client?.cepages}`,
+        `**Type de vins:** ${client?.type_vin}`,
+        `**Email contact:** ${client?.email_contact || ''}`,
+        `**Téléphone:** ${client?.telephone || ''}`,
+        client?.histoire ? `**Histoire du domaine:**\n${client.histoire}` : '',
+        client?.points_forts ? `**Points forts:**\n${client.points_forts}` : '',
+        client?.public_cible ? `**Public cible:** ${client.public_cible}` : '',
+        client?.style ? `**Style souhaité:** ${client.style}` : '',
+        client?.tone_voix ? `**Ton de communication:** ${client.tone_voix}` : '',
+        profil.slogan ? `**Slogan site:** ${profil.slogan}` : form.slogan ? `**Slogan site:** ${form.slogan}` : '',
+        profil.messages_cles ? `**Messages clés:**\n${profil.messages_cles}` : '',
+        '',
+        '## STYLES & MISE EN PAGE',
+        '',
+        `**Pack:** ${form.pack.toUpperCase()}`,
+        `**Structure de page:** ${templateLabel}`,
+        `**Style des éléments:** ${skinLabel}`,
+        `**Polices:** ${fontLabel}`,
+        `**Couleur principale:** ${form.couleur_principale}`,
+        `**Couleur accent:** ${form.couleur_accent}`,
+        `**Couleur secondaire:** ${form.couleur_secondaire}`,
+        '',
+        '## CUVÉES À INTÉGRER',
+        '',
+      ].filter(Boolean)
+
+      if (form.cuvees.length === 0) {
+        lignes.push('Pas de cuvées fournies. Crée 4-6 cuvées représentatives du domaine.')
+      } else {
+        form.cuvees.forEach((c, i) => {
+          lignes.push(`**${i + 1}. ${c.nom}**`)
+          if (c.description) lignes.push(c.description)
+          if (c.photo_url) lignes.push(`Image: ${c.photo_url}`)
+          lignes.push('')
+        })
+      }
+
+      lignes.push(
+        '## MÉDIAS & ASSETS',
+        '',
+        form.logo_url ? `**Logo:** ${form.logo_url}` : '**Logo:** À fournir au client',
+        form.hero_url ? `**Image héro:** ${form.hero_url}` : '**Image héro:** À fournir au client',
+        form.da_urls.length > 0 ? `**Direction artistique:** ${form.da_urls.join(', ')}` : '',
+        form.media_urls.length > 0 ? `**Autres médias:** ${form.media_urls.join(', ')}` : '',
+        '',
+        '## STRUCTURE DU SITE',
+        '',
+        'Pages obligatoires:',
+        '- Accueil (hero, présentation, cuvées en grille/carousel)',
+        '- Présentation du domaine',
+        '- Nos cuvées (avec détails, photos, descriptions)',
+        '- Contact (formulaire + localisation)',
+        '- Blog/Actualités (optionnel)',
+        '',
+        '## INSTRUCTIONS TECHNIQUES',
+        '',
+        '1. Crée un site HTML/CSS responsive (mobile-first)',
+        `2. Utilise les polices Google: ${fontLabel}`,
+        `3. Applique le schéma de couleurs: principale ${form.couleur_principale}, accent ${form.couleur_accent}`,
+        `4. Respecte la mise en page: ${templateLabel}`,
+        `5. Style des éléments: ${skinLabel}`,
+        '6. Navigation cohérente et intuitive',
+        '7. Images optimisées (lazy-loading)',
+        '8. SEO-friendly (meta, structured data)',
+        '9. Loi Evin (L3323-4): pas d\'ambiance festive, pas de personnes qui boivent',
+        '10. Responsive sur mobile/tablet/desktop',
+        '',
+        '## LIVRABLES',
+        '',
+        '- Dossier `/site/` avec structure HTML complète',
+        '- `/site/css/style.css` avec variables de couleurs',
+        '- `/site/js/main.js` si interactions nécessaires',
+        '- Images placeholders avec chemins corrects',
+        '- `/site/index.html`, `/site/domaine.html`, `/site/cuvees.html`, `/site/contact.html`, etc.',
+        '- ZIP du dossier complet prêt à déployer',
+        '',
+        '## NOTES',
+        '',
+        form.demande ? `**Notes client:** ${form.demande}` : '',
+        `**Créé pour:** ${client?.nom_domaine}`,
+        `**Date:** ${new Date().toLocaleDateString('fr-FR')}`,
+      ]
+
+      const prompt = lignes.join('\n')
+      setPromptModal({ visible: true, prompt })
     }
-
-    lignes.push(
-      '## MÉDIAS & ASSETS',
-      '',
-      form.logo_url ? `**Logo:** ${form.logo_url}` : '**Logo:** À fournir au client',
-      form.hero_url ? `**Image héro:** ${form.hero_url}` : '**Image héro:** À fournir au client',
-      form.da_urls.length > 0 ? `**Direction artistique:** ${form.da_urls.join(', ')}` : '',
-      form.media_urls.length > 0 ? `**Autres médias:** ${form.media_urls.join(', ')}` : '',
-      '',
-      '## STRUCTURE DU SITE',
-      '',
-      'Pages obligatoires:',
-      '- Accueil (hero, présentation, cuvées en grille/carousel)',
-      '- Présentation du domaine',
-      '- Nos cuvées (avec détails, photos, descriptions)',
-      '- Contact (formulaire + localisation)',
-      '- Blog/Actualités (optionnel)',
-      '',
-      form.pack === 'pro' ? '- Boutique WooCommerce (cuvées à la vente, panier, paiement Stripe/PayPal)\n- Gestion des livraisons\n' : '',
-      '',
-      '## INSTRUCTIONS TECHNIQUES',
-      '',
-      '1. Crée un site HTML/CSS responsive (mobile-first)',
-      `2. Utilise les polices Google: ${fontLabel}`,
-      `3. Applique le schéma de couleurs: principale ${form.couleur_principale}, accent ${form.couleur_accent}`,
-      `4. Respecte la mise en page: ${templateLabel}`,
-      `5. Style des éléments: ${skinLabel}`,
-      '6. Navigation cohérente et intuitive',
-      '7. Images optimisées (lazy-loading)',
-      '8. SEO-friendly (meta, structured data)',
-      '9. Loi Evin (L3323-4): pas d\'ambiance festive, pas de personnes qui boivent',
-      '10. Responsive sur mobile/tablet/desktop',
-      '',
-      form.pack === 'pro' ? '11. Intègre WooCommerce avec les cuvées\n12. Stripe/PayPal prêt (sans clés réelles)\n' : '',
-      '',
-      '## LIVRABLES',
-      '',
-      '- Dossier `/site/` avec structure HTML complète',
-      '- `/site/css/style.css` avec variables de couleurs',
-      '- `/site/js/main.js` si interactions nécessaires',
-      '- Images placeholders avec chemins corrects',
-      '- `/site/index.html`, `/site/domaine.html`, `/site/cuvees.html`, `/site/contact.html`, etc.',
-      form.pack === 'pro' ? '- `/site/shop/` avec structure WooCommerce prêt à l\'intégration' : '',
-      '- ZIP du dossier complet prêt à déployer',
-      '',
-      '## NOTES',
-      '',
-      form.demande ? `**Notes client:** ${form.demande}` : '',
-      `**Créé pour:** ${client?.nom_domaine}`,
-      `**Date:** ${new Date().toLocaleDateString('fr-FR')}`,
-    ]
-
-    const prompt = lignes.join('\n')
-    setPromptModal({ visible: true, prompt })
   }
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || 'Domaine'
