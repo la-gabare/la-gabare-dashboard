@@ -360,118 +360,8 @@ export default function CreateurSitePage() {
     const skinLabel = skinOptions.find((s) => s.value === form.skin_choisi)?.label || 'Non spécifié'
     const fontLabel = fontPairings.find((f) => f.name === form.style_polices)?.name || 'Non spécifié'
 
-    // PACK PRO/PREMIUM: WOOCOMMERCE
-    if (form.pack === 'pro' || form.pack === 'premium') {
-      const lignesWoo = [
-        'Tu crées une boutique WooCommerce complète pour un domaine viticole.',
-        'Elle doit avoir EXACTEMENT le même design et les mêmes couleurs que le site vitrine.',
-        '',
-        '## IDENTITÉ & BRANDING',
-        '',
-        `**Nom du domaine:** ${client?.nom_domaine}`,
-        `**Région:** ${client?.region}`,
-        `**Appellation:** ${client?.appellation}`,
-        `**Cépages:** ${client?.cepages}`,
-        `**Type de vins:** ${client?.type_vin}`,
-        `**Ton de communication:** ${client?.tone_voix || 'authentique'}`,
-        client?.histoire ? `**Histoire:**\n${client.histoire}` : '',
-        client?.points_forts ? `**Points forts:**\n${client.points_forts}` : '',
-        '',
-        '## DESIGN & STYLES (À REPRODUIRE EXACTEMENT)',
-        '',
-        `**Polices:** ${fontLabel}`,
-        `**Couleur principale:** ${form.couleur_principale}`,
-        `**Couleur accent:** ${form.couleur_accent}`,
-        `**Couleur secondaire:** ${form.couleur_secondaire}`,
-        `**Style des éléments:** ${skinLabel}`,
-        `**Logo:** ${form.logo_url || 'Même logo que le site vitrine'}`,
-        '',
-        '## CUVÉES EN VENTE',
-        '',
-      ].filter(Boolean)
-
-      if (form.cuvees.length === 0) {
-        lignesWoo.push('Pas de cuvées fournies. Crée 4-6 produits représentatifs.')
-      } else {
-        form.cuvees.forEach((c, i) => {
-          lignesWoo.push(`**${i + 1}. ${c.nom}**`)
-          if (c.description) lignesWoo.push(`Description: ${c.description}`)
-          if (c.photo_url) lignesWoo.push(`Photo: ${c.photo_url}`)
-          lignesWoo.push('Prix: À définir')
-          lignesWoo.push('')
-        })
-      }
-
-      lignesWoo.push(
-        '## STRUCTURE WOOCOMMERCE',
-        '',
-        'Pages:',
-        '- Accueil boutique (présentation + grille de produits)',
-        '- Fiche produit (description, prix, images, ajouter au panier)',
-        '- Panier (affichage articles, modification quantités)',
-        '- Checkout (formulaire adresse, paiement)',
-        '- Page merci (confirmation commande)',
-        '- Mentions légales, CGV, Contact',
-        '',
-        '## PRODUITS',
-        '',
-        'Pour chaque cuvée (produit):',
-        '- Nom: exact comme fourni',
-        '- Description courte: 50-100 mots (accords mets-vins)',
-        '- Description longue: description complète',
-        '- Photo: haute résolution',
-        '- Catégories: Vins Rouges / Blancs / Rosés',
-        '- Tags: cépage, millésime, terroir',
-        '- Prix: champ visible pour remplissage manuel',
-        '- Stock: champ gérable',
-        '',
-        '## PAIEMENT & LIVRAISON',
-        '',
-        'Paiement:',
-        '- Stripe (structure prête, sans clés réelles)',
-        '- PayPal (structure prête, sans clés réelles)',
-        '- À la main (virement/chèque avec instructions)',
-        '',
-        'Livraison:',
-        '- Retrait au domaine: gratuit',
-        '- Livraison France: tarifs par zones',
-        '- Livraison Europe: optionnel',
-        '- Port offert dès 6 bouteilles',
-        '',
-        '## INSTRUCTIONS TECHNIQUES',
-        '',
-        '1. Crée WooCommerce avec thème personnalisé',
-        `2. Polices: ${fontLabel}`,
-        `3. Couleurs CSS: principale ${form.couleur_principale}, accent ${form.couleur_accent}`,
-        `4. Style des éléments: ${skinLabel}`,
-        '5. Responsive mobile/tablet/desktop',
-        '6. Lazy-loading images',
-        '7. Page produit SEO (meta descriptions)',
-        '8. Loi Evin (L3323-4): pas d\'ambiance festive, pas de personnes qui boivent',
-        '9. Intégration paiement structure prête',
-        '10. Emails confirmations commande',
-        '',
-        '## LIVRABLES',
-        '',
-        '- Theme WordPress/WooCommerce personnalisé',
-        '- `/wp-content/themes/custom/` avec style.css',
-        '- Toutes les pages (accueil, produits, panier, checkout, etc.)',
-        '- Documentation configuration paiement',
-        '- ZIP prêt à déployer',
-        '',
-        '## NOTES',
-        '',
-        form.demande ? `**Notes client:** ${form.demande}` : '',
-        `**Créé pour:** ${client?.nom_domaine}`,
-        `**Pack:** ${form.pack.toUpperCase()}`,
-        `**Date:** ${new Date().toLocaleDateString('fr-FR')}`,
-      )
-
-      const prompt = lignesWoo.join('\n')
-      setPromptModal({ visible: true, prompt })
-    } else {
-      // PACK ESSENTIEL: SITE VITRINE
-      const lignes = [
+    // SITE VITRINE (tous les packs)
+    const lignes = [
         'Tu crées un site Web complet pour un domaine viticole.',
         '',
         '## IDENTITÉ & BRANDING DU DOMAINE',
@@ -563,7 +453,6 @@ export default function CreateurSitePage() {
 
       const prompt = lignes.join('\n')
       setPromptModal({ visible: true, prompt })
-    }
   }
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || 'Domaine'
