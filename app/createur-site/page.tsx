@@ -63,6 +63,7 @@ type Cuvee = {
   alcool?: string
   aromes_primaires?: string[]
   aromes_secondaires?: string[]
+  aromes_tertiaires?: string[]
   cepages?: string[]
 }
 
@@ -78,6 +79,14 @@ const aromeSecondaires = [
   'Cuir', 'Truffe', 'Champignon', 'Sous-bois', 'Humus',
   'Pierre à fusil', 'Minéral', 'Iodé', 'Sel', 'Poivre',
   'Cannelle', 'Clou de girofle', 'Anis', 'Réglisse', 'Fumé',
+]
+
+const aromeTertiaires = [
+  'Fruits secs', 'Raisins secs', 'Pruneau', 'Figue', 'Datte',
+  'Noix', 'Amande grillée', 'Noisette torréfiée', 'Cacahuète',
+  'Miel', 'Propolis', 'Cire', 'Cuir vieilli', 'Tabac blond',
+  'Champignon sec', 'Müre', 'Réglisse noire', 'Encens',
+  'Bois', 'Cèdre', 'Cognac', 'Xérès', 'Tête de mort',
 ]
 
 const cepagesList = [
@@ -122,7 +131,7 @@ export default function CreateurSitePage() {
   const [uploading, setUploading] = useState(false)
   const [promptModal, setPromptModal] = useState<{ visible: boolean; prompt: string }>({ visible: false, prompt: '' })
   const [descriptionClient, setDescriptionClient] = useState('')
-  const [searchAromes, setSearchAromes] = useState<{ primaires: string; secondaires: string; cepages: string }>({ primaires: '', secondaires: '', cepages: '' })
+  const [searchAromes, setSearchAromes] = useState<{ primaires: string; secondaires: string; tertiaires: string; cepages: string }>({ primaires: '', secondaires: '', tertiaires: '', cepages: '' })
   const [form, setForm] = useState({
     client_id: '',
     pack: 'essentiel',
@@ -146,7 +155,7 @@ export default function CreateurSitePage() {
   })
 
   const ajouterCuvee = () =>
-    setForm((f) => ({ ...f, cuvees: [...f.cuvees, { nom: '', description: '', photo_url: '', prix: '', alcool: '', aromes_primaires: [], aromes_secondaires: [], cepages: [] }] }))
+    setForm((f) => ({ ...f, cuvees: [...f.cuvees, { nom: '', description: '', photo_url: '', prix: '', alcool: '', aromes_primaires: [], aromes_secondaires: [], aromes_tertiaires: [], cepages: [] }] }))
 
   const modifierCuvee = (i: number, champ: keyof Cuvee, valeur: string) =>
     setForm((f) => ({
@@ -787,7 +796,7 @@ export default function CreateurSitePage() {
                     .tag-option:hover { background: rgba(176,141,87,.2); border-color: #b08d57; }
                   `}</style>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.6rem', marginBottom: '.6rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '.6rem', marginBottom: '.6rem' }}>
                     <div className="tag-input-wrapper">
                       <label className="tag-input-label">Arômes primaires</label>
                       <input
@@ -838,6 +847,34 @@ export default function CreateurSitePage() {
                           .filter((a) => !c.aromes_secondaires?.includes(a) && a.toLowerCase().includes(searchAromes.secondaires.toLowerCase()))
                           .map((arome) => (
                             <div key={arome} className="tag-option" onClick={() => { setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_secondaires: [...(cv.aromes_secondaires || []), arome] } : cv) })); setSearchAromes((s) => ({ ...s, secondaires: '' })); }}>
+                              + {arome}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+
+                    <div className="tag-input-wrapper">
+                      <label className="tag-input-label">Arômes tertiaires</label>
+                      <input
+                        type="text"
+                        className="tag-input-field"
+                        placeholder="Chercher..."
+                        value={searchAromes.tertiaires || ''}
+                        onChange={(e) => setSearchAromes((s) => ({ ...s, tertiaires: e.target.value }))}
+                      />
+                      <div className="tag-container">
+                        {(c.aromes_tertiaires || []).map((arome) => (
+                          <div key={arome} className="tag">
+                            {arome}
+                            <span className="tag-remove" onClick={() => setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_tertiaires: (cv.aromes_tertiaires || []).filter((a) => a !== arome) } : cv) }))}>×</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="tag-suggestions">
+                        {aromeTertiaires
+                          .filter((a) => !c.aromes_tertiaires?.includes(a) && a.toLowerCase().includes((searchAromes.tertiaires || '').toLowerCase()))
+                          .map((arome) => (
+                            <div key={arome} className="tag-option" onClick={() => { setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_tertiaires: [...(cv.aromes_tertiaires || []), arome] } : cv) })); setSearchAromes((s) => ({ ...s, tertiaires: '' })); }}>
                               + {arome}
                             </div>
                           ))}
