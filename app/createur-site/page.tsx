@@ -89,6 +89,7 @@ export default function CreateurSitePage() {
   const [previewSite, setPreviewSite] = useState<SiteGenere | null>(null)
   const [uploading, setUploading] = useState(false)
   const [promptModal, setPromptModal] = useState<{ visible: boolean; prompt: string }>({ visible: false, prompt: '' })
+  const [descriptionClient, setDescriptionClient] = useState('')
   const [form, setForm] = useState({
     client_id: '',
     pack: 'essentiel',
@@ -161,6 +162,84 @@ export default function CreateurSitePage() {
         .filter(Boolean)
         .join(' — ')
       setForm((f) => ({ ...f, demande: infosClient }))
+
+      // Formater toutes les infos du client
+      const profil = (client.profil_client_complet || {}) as Record<string, any>
+      const lignes: string[] = []
+
+      lignes.push('=== FICHE CLIENT COMPLÈTE ===', '')
+
+      // Infos de base
+      lignes.push('IDENTITÉ DU DOMAINE', '---')
+      if (client.nom_domaine) lignes.push(`Nom du domaine: ${client.nom_domaine}`)
+      if (client.appellation) lignes.push(`Appellation: ${client.appellation}`)
+      if (client.region) lignes.push(`Région: ${client.region}`)
+      if (client.cepages) lignes.push(`Cépages: ${Array.isArray(client.cepages) ? client.cepages.join(', ') : client.cepages}`)
+      if (client.type_vin) lignes.push(`Type de vin: ${client.type_vin}`)
+      if (client.email_contact) lignes.push(`Email: ${client.email_contact}`)
+      lignes.push('')
+
+      // Présentation
+      lignes.push('PRÉSENTATION & POSITIONNEMENT', '---')
+      if (client.histoire) lignes.push(`Histoire:\n${client.histoire}`)
+      if (client.points_forts) lignes.push(`Points forts:\n${client.points_forts}`)
+      if (client.public_cible) lignes.push(`Public cible: ${client.public_cible}`)
+      if (client.style) lignes.push(`Style visuel: ${client.style}`)
+      if (client.tone_voix) lignes.push(`Ton de communication: ${client.tone_voix}`)
+      lignes.push('')
+
+      // Infos du formulaire complet
+      if (Object.keys(profil).length > 0) {
+        lignes.push('INFORMATIONS SUPPLÉMENTAIRES', '---')
+
+        if (profil.slogan) lignes.push(`Slogan: ${profil.slogan}`)
+        if (profil.presentation) lignes.push(`Présentation: ${profil.presentation}`)
+        if (profil.liste_cuvees) lignes.push(`Liste de cuvées:\n${profil.liste_cuvees}`)
+
+        // Réseaux sociaux
+        const reseaux: string[] = []
+        if (profil.reseau_instagram) reseaux.push(`Instagram ${profil.instagram_handle ? '(@' + profil.instagram_handle + ')' : ''}`)
+        if (profil.reseau_facebook) reseaux.push(`Facebook ${profil.facebook_page ? '(' + profil.facebook_page + ')' : ''}`)
+        if (profil.reseau_linkedin) reseaux.push('LinkedIn')
+        if (profil.reseau_tiktok) reseaux.push(`TikTok ${profil.tiktok_handle ? '(@' + profil.tiktok_handle + ')' : ''}`)
+        if (reseaux.length > 0) lignes.push(`Réseaux présents: ${reseaux.join(', ')}`)
+
+        if (profil.manager) lignes.push(`Manager/Responsable: ${profil.manager}`)
+
+        // Cibles
+        const cibles: string[] = []
+        if (profil.cible_particuliers) cibles.push('Particuliers')
+        if (profil.cible_cavistes) cibles.push('Cavistes')
+        if (profil.cible_restaurants) cibles.push('Restaurants')
+        if (profil.cible_export) cibles.push('Export')
+        if (profil.cible_professionnels) cibles.push('Professionnels')
+        if (cibles.length > 0) lignes.push(`Cibles commerciales: ${cibles.join(', ')}`)
+
+        if (profil.concurrents) lignes.push(`Concurrents: ${profil.concurrents}`)
+        if (profil.positionnement) lignes.push(`Positionnement: ${profil.positionnement}`)
+
+        // Objectifs
+        const objectifs: string[] = []
+        if (profil.obj_vente) objectifs.push('Vente directe')
+        if (profil.obj_visibilite) objectifs.push('Visibilité/Notoriété')
+        if (profil.obj_fidelite) objectifs.push('Fidélité clients')
+        if (profil.obj_recrutement) objectifs.push('Recrutement')
+        if (profil.obj_engagement) objectifs.push('Engagement communauté')
+        if (profil.obj_conformite) objectifs.push('Conformité légale')
+        if (objectifs.length > 0) lignes.push(`Objectifs: ${objectifs.join(', ')}`)
+
+        if (profil.kpi_12mois) lignes.push(`KPI 12 mois: ${profil.kpi_12mois}`)
+        if (profil.urgence) lignes.push(`Urgence/Timeline: ${profil.urgence}`)
+
+        lignes.push('')
+      }
+
+      lignes.push('SITE & CONTENU ACTUEL', '---')
+      if (client.site_url) lignes.push(`Site actuel: ${client.site_url}`)
+      if (client.pack_site) lignes.push(`Pack site: ${client.pack_site}`)
+      if (profil.site_existant) lignes.push(`Situation site: ${profil.site_existant}`)
+
+      setDescriptionClient(lignes.join('\n'))
     }
   }
 
@@ -591,6 +670,16 @@ export default function CreateurSitePage() {
                 <div className="form-group">
                   <label className="form-label">Type de vin</label>
                   <input type="text" className="form-input" value={currentClient.type_vin || ''} disabled />
+                </div>
+
+                <h3>Fiche client complète</h3>
+                <div className="form-group">
+                  <textarea
+                    className="form-textarea"
+                    value={descriptionClient}
+                    readOnly
+                    style={{ minHeight: '300px', maxHeight: '400px' }}
+                  />
                 </div>
               </>
             )}
