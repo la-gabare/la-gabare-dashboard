@@ -55,7 +55,39 @@ const GOOGLE_FONTS_PREVIEW_URL =
   ].join('&') +
   '&display=swap'
 
-type Cuvee = { nom: string; description: string; photo_url: string }
+type Cuvee = {
+  nom: string
+  description: string
+  photo_url: string
+  prix?: string
+  alcool?: string
+  aromes_primaires?: string[]
+  aromes_secondaires?: string[]
+  cepages?: string[]
+}
+
+const aromePrimaires = [
+  'Agrumes', 'Ananas', 'Pomme', 'Poire', 'Pêche', 'Abricot',
+  'Framboise', 'Fraise', 'Cerise', 'Cassis', 'Myrtille',
+  'Rose', 'Pivoine', 'Acacia', 'Miel', 'Vanille', 'Beurre',
+  'Amande', 'Noisette', 'Cacahuète', 'Épices', 'Menthe',
+]
+
+const aromeSecondaires = [
+  'Caramel', 'Chocolat', 'Café', 'Cacao', 'Moka', 'Tabac',
+  'Cuir', 'Truffe', 'Champignon', 'Sous-bois', 'Humus',
+  'Pierre à fusil', 'Minéral', 'Iodé', 'Sel', 'Poivre',
+  'Cannelle', 'Clou de girofle', 'Anis', 'Réglisse', 'Fumé',
+]
+
+const cepagesList = [
+  'Chardonnay', 'Sauvignon Blanc', 'Riesling', 'Gewürztraminer', 'Pinot Gris',
+  'Albariño', 'Grüner Veltliner', 'Vermentino', 'Muscadet', 'Sancerre',
+  'Merlot', 'Cabernet Sauvignon', 'Pinot Noir', 'Syrah', 'Grenache',
+  'Tempranillo', 'Nebbiolo', 'Brunello', 'Gamay', 'Cabernet Franc',
+  'Tannat', 'Mourvèdre', 'Carignan', 'Chenin Blanc', 'Viognier',
+  'Marsanne', 'Roussanne', 'Verdicchio', 'Gavi', 'Cinsault',
+]
 
 const templateOptions = [
   { value: 1, label: 'Classique' },
@@ -113,7 +145,7 @@ export default function CreateurSitePage() {
   })
 
   const ajouterCuvee = () =>
-    setForm((f) => ({ ...f, cuvees: [...f.cuvees, { nom: '', description: '', photo_url: '' }] }))
+    setForm((f) => ({ ...f, cuvees: [...f.cuvees, { nom: '', description: '', photo_url: '', prix: '', alcool: '', aromes_primaires: [], aromes_secondaires: [], cepages: [] }] }))
 
   const modifierCuvee = (i: number, champ: keyof Cuvee, valeur: string) =>
     setForm((f) => ({
@@ -690,30 +722,124 @@ export default function CreateurSitePage() {
             </div>
 
             <h3>Cuvées (4 min.)</h3>
-            <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
+            <div style={{ maxHeight: '500px', overflowY: 'auto', marginBottom: '1rem' }}>
               {form.cuvees.map((c, i) => (
                 <div key={i} className="cuvee-item">
                   <h4>Cuvée {i + 1}</h4>
-                  <div className="cuvee-fields">
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Nom"
-                      value={c.nom}
-                      onChange={(e) => modifierCuvee(i, 'nom', e.target.value)}
-                    />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.6rem', marginBottom: '.6rem' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Nom</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Nom du vin"
+                        value={c.nom}
+                        onChange={(e) => modifierCuvee(i, 'nom', e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Prix (€)</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Ex. 15.50"
+                        value={c.prix || ''}
+                        onChange={(e) => modifierCuvee(i, 'prix', e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Alcool (%)</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Ex. 12.5"
+                        value={c.alcool || ''}
+                        onChange={(e) => modifierCuvee(i, 'alcool', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '.6rem' }}>
+                    <label className="form-label">Description</label>
                     <textarea
                       className="form-textarea"
-                      placeholder="Description"
-                      style={{ minHeight: '50px' }}
+                      placeholder="Description du vin"
+                      style={{ minHeight: '60px' }}
                       value={c.description}
                       onChange={(e) => modifierCuvee(i, 'description', e.target.value)}
                     />
                   </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.6rem', marginBottom: '.6rem' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Arômes primaires</label>
+                      <select
+                        className="form-select"
+                        multiple
+                        size={3}
+                        value={c.aromes_primaires || []}
+                        onChange={(e) => {
+                          const selected = Array.from(e.target.selectedOptions, opt => opt.value)
+                          setForm((f) => ({
+                            ...f,
+                            cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_primaires: selected } : cv)
+                          }))
+                        }}
+                      >
+                        {aromePrimaires.map(arome => (
+                          <option key={arome} value={arome}>{arome}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Arômes secondaires</label>
+                      <select
+                        className="form-select"
+                        multiple
+                        size={3}
+                        value={c.aromes_secondaires || []}
+                        onChange={(e) => {
+                          const selected = Array.from(e.target.selectedOptions, opt => opt.value)
+                          setForm((f) => ({
+                            ...f,
+                            cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_secondaires: selected } : cv)
+                          }))
+                        }}
+                      >
+                        {aromeSecondaires.map(arome => (
+                          <option key={arome} value={arome}>{arome}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '.6rem' }}>
+                    <label className="form-label">Cépages (Ctrl+Click pour multi-select)</label>
+                    <select
+                      className="form-select"
+                      multiple
+                      size={4}
+                      value={c.cepages || []}
+                      onChange={(e) => {
+                        const selected = Array.from(e.target.selectedOptions, opt => opt.value)
+                        setForm((f) => ({
+                          ...f,
+                          cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, cepages: selected } : cv)
+                        }))
+                      }}
+                    >
+                      {cepagesList.map(cepage => (
+                        <option key={cepage} value={cepage}>{cepage}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   {c.photo_url && (
-                    <img src={c.photo_url} alt="" style={{ width: '50px', height: '50px', marginTop: '.5rem', borderRadius: '4px', objectFit: 'cover' }} />
+                    <img src={c.photo_url} alt="" style={{ width: '60px', height: '60px', marginBottom: '.5rem', borderRadius: '4px', objectFit: 'cover' }} />
                   )}
-                  <div className="btn-row" style={{ marginTop: '.5rem' }}>
+
+                  <div className="btn-row">
                     <button onClick={() => supprimerCuvee(i)} className="btn btn-secondary" style={{ fontSize: '.75rem', padding: '.4rem .8rem' }}>
                       Supprimer
                     </button>
