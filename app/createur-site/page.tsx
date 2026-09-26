@@ -274,45 +274,112 @@ export default function CreateurSitePage() {
       alert('Sélectionne un client.')
       return
     }
-    setGenerating(true)
-    try {
-      const res = await fetch('/api/sites-generes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+
+    const client = clients.find((c) => c.id === Number(form.client_id))
+    const profil = (client?.profil_client_complet || {}) as Record<string, any>
+    const templateLabel = templateOptions.find((t) => t.value === form.template_choisi)?.label || 'Non spécifié'
+    const skinLabel = skinOptions.find((s) => s.value === form.skin_choisi)?.label || 'Non spécifié'
+    const fontLabel = fontPairings.find((f) => f.name === form.style_polices)?.name || 'Non spécifié'
+
+    const lignes = [
+      'Tu crées un site Web complet pour un domaine viticole.',
+      '',
+      '## IDENTITÉ & BRANDING DU DOMAINE',
+      '',
+      `**Nom du domaine:** ${client?.nom_domaine}`,
+      `**Région:** ${client?.region}`,
+      `**Appellation:** ${client?.appellation}`,
+      `**Localité:** ${client?.localite || ''}`,
+      `**Cépages:** ${client?.cepages}`,
+      `**Type de vins:** ${client?.type_vin}`,
+      `**Email contact:** ${client?.email_contact || ''}`,
+      `**Téléphone:** ${client?.telephone || ''}`,
+      client?.histoire ? `**Histoire du domaine:**\n${client.histoire}` : '',
+      client?.points_forts ? `**Points forts:**\n${client.points_forts}` : '',
+      client?.public_cible ? `**Public cible:** ${client.public_cible}` : '',
+      client?.style ? `**Style souhaité:** ${client.style}` : '',
+      client?.tone_voix ? `**Ton de communication:** ${client.tone_voix}` : '',
+      profil.slogan ? `**Slogan site:** ${profil.slogan}` : form.slogan ? `**Slogan site:** ${form.slogan}` : '',
+      profil.messages_cles ? `**Messages clés:**\n${profil.messages_cles}` : '',
+      '',
+      '## STYLES & MISE EN PAGE',
+      '',
+      `**Pack:** ${form.pack.toUpperCase()}`,
+      `**Structure de page:** ${templateLabel}`,
+      `**Style des éléments:** ${skinLabel}`,
+      `**Polices:** ${fontLabel}`,
+      `**Couleur principale:** ${form.couleur_principale}`,
+      `**Couleur accent:** ${form.couleur_accent}`,
+      `**Couleur secondaire:** ${form.couleur_secondaire}`,
+      '',
+      '## CUVÉES À INTÉGRER',
+      '',
+    ].filter(Boolean)
+
+    if (form.cuvees.length === 0) {
+      lignes.push('Pas de cuvées fournies. Crée 4-6 cuvées représentatives du domaine.')
+    } else {
+      form.cuvees.forEach((c, i) => {
+        lignes.push(`**${i + 1}. ${c.nom}**`)
+        if (c.description) lignes.push(c.description)
+        if (c.photo_url) lignes.push(`Image: ${c.photo_url}`)
+        lignes.push('')
       })
-      if (res.ok) {
-        setForm({
-          client_id: '',
-          pack: 'essentiel',
-          slogan: '',
-          message_principal: '',
-          elements_avant: '',
-          demande: '',
-          couleur_principale: '',
-          couleur_secondaire: '',
-          couleur_accent: '',
-          couleurs_notes: '',
-          style_mise_en_page: '',
-          style_polices: '',
-          template_choisi: null,
-          skin_choisi: null,
-          logo_url: '',
-          hero_url: '',
-          da_urls: [],
-          media_urls: [],
-          cuvees: [],
-        })
-        alert('Génération mise en file d\'attente : l\'agent n8n va la traiter sous peu.')
-        fetchData()
-      } else {
-        const err = await res.json()
-        alert('Erreur: ' + err.error)
-      }
-    } catch (err) {
-      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
     }
-    setGenerating(false)
+
+    lignes.push(
+      '## MÉDIAS & ASSETS',
+      '',
+      form.logo_url ? `**Logo:** ${form.logo_url}` : '**Logo:** À fournir au client',
+      form.hero_url ? `**Image héro:** ${form.hero_url}` : '**Image héro:** À fournir au client',
+      form.da_urls.length > 0 ? `**Direction artistique:** ${form.da_urls.join(', ')}` : '',
+      form.media_urls.length > 0 ? `**Autres médias:** ${form.media_urls.join(', ')}` : '',
+      '',
+      '## STRUCTURE DU SITE',
+      '',
+      'Pages obligatoires:',
+      '- Accueil (hero, présentation, cuvées en grille/carousel)',
+      '- Présentation du domaine',
+      '- Nos cuvées (avec détails, photos, descriptions)',
+      '- Contact (formulaire + localisation)',
+      '- Blog/Actualités (optionnel)',
+      '',
+      form.pack === 'pro' ? '- Boutique WooCommerce (cuvées à la vente, panier, paiement Stripe/PayPal)\n- Gestion des livraisons\n' : '',
+      '',
+      '## INSTRUCTIONS TECHNIQUES',
+      '',
+      '1. Crée un site HTML/CSS responsive (mobile-first)',
+      `2. Utilise les polices Google: ${fontLabel}`,
+      `3. Applique le schéma de couleurs: principale ${form.couleur_principale}, accent ${form.couleur_accent}`,
+      `4. Respecte la mise en page: ${templateLabel}`,
+      `5. Style des éléments: ${skinLabel}`,
+      '6. Navigation cohérente et intuitive',
+      '7. Images optimisées (lazy-loading)',
+      '8. SEO-friendly (meta, structured data)',
+      '9. Loi Evin (L3323-4): pas d\'ambiance festive, pas de personnes qui boivent',
+      '10. Responsive sur mobile/tablet/desktop',
+      '',
+      form.pack === 'pro' ? '11. Intègre WooCommerce avec les cuvées\n12. Stripe/PayPal prêt (sans clés réelles)\n' : '',
+      '',
+      '## LIVRABLES',
+      '',
+      '- Dossier `/site/` avec structure HTML complète',
+      '- `/site/css/style.css` avec variables de couleurs',
+      '- `/site/js/main.js` si interactions nécessaires',
+      '- Images placeholders avec chemins corrects',
+      '- `/site/index.html`, `/site/domaine.html`, `/site/cuvees.html`, `/site/contact.html`, etc.',
+      form.pack === 'pro' ? '- `/site/shop/` avec structure WooCommerce prêt à l\'intégration' : '',
+      '- ZIP du dossier complet prêt à déployer',
+      '',
+      '## NOTES',
+      '',
+      form.demande ? `**Notes client:** ${form.demande}` : '',
+      `**Créé pour:** ${client?.nom_domaine}`,
+      `**Date:** ${new Date().toLocaleDateString('fr-FR')}`,
+    ]
+
+    const prompt = lignes.join('\n')
+    setPromptModal({ visible: true, prompt })
   }
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || 'Domaine'
