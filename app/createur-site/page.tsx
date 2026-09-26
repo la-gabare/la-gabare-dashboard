@@ -798,6 +798,17 @@ export default function CreateurSitePage() {
                     />
                   </div>
 
+                  <div className="form-group" style={{ marginBottom: '.6rem' }}>
+                    <label className="form-label">URL de la photo</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="https://..."
+                      value={c.photo_url}
+                      onChange={(e) => modifierCuvee(i, 'photo_url', e.target.value)}
+                    />
+                  </div>
+
                   <style>{`
                     .tag-input-wrapper { margin-bottom: .6rem; }
                     .tag-input-label { display: flex; align-items: center; gap: .4rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: #b08d57; margin-bottom: .4rem; font-weight: 500; }
