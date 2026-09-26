@@ -122,6 +122,7 @@ export default function CreateurSitePage() {
   const [uploading, setUploading] = useState(false)
   const [promptModal, setPromptModal] = useState<{ visible: boolean; prompt: string }>({ visible: false, prompt: '' })
   const [descriptionClient, setDescriptionClient] = useState('')
+  const [searchAromes, setSearchAromes] = useState<{ primaires: string; secondaires: string; cepages: string }>({ primaires: '', secondaires: '', cepages: '' })
   const [form, setForm] = useState({
     client_id: '',
     pack: 'essentiel',
@@ -771,68 +772,105 @@ export default function CreateurSitePage() {
                     />
                   </div>
 
+                  <style>{`
+                    .tag-input-wrapper { margin-bottom: .6rem; }
+                    .tag-input-label { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: #b08d57; margin-bottom: .4rem; font-weight: 500; }
+                    .tag-input-field { width: 100%; padding: .7rem; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.12); color: #f5f2ec; border-radius: 8px; font-family: inherit; font-size: .9rem; outline: none; }
+                    .tag-input-field:focus { border-color: #b08d57; background: rgba(0,0,0,.7); }
+                    .tag-container { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .4rem; }
+                    .tag { display: inline-block; padding: .4rem .8rem; background: rgba(176,141,87,.3); border: 1px solid rgba(176,141,87,.5); color: #b08d57; border-radius: 20px; font-size: .8rem; font-weight: 500; cursor: pointer; transition: all .2s; }
+                    .tag:hover { background: rgba(176,141,87,.5); }
+                    .tag-remove { margin-left: .4rem; cursor: pointer; opacity: .7; }
+                    .tag-remove:hover { opacity: 1; }
+                    .tag-suggestions { display: flex; flex-wrap: wrap; gap: .3rem; max-height: 80px; overflow-y: auto; }
+                    .tag-option { padding: .3rem .6rem; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); color: #f5f2ec; border-radius: 4px; font-size: .8rem; cursor: pointer; transition: all .2s; }
+                    .tag-option:hover { background: rgba(176,141,87,.2); border-color: #b08d57; }
+                  `}</style>
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.6rem', marginBottom: '.6rem' }}>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Arômes primaires</label>
-                      <select
-                        className="form-select"
-                        multiple
-                        size={3}
-                        value={c.aromes_primaires || []}
-                        onChange={(e) => {
-                          const selected = Array.from(e.target.selectedOptions, opt => opt.value)
-                          setForm((f) => ({
-                            ...f,
-                            cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_primaires: selected } : cv)
-                          }))
-                        }}
-                      >
-                        {aromePrimaires.map(arome => (
-                          <option key={arome} value={arome}>{arome}</option>
+                    <div className="tag-input-wrapper">
+                      <label className="tag-input-label">Arômes primaires</label>
+                      <input
+                        type="text"
+                        className="tag-input-field"
+                        placeholder="Chercher..."
+                        value={searchAromes.primaires}
+                        onChange={(e) => setSearchAromes((s) => ({ ...s, primaires: e.target.value }))}
+                      />
+                      <div className="tag-container">
+                        {(c.aromes_primaires || []).map((arome) => (
+                          <div key={arome} className="tag">
+                            {arome}
+                            <span className="tag-remove" onClick={() => setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_primaires: (cv.aromes_primaires || []).filter((a) => a !== arome) } : cv) }))}>×</span>
+                          </div>
                         ))}
-                      </select>
+                      </div>
+                      <div className="tag-suggestions">
+                        {aromePrimaires
+                          .filter((a) => !c.aromes_primaires?.includes(a) && a.toLowerCase().includes(searchAromes.primaires.toLowerCase()))
+                          .map((arome) => (
+                            <div key={arome} className="tag-option" onClick={() => { setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_primaires: [...(cv.aromes_primaires || []), arome] } : cv) })); setSearchAromes((s) => ({ ...s, primaires: '' })); }}>
+                              + {arome}
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Arômes secondaires</label>
-                      <select
-                        className="form-select"
-                        multiple
-                        size={3}
-                        value={c.aromes_secondaires || []}
-                        onChange={(e) => {
-                          const selected = Array.from(e.target.selectedOptions, opt => opt.value)
-                          setForm((f) => ({
-                            ...f,
-                            cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_secondaires: selected } : cv)
-                          }))
-                        }}
-                      >
-                        {aromeSecondaires.map(arome => (
-                          <option key={arome} value={arome}>{arome}</option>
+
+                    <div className="tag-input-wrapper">
+                      <label className="tag-input-label">Arômes secondaires</label>
+                      <input
+                        type="text"
+                        className="tag-input-field"
+                        placeholder="Chercher..."
+                        value={searchAromes.secondaires}
+                        onChange={(e) => setSearchAromes((s) => ({ ...s, secondaires: e.target.value }))}
+                      />
+                      <div className="tag-container">
+                        {(c.aromes_secondaires || []).map((arome) => (
+                          <div key={arome} className="tag">
+                            {arome}
+                            <span className="tag-remove" onClick={() => setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_secondaires: (cv.aromes_secondaires || []).filter((a) => a !== arome) } : cv) }))}>×</span>
+                          </div>
                         ))}
-                      </select>
+                      </div>
+                      <div className="tag-suggestions">
+                        {aromeSecondaires
+                          .filter((a) => !c.aromes_secondaires?.includes(a) && a.toLowerCase().includes(searchAromes.secondaires.toLowerCase()))
+                          .map((arome) => (
+                            <div key={arome} className="tag-option" onClick={() => { setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, aromes_secondaires: [...(cv.aromes_secondaires || []), arome] } : cv) })); setSearchAromes((s) => ({ ...s, secondaires: '' })); }}>
+                              + {arome}
+                            </div>
+                          ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="form-group" style={{ marginBottom: '.6rem' }}>
-                    <label className="form-label">Cépages (Ctrl+Click pour multi-select)</label>
-                    <select
-                      className="form-select"
-                      multiple
-                      size={4}
-                      value={c.cepages || []}
-                      onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions, opt => opt.value)
-                        setForm((f) => ({
-                          ...f,
-                          cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, cepages: selected } : cv)
-                        }))
-                      }}
-                    >
-                      {cepagesList.map(cepage => (
-                        <option key={cepage} value={cepage}>{cepage}</option>
+                  <div className="tag-input-wrapper">
+                    <label className="tag-input-label">Cépages</label>
+                    <input
+                      type="text"
+                      className="tag-input-field"
+                      placeholder="Chercher..."
+                      value={searchAromes.cepages}
+                      onChange={(e) => setSearchAromes((s) => ({ ...s, cepages: e.target.value }))}
+                    />
+                    <div className="tag-container">
+                      {(c.cepages || []).map((cepage) => (
+                        <div key={cepage} className="tag">
+                          {cepage}
+                          <span className="tag-remove" onClick={() => setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, cepages: (cv.cepages || []).filter((c) => c !== cepage) } : cv) }))}>×</span>
+                        </div>
                       ))}
-                    </select>
+                    </div>
+                    <div className="tag-suggestions">
+                      {cepagesList
+                        .filter((c) => !c.cepages?.includes(c) && c.toLowerCase().includes(searchAromes.cepages.toLowerCase()))
+                        .map((cepage) => (
+                          <div key={cepage} className="tag-option" onClick={() => { setForm((f) => ({ ...f, cuvees: f.cuvees.map((cv, idx) => idx === i ? { ...cv, cepages: [...(cv.cepages || []), cepage] } : cv) })); setSearchAromes((s) => ({ ...s, cepages: '' })); }}>
+                            + {cepage}
+                          </div>
+                        ))}
+                    </div>
                   </div>
 
                   {c.photo_url && (
