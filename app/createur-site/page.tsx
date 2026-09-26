@@ -783,7 +783,9 @@ export default function CreateurSitePage() {
 
                   <style>{`
                     .tag-input-wrapper { margin-bottom: .6rem; }
-                    .tag-input-label { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: #b08d57; margin-bottom: .4rem; font-weight: 500; }
+                    .tag-input-label { display: flex; align-items: center; gap: .4rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: #b08d57; margin-bottom: .4rem; font-weight: 500; }
+                    .tag-info-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: rgba(176,141,87,.3); border: 1px solid rgba(176,141,87,.5); border-radius: 50%; color: #b08d57; font-size: .7rem; cursor: help; position: relative; }
+                    .tag-info-icon:hover::after { content: attr(data-info); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.8); color: #f5f2ec; padding: .4rem .6rem; border-radius: 4px; font-size: .75rem; white-space: nowrap; z-index: 1000; border: 1px solid rgba(176,141,87,.5); text-transform: none; letter-spacing: 0; font-weight: 400; }
                     .tag-input-field { width: 100%; padding: .7rem; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.12); color: #f5f2ec; border-radius: 8px; font-family: inherit; font-size: .9rem; outline: none; }
                     .tag-input-field:focus { border-color: #b08d57; background: rgba(0,0,0,.7); }
                     .tag-container { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .4rem; }
@@ -798,7 +800,10 @@ export default function CreateurSitePage() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '.6rem', marginBottom: '.6rem' }}>
                     <div className="tag-input-wrapper">
-                      <label className="tag-input-label">Arômes primaires</label>
+                      <label className="tag-input-label">
+                        Arômes primaires
+                        <div className="tag-info-icon" data-info="Proviennent du raisin et du vin frais">?</div>
+                      </label>
                       <input
                         type="text"
                         className="tag-input-field"
@@ -826,7 +831,10 @@ export default function CreateurSitePage() {
                     </div>
 
                     <div className="tag-input-wrapper">
-                      <label className="tag-input-label">Arômes secondaires</label>
+                      <label className="tag-input-label">
+                        Arômes secondaires
+                        <div className="tag-info-icon" data-info="Proviennent de la fermentation et élevage">?</div>
+                      </label>
                       <input
                         type="text"
                         className="tag-input-field"
@@ -854,7 +862,10 @@ export default function CreateurSitePage() {
                     </div>
 
                     <div className="tag-input-wrapper">
-                      <label className="tag-input-label">Arômes tertiaires</label>
+                      <label className="tag-input-label">
+                        Arômes tertiaires
+                        <div className="tag-info-icon" data-info="Proviennent du vieillissement et oxydation">?</div>
+                      </label>
                       <input
                         type="text"
                         className="tag-input-field"
