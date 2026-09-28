@@ -103,108 +103,108 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
 
       y = addSectionTitle('1. Avant de commencer', y)
       y = addBulletList([
-        'Vous avez reçu vos identifiants FTP par email',
-        'Conservez-les précieusement et ne les partagez pas',
-        'Vous aurez besoin d\'un client FTP comme FileZilla (gratuit)'
+        'Vous avez reçu 2 fichiers texte : prompt-vitrine.txt et prompt-woocommerce.txt',
+        'Vous aurez besoin d\'un compte Claude (claude.ai) - gratuit ou payant',
+        'Prévoyez 30-45 minutes pour créer les 2 sites (vitrine + boutique)'
       ], y)
       y += 5
 
-      y = addSectionTitle('2. Accéder au Gestionnaire de fichiers Hostinger', y)
-      y = addContent('Vous allez utiliser le Gestionnaire de fichiers hPanel (plus simple que FTP) :', y)
+      y = addSectionTitle('2. Créer un chat Claude pour votre site', y)
+      y = addContent('Allez sur claude.ai et créez un nouveau chat dédié à votre projet :', y)
       y += 3
       y = addBulletList([
-        '1. Connectez-vous à votre hPanel (panneau Hostinger)',
-        '2. Cliquez sur "Fichiers" dans le menu à gauche',
-        '3. Cliquez sur "Gestionnaire de fichiers"',
-        '4. Vous verrez le dossier "public_html" (c\'est où va votre site)',
-        '5. C\'est ici que vous allez uploader vos fichiers'
+        '1. Allez sur claude.ai dans votre navigateur',
+        '2. Cliquez sur "+ New chat" (en haut à gauche)',
+        '3. Nommez le chat : "[CLIENT] Domaine - Création site" (remplacez par votre nom)',
+        '4. Gardez ce chat ouvert, vous l\'utiliserez pour les 2 sites'
       ], y)
       y += 5
 
-      y = addSectionTitle('3. Les fichiers de votre site', y)
-      y = addContent('Voici la structure de vos fichiers :', y)
+      y = addSectionTitle('3. Fichiers de prompts fournis', y)
+      y = addContent('Vous avez 2 fichiers texte à utiliser avec Claude :', y)
       y += 3
       y = addBulletList([
-        'index.html - Page d\'accueil',
-        'domaine.html - Présentation du domaine',
-        'cuvees.html - Galerie des cuvées',
-        'contact.html - Formulaire de contact',
-        'css/style.css - Feuille de styles (couleurs, polices)',
-        'js/main.js - Interactions JavaScript',
-        'images/ - Dossier contenant toutes les images'
+        'prompt-vitrine.txt : Contient TOUS les détails pour créer votre site principal',
+        'prompt-woocommerce.txt : Contient les détails pour créer votre boutique en ligne',
+        'Les 2 fichiers incluent : client info, cuvées, styles, prix, arômes, images'
       ], y)
       y += 5
 
-      y = addSectionTitle('4. Avant le déploiement', y)
-      y = addContent('Personnalisez ces paramètres dans index.html :', y)
+      y = addSectionTitle('4. Étape 1 : Créer votre site vitrine', y)
       y += 3
       y = addBulletList([
-        'Adresse email : votre@email-pro.fr',
-        'Numéro de téléphone : votre numéro',
-        'Horaires d\'ouverture : horaires du caveau',
-        'Adresse complète : adresse du domaine',
-        'Lien boutique : URL de votre boutique WooCommerce'
+        '1. Dans votre chat Claude, cliquez sur le bouton "+" pour ajouter un fichier',
+        '2. Sélectionnez "prompt-vitrine.txt"',
+        '3. Collez ce texte dans le chat : "Utilise ce prompt pour créer mon site"',
+        '4. Attendez que Claude génère le code (5-10 minutes)',
+        '5. Claude va créer index.html, domaine.html, cuvees.html, contact.html, css/, js/, etc.',
+        '6. Téléchargez chaque fichier en cliquant sur le bouton télécharger dans Claude'
       ], y)
       y += 8
 
       addPageNumber()
-      doc.addPage()
       pageNum++
       y = 20
 
-      y = addSectionTitle('5. Uploader votre site (pas à pas)', y)
+      y = addSectionTitle('5. Étape 2 : Créer votre boutique WooCommerce', y)
       y += 3
-
-      const steps = [
-        '1. Connectez-vous à hPanel et allez dans Fichiers → Gestionnaire de fichiers',
-        '2. Ouvrez le dossier "public_html"',
-        '3. Créez un nouveau dossier appelé "site" (optionnel)',
-        '4. Entrez dans ce dossier (ou restez à la racine public_html/)',
-        '5. Cliquez sur "Uploader des fichiers" ou "Ajouter des fichiers"',
-        '6. Sélectionnez et uploadez : index.html, domaine.html, cuvees.html, contact.html',
-        '7. Uploadez le dossier css/ avec le fichier style.css',
-        '8. Uploadez le dossier js/ avec le fichier main.js',
-        '9. Uploadez le dossier images/ avec toutes les images du site',
-        '10. Attendez la fin du téléchargement (5-10 minutes selon les images)',
-        '11. Ouvrez votre domaine dans un navigateur web',
-        '12. Vérifiez que tout s\'affiche correctement'
-      ]
-
-      y = addBulletList(steps, y)
+      y = addBulletList([
+        '1. Dans le MÊME chat Claude (ou un nouveau si vous préférez)',
+        '2. Cliquez sur "+" et sélectionnez "prompt-woocommerce.txt"',
+        '3. Écrivez : "Utilise ce prompt pour créer ma boutique WooCommerce"',
+        '4. Attendez que Claude génère le code boutique (10-15 minutes)',
+        '5. Claude va créer les fichiers boutique avec le design cohérent',
+        '6. Téléchargez tous les fichiers générés'
+      ], y)
       y += 8
 
-      y = addSectionTitle('6. Dépannage courant', y)
+      y = addSectionTitle('6. Uploader les fichiers sur Hostinger', y)
+      y += 3
+      y = addContent('Une fois vos fichiers créés par Claude, uploadez-les :', y)
+      y += 3
+      y = addBulletList([
+        '1. Connectez-vous à votre hPanel (panneau Hostinger)',
+        '2. Allez dans Fichiers → Gestionnaire de fichiers',
+        '3. Ouvrez le dossier "public_html"',
+        '4. Uploadez tous les fichiers site vitrine',
+        '5. Uploadez tous les fichiers boutique WooCommerce',
+        '6. Attendez la fin de l\'upload (10-20 minutes selon la taille)',
+        '7. Ouvrez votre domaine dans un navigateur pour vérifier'
+      ], y)
+      y += 8
+
+      y = addSectionTitle('7. Dépannage courant', y)
       y += 3
 
       const issues = [
-        'Les images ne s\'affichent pas ? Vérifiez que le dossier images/ a été uploadé avec le même chemin',
-        'Le CSS ne s\'applique pas ? Videz le cache du navigateur (Ctrl+Maj+Suppr)',
-        'Les liens sont morts ? Vérifiez les chemins relatifs dans les fichiers HTML',
-        'Erreur 404 ? Assurez-vous que tous les fichiers ont bien été uploadés',
-        'Le site est lent ? Compressez les images ou demandez plus d\'espace serveur'
+        'Images qui ne s\'affichent ? Assurez-vous que le dossier "images/" est uploadé',
+        'CSS/Styles ne s\'appliquent pas ? Videz le cache du navigateur (Ctrl+Maj+Suppr)',
+        'Liens cassés ? Vérifiez que tous les fichiers ont bien été uploadés avec les bons chemins',
+        'Erreur 404 ? Tous les fichiers doivent être dans public_html ou un sous-dossier',
+        'Site lent ? Optimisez vos images ou compressez-les avant l\'upload'
       ]
 
       y = addBulletList(issues, y)
       y += 8
 
-      y = addSectionTitle('7. Après le déploiement', y)
-      y += 3
-
-      y = addBulletList([
-        'Testez tous les liens (pages, formulaires, images)',
-        'Vérifiez l\'affichage sur mobile, tablette et ordinateur',
-        'Testez le formulaire de contact',
-        'Vérifiez le référencement Google (Google Search Console)',
-        'Configurez Google Analytics pour suivre les visites'
-      ], y)
-      y += 8
-
       addPageNumber()
       doc.addPage()
       pageNum++
       y = 20
 
-      y = addSectionTitle('8. Support et ressources', y)
+      y = addSectionTitle('8. Points importants', y)
+      y += 3
+
+      y = addBulletList([
+        'Les 2 prompts contiennent TOUS les détails de votre domaine (prix, cuvées, styles)',
+        'Claude va créer du code HTML/CSS/JS personnalisé pour vous',
+        'Vérifiez que le site vitrine et la boutique ont le même design',
+        'Testez tous les liens entre vitrine et boutique',
+        'N\'oubliez pas de remplir le formulaire de contact avec votre email réel'
+      ], y)
+      y += 8
+
+      y = addSectionTitle('9. Support et ressources', y)
       y += 3
 
       y = addContent('En cas de problème ou de question :', y)
