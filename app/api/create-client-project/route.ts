@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import os from 'os'
 import { generateTutorialPDF } from '@/lib/pdf-generator'
 
+const JSZip = require('jszip')
+
 export async function POST(request: NextRequest) {
+  const tempDir = path.join('/tmp', `project-${Date.now()}`)
+
   try {
     const { client_name, client_id, project_slug, prompt, promptWoo } = await request.json()
 
@@ -15,112 +18,104 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let projectPath: string
-
-    try {
-      const desktopPath = path.join(os.homedir(), 'Desktop', 'Dossier Clients')
-      const folderName = `Site du client - ${client_name}`
-      projectPath = path.join(desktopPath, folderName)
-
-      if (!fs.existsSync(desktopPath)) {
-        fs.mkdirSync(desktopPath, { recursive: true })
-      }
-
-      if (!fs.existsSync(projectPath)) {
-        fs.mkdirSync(projectPath, { recursive: true })
-      }
-
-      const subDirs = ['site', 'images', 'assets']
-      subDirs.forEach(dir => {
-        const dirPath = path.join(projectPath, dir)
-        if (!fs.existsSync(dirPath)) {
-          fs.mkdirSync(dirPath, { recursive: true })
-        }
-      })
-    } catch (fsError) {
-      console.error('Filesystem error:', fsError)
-      return NextResponse.json(
-        { success: false, error: `Impossible de créer le dossier: ${(fsError as Error).message}` },
-        { status: 500 }
-      )
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true })
     }
 
-    try {
-      const pdfPath = path.join(projectPath, 'TUTORIEL - Mettre en ligne le site.pdf')
-      await generateTutorialPDF(pdfPath, client_name)
-    } catch (pdfError) {
-      console.error('PDF generation error:', pdfError)
-      return NextResponse.json(
-        { success: false, error: `Erreur lors de la génération du PDF: ${(pdfError as Error).message}` },
-        { status: 500 }
-      )
+    const projectName = `Site du client - ${client_name}`
+    const projectDir = path.join(tempDir, projectName)
+
+    if (!fs.existsSync(projectDir)) {
+      fs.mkdirSync(projectDir, { recursive: true })
     }
 
-    try {
-      fs.writeFileSync(
-        path.join(projectPath, 'prompt-vitrine.txt'),
-        prompt || 'Aucun prompt fourni'
-      )
-
-      fs.writeFileSync(
-        path.join(projectPath, 'prompt-woocommerce.txt'),
-        promptWoo || 'Aucun prompt fourni'
-      )
-    } catch (writeError) {
-      console.error('File write error:', writeError)
-      return NextResponse.json(
-        { success: false, error: `Erreur lors de l'écriture des fichiers: ${(writeError as Error).message}` },
-        { status: 500 }
-      )
-    }
-
-    try {
-      const configFile = {
-        client_name,
-        client_id,
-        project_slug,
-        folder_path: projectPath,
-        created_at: new Date().toISOString(),
-        chat_name: `[CLIENT] ${client_name} - Création site`,
-        files: {
-          prompt_vitrine: 'prompt-vitrine.txt',
-          prompt_woocommerce: 'prompt-woocommerce.txt',
-          tutoriel: 'TUTORIEL - Mettre en ligne le site.pdf'
-        }
-      }
-
-      fs.writeFileSync(
-        path.join(projectPath, 'project-config.json'),
-        JSON.stringify(configFile, null, 2)
-      )
-    } catch (configError) {
-      console.error('Config file error:', configError)
-      return NextResponse.json(
-        { success: false, error: `Erreur lors de la création du fichier config: ${(configError as Error).message}` },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      folderPath: projectPath,
-      chatName: `[CLIENT] ${client_name} - Création site`,
-      message: 'Projet créé avec succès',
-      files: {
-        tutoriel: path.join(projectPath, 'TUTORIEL - Mettre en ligne le site.pdf'),
-        promptVitrine: path.join(projectPath, 'prompt-vitrine.txt'),
-        promptWoo: path.join(projectPath, 'prompt-woocommerce.txt')
+    const subDirs = ['site', 'images', 'assets']
+    subDirs.forEach(dir => {
+      const dirPath = path.join(projectDir, dir)
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true })
       }
     })
 
+    const pdfPath = path.join(projectDir, 'TUTORIEL - Mettre en ligne le site.pdf')
+    await generateTutorialPDF(pdfPath, client_name)
+
+    fs.writeFileSync(
+      path.join(projectDir, 'prompt-vitrine.txt'),
+      prompt || 'Aucun prompt fourni'
+    )
+
+    fs.writeFileSync(
+      path.join(projectDir, 'prompt-woocommerce.txt'),
+      promptWoo || 'Aucun prompt fourni'
+    )
+
+    const configFile = {
+      client_name,
+      client_id,
+      project_slug,
+      created_at: new Date().toISOString(),
+      chat_name: `[CLIENT] ${client_name} - Création site`,
+      files: {
+        prompt_vitrine: 'prompt-vitrine.txt',
+        prompt_woocommerce: 'prompt-woocommerce.txt',
+        tutoriel: 'TUTORIEL - Mettre en ligne le site.pdf'
+      }
+    }
+
+    fs.writeFileSync(
+      path.join(projectDir, 'project-config.json'),
+      JSON.stringify(configFile, null, 2)
+    )
+
+    const zip = new JSZip()
+    await addDirectoryToZip(zip, projectDir, projectName)
+
+    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
+    const zipPath = path.join(tempDir, `${projectName}.zip`)
+    fs.writeFileSync(zipPath, zipBuffer)
+
+    const zipData = fs.readFileSync(zipPath)
+    const base64Zip = zipData.toString('base64')
+
+    fs.rmSync(tempDir, { recursive: true, force: true })
+
+    return NextResponse.json({
+      success: true,
+      zipData: base64Zip,
+      fileName: `${projectName}.zip`,
+      chatName: `[CLIENT] ${client_name} - Création site`,
+      message: 'Projet créé - ZIP généré avec succès'
+    })
+
   } catch (error) {
-    console.error('Unexpected error:', error)
+    if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+    console.error('Error:', error)
     return NextResponse.json(
       {
         success: false,
-        error: `Erreur serveur: ${(error as Error).message}`
+        error: `Erreur: ${(error as Error).message}`
       },
       { status: 500 }
     )
+  }
+}
+
+async function addDirectoryToZip(zip: any, dirPath: string, dirName: string) {
+  const files = fs.readdirSync(dirPath)
+
+  for (const file of files) {
+    const filePath = path.join(dirPath, file)
+    const stat = fs.statSync(filePath)
+
+    if (stat.isDirectory()) {
+      const folder = zip.folder(file)
+      await addDirectoryToZip(folder, filePath, file)
+    } else {
+      const content = fs.readFileSync(filePath)
+      zip.file(file, content)
+    }
   }
 }

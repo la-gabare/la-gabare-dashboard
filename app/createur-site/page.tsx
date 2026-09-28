@@ -568,8 +568,22 @@ export default function CreateurSitePage() {
       const data = await response.json()
 
       if (data.success) {
-        alert(`✅ Projet créé avec succès!\n\n📁 Dossier: ${data.folderPath}\n\n📄 Fichiers générés:\n- Tutoriel PDF\n- Prompts texte\n- Configuration`)
-        window.open(`file://${data.folderPath}`, '_blank')
+        const zipBinary = atob(data.zipData)
+        const bytes = new Uint8Array(zipBinary.length)
+        for (let i = 0; i < zipBinary.length; i++) {
+          bytes[i] = zipBinary.charCodeAt(i)
+        }
+        const blob = new Blob([bytes], { type: 'application/zip' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = data.fileName
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+
+        alert(`✅ Projet créé avec succès!\n\n📥 ZIP téléchargé: ${data.fileName}\n\n📂 Instructions:\n1. Extrayez le ZIP\n2. Coupez le dossier\n3. Collez-le dans C:\\Users\\louis\\Desktop\\Dossier Clients\n\n📄 Fichiers inclus:\n- TUTORIEL - Mettre en ligne le site.pdf\n- prompt-vitrine.txt\n- prompt-woocommerce.txt\n- project-config.json`)
       } else {
         alert(`❌ Erreur: ${data.error}`)
       }
