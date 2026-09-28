@@ -19,11 +19,11 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
 
       doc.pipe(stream)
 
-      doc.fontSize(28).font('Courier-Bold').fillColor('#b08d57').text('La Gabare', { align: 'center' })
+      doc.fontSize(28).fillColor('#b08d57').text('La Gabare', { align: 'center' })
       doc.fontSize(14).fillColor('#b08d57').text('Guide de déploiement', { align: 'center' })
       doc.moveDown(0.5)
 
-      doc.fontSize(12).fillColor('#000').font('Courier').text(`Site web : ${clientName}`, { align: 'center' })
+      doc.fontSize(12).fillColor('#000').text(`Site web : ${clientName}`, { align: 'center' })
       doc.fontSize(10).fillColor('#666').text(`Créé le ${new Date().toLocaleDateString('fr-FR')}`, { align: 'center' })
       doc.moveDown(1.5)
 
@@ -106,12 +106,12 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
 }
 
 function addSection(doc: PDFDocumentType, title: string, items: string[], numbered = false) {
-  doc.fontSize(13).font('Courier-Bold').fillColor('#b08d57').text(title)
+  doc.fontSize(13).fillColor('#b08d57').text(title)
   doc.moveDown(0.3)
 
   items.forEach((item, idx) => {
     const bullet = numbered ? `${idx + 1}. ` : '• '
-    doc.fontSize(11).font('Courier').fillColor('#000').text(bullet + item, {
+    doc.fontSize(11).fillColor('#000').text(bullet + item, {
       indent: 20
     })
   })
