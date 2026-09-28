@@ -109,14 +109,15 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
       ], y)
       y += 5
 
-      y = addSectionTitle('2. Vos identifiants FTP', y)
-      y = addContent('Voici les informations pour vous connecter au serveur :', y)
+      y = addSectionTitle('2. Récupérer vos identifiants FTP (Hostinger)', y)
+      y = addContent('Comment trouver vos identifiants FTP chez Hostinger :', y)
       y += 3
       y = addBulletList([
-        'Serveur : ftp.votre-domaine.com',
-        'Identifiant : [À compléter avec vos identifiants]',
-        'Mot de passe : [À compléter avec vos identifiants]',
-        'Port : 21 (standard) ou 990 (SFTP sécurisé)'
+        '1. Connectez-vous à votre hPanel (panneau Hostinger)',
+        '2. Allez à Fichiers → FTP/SFTP',
+        '3. Vous verrez vos identifiants FTP (Serveur, Utilisateur, Mot de passe)',
+        '4. Serveur : généralement ftp.votre-domaine.com ou l\'adresse IP',
+        '5. Port : 21 pour FTP ou 990 pour SFTP (plus sécurisé)'
       ], y)
       y += 5
 
@@ -156,16 +157,18 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
 
       const steps = [
         '1. Téléchargez FileZilla (gratuit) sur filezilla-project.org',
-        '2. Ouvrez FileZilla',
-        '3. Allez à Fichier → Gestionnaire de sites',
-        '4. Cliquez "Nouveau site" et entrez vos identifiants FTP',
-        '5. Connectez-vous au serveur',
-        '6. Dans le volet de droite, naviguez jusqu\'à public_html/ ou www/',
-        '7. Dans le volet de gauche, ouvrez votre dossier site/',
-        '8. Sélectionnez tous les fichiers et glissez-les à droite',
-        '9. Attendez la fin du téléchargement (les images peuvent prendre du temps)',
-        '10. Ouvrez votre domaine dans un navigateur',
-        '11. Vérifiez que tout s\'affiche correctement'
+        '2. Ouvrez FileZilla et allez à Fichier → Gestionnaire de sites',
+        '3. Cliquez "Nouveau site" et entrez vos identifiants Hostinger',
+        '4. Connectez-vous au serveur FTP/SFTP',
+        '5. Dans le volet de droite, naviguez jusqu\'à public_html/',
+        '6. Créez un dossier "site" ou utilisez la racine public_html/',
+        '7. Uploadez index.html, domaine.html, cuvees.html, contact.html',
+        '8. Uploadez le dossier css/ avec style.css',
+        '9. Uploadez le dossier js/ avec main.js',
+        '10. Uploadez le dossier images/ avec toutes les images',
+        '11. Attendez la fin du téléchargement (5-10 minutes selon les images)',
+        '12. Ouvrez votre domaine dans un navigateur',
+        '13. Vérifiez que tout s\'affiche correctement'
       ]
 
       y = addBulletList(steps, y)
