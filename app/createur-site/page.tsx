@@ -127,6 +127,7 @@ export default function CreateurSitePage() {
   const [sites, setSites] = useState<SiteGenere[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [creatingProject, setCreatingProject] = useState(false)
   const [previewSite, setPreviewSite] = useState<SiteGenere | null>(null)
   const [uploading, setUploading] = useState(false)
   const [promptModal, setPromptModal] = useState<{ visible: boolean; prompt: string }>({ visible: false, prompt: '' })
@@ -533,6 +534,83 @@ export default function CreateurSitePage() {
 
       const prompt = lignes.join('\n')
       setPromptModal({ visible: true, prompt })
+  }
+
+  const createProjectAndGenerate = async () => {
+    if (!form.client_id) {
+      alert('Sélectionne un client d\'abord.')
+      return
+    }
+
+    const client = clients.find((c) => c.id === Number(form.client_id))
+    if (!client) {
+      alert('Client non trouvé.')
+      return
+    }
+
+    setCreatingProject(true)
+    try {
+      const vitrinePrompt = generatePromptText()
+      const wooPrompt = generateWooPromptText()
+
+      const response = await fetch('/api/create-client-project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_name: client.nom_domaine,
+          client_id: form.client_id,
+          project_slug: `site-${client.nom_domaine.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+          prompt: vitrinePrompt,
+          promptWoo: wooPrompt,
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert(`✅ Projet créé avec succès!\n\n📁 Dossier: ${data.folderPath}\n\n📄 Fichiers générés:\n- Tutoriel PDF\n- Prompts texte\n- Configuration`)
+        window.open(`file://${data.folderPath}`, '_blank')
+      } else {
+        alert(`❌ Erreur: ${data.error}`)
+      }
+    } catch (error) {
+      console.error(error)
+      alert(`❌ Erreur lors de la création du projet: ${(error as Error).message}`)
+    } finally {
+      setCreatingProject(false)
+    }
+  }
+
+  const generatePromptText = (): string => {
+    const client = clients.find((c) => c.id === Number(form.client_id))
+    const profil = (client?.profil_client_complet || {}) as Record<string, any>
+    const templateLabel = templateOptions.find((t) => t.value === form.template_choisi)?.label || 'Non spécifié'
+    const skinLabel = skinOptions.find((s) => s.value === form.skin_choisi)?.label || 'Non spécifié'
+    const fontLabel = fontPairings.find((f) => f.name === form.style_polices)?.name || 'Non spécifié'
+
+    const lignes = [
+        'Tu crées un site Web complet pour un domaine viticole.',
+        '',
+        '## IDENTITÉ & BRANDING DU DOMAINE',
+        '',
+        `**Nom du domaine:** ${client?.nom_domaine}`,
+        `**Région:** ${client?.region}`,
+        `**Appellation:** ${client?.appellation}`,
+        `**Cépages:** ${client?.cepages}`,
+        `**Type de vins:** ${client?.type_vin}`,
+        `**Email contact:** ${client?.email_contact || ''}`,
+        client?.histoire ? `**Histoire du domaine:**\n${client.histoire}` : '',
+        client?.points_forts ? `**Points forts:**\n${client.points_forts}` : '',
+        client?.public_cible ? `**Public cible:** ${client.public_cible}` : '',
+        `**Pack:** ${form.pack.toUpperCase()}`,
+    ].filter(Boolean).join('\n')
+
+    return lignes
+  }
+
+  const generateWooPromptText = (): string => {
+    const client = clients.find((c) => c.id === Number(form.client_id))
+    return `Tu crées une boutique WooCommerce pour ${client?.nom_domaine || 'Domaine'}. Pack: ${form.pack.toUpperCase()}`
   }
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || 'Domaine'
@@ -999,6 +1077,11 @@ export default function CreateurSitePage() {
             {form.client_id && (
               <button onClick={genererPromptWoocommerceFromForm} className="btn btn-secondary">
                 🛍️ Boutique client
+              </button>
+            )}
+            {form.client_id && (
+              <button onClick={createProjectAndGenerate} disabled={creatingProject} className="btn btn-secondary" style={{ backgroundColor: '#2d5016', borderColor: '#4a8024' }}>
+                {creatingProject ? '⏳ Création...' : '📁 Créer & Générer'}
               </button>
             )}
           </div>
