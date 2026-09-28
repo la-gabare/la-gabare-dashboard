@@ -133,6 +133,8 @@ export default function CreateurSitePage() {
   const [promptModal, setPromptModal] = useState<{ visible: boolean; prompt: string }>({ visible: false, prompt: '' })
   const [descriptionClient, setDescriptionClient] = useState('')
   const [searchAromes, setSearchAromes] = useState<{ primaires: string; secondaires: string; tertiaires: string; cepages: string }>({ primaires: '', secondaires: '', tertiaires: '', cepages: '' })
+  const [generatedProjects, setGeneratedProjects] = useState<Array<{ id: string; client_name: string; created_at: string; zipData: string; vitrinePrompt: string; wooPrompt: string }>>([])
+
   const [form, setForm] = useState({
     client_id: '',
     pack: 'essentiel',
@@ -568,22 +570,18 @@ export default function CreateurSitePage() {
       const data = await response.json()
 
       if (data.success) {
-        const zipBinary = atob(data.zipData)
-        const bytes = new Uint8Array(zipBinary.length)
-        for (let i = 0; i < zipBinary.length; i++) {
-          bytes[i] = zipBinary.charCodeAt(i)
-        }
-        const blob = new Blob([bytes], { type: 'application/zip' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = data.fileName
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-
-        alert(`✅ Projet créé avec succès!\n\n📥 ZIP téléchargé: ${data.fileName}\n\n📂 Instructions:\n1. Extrayez le ZIP\n2. Coupez le dossier\n3. Collez-le dans C:\\Users\\louis\\Desktop\\Dossier Clients\n\n📄 Fichiers inclus:\n- TUTORIEL - Mettre en ligne le site.pdf\n- prompt-vitrine.txt\n- prompt-woocommerce.txt\n- project-config.json`)
+        setGeneratedProjects((prev) => [
+          {
+            id: Date.now().toString(),
+            client_name: client.nom_domaine,
+            created_at: new Date().toLocaleString('fr-FR'),
+            zipData: data.zipData,
+            vitrinePrompt: vitrinePrompt,
+            wooPrompt: wooPrompt,
+          },
+          ...prev,
+        ])
+        alert(`✅ Projet créé et sauvegardé!\n\nVous le retrouvez dans "Sites générés".\nVous pouvez le télécharger ou copier les prompts.`)
       } else {
         alert(`❌ Erreur: ${data.error}`)
       }
@@ -1278,29 +1276,94 @@ export default function CreateurSitePage() {
             )}
           </div>
 
-          <h2 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Aperçus générés</h2>
+          <h2 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Sites générés</h2>
           <div className="sites-list">
-            {sites.length === 0 ? (
-              <p style={{ color: 'rgba(245,242,236,.5)', textAlign: 'center', padding: '2rem' }}>Aucun site généré.</p>
+            {generatedProjects.length === 0 ? (
+              <p style={{ color: 'rgba(245,242,236,.5)', textAlign: 'center', padding: '2rem' }}>Aucun projet sauvegardé. Cliquez sur "Créer & Générer" pour en créer un.</p>
             ) : (
-              sites.slice(0, 10).map((s) => (
-                <div key={s.id} className="site-card">
-                  <h4>{clientName(s.client_id)}</h4>
-                  <small>
-                    {s.pack.toUpperCase()} • {new Date(s.created_at).toLocaleDateString('fr-FR')}
+              generatedProjects.map((project) => (
+                <div key={project.id} className="site-card">
+                  <h4>📁 {project.client_name}</h4>
+                  <small style={{ color: 'rgba(245,242,236,.7)' }}>
+                    {project.created_at}
                   </small>
-                  <div className="site-status">{statusLabels[s.status as keyof typeof statusLabels] || s.status}</div>
-                  <div className="site-actions">
-                    {s.html_genere && (
-                      <button onClick={() => setPreviewSite(s)} className="btn btn-secondary">
-                        Voir aperçu
-                      </button>
-                    )}
-                    {s.status === 'a_valider' && (
-                      <button onClick={() => alert('Validation en cours...')} className="btn btn-primary" style={{ fontSize: '.8rem' }}>
-                        ✓ Valider
-                      </button>
-                    )}
+                  <div style={{ marginTop: '.8rem', display: 'flex', flexWrap: 'wrap', gap: '.6rem' }}>
+                    <button
+                      onClick={() => {
+                        const zipBinary = atob(project.zipData)
+                        const bytes = new Uint8Array(zipBinary.length)
+                        for (let i = 0; i < zipBinary.length; i++) {
+                          bytes[i] = zipBinary.charCodeAt(i)
+                        }
+                        const blob = new Blob([bytes], { type: 'application/zip' })
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `Site du client - ${project.client_name}.zip`
+                        document.body.appendChild(a)
+                        a.click()
+                        window.URL.revokeObjectURL(url)
+                        document.body.removeChild(a)
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '.8rem' }}
+                    >
+                      📦 ZIP complet
+                    </button>
+                    <button
+                      onClick={() => {
+                        const blob = new Blob([project.vitrinePrompt], { type: 'text/plain' })
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `prompt-vitrine-${project.client_name}.txt`
+                        document.body.appendChild(a)
+                        a.click()
+                        window.URL.revokeObjectURL(url)
+                        document.body.removeChild(a)
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '.8rem' }}
+                    >
+                      🌐 Prompt vitrine
+                    </button>
+                    <button
+                      onClick={() => {
+                        const blob = new Blob([project.wooPrompt], { type: 'text/plain' })
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `prompt-woocommerce-${project.client_name}.txt`
+                        document.body.appendChild(a)
+                        a.click()
+                        window.URL.revokeObjectURL(url)
+                        document.body.removeChild(a)
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '.8rem' }}
+                    >
+                      🛍️ Prompt WooCommerce
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(project.vitrinePrompt)
+                        alert('✅ Prompt vitrine copié!')
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '.8rem' }}
+                    >
+                      📋 Copier vitrine
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(project.wooPrompt)
+                        alert('✅ Prompt WooCommerce copié!')
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '.8rem' }}
+                    >
+                      📋 Copier Woo
+                    </button>
                   </div>
                 </div>
               ))
