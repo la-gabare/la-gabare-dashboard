@@ -41,11 +41,11 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
       }
 
       const addSectionTitle = (title: string, yPos: number) => {
-        if (yPos > pageHeight - 50) {
+        if (yPos > pageHeight - 60) {
+          addPageNumber()
           doc.addPage()
           pageNum++
           yPos = 20
-          addPageNumber()
         }
 
         doc.setFontSize(13)
@@ -53,15 +53,22 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
         doc.setFont(undefined, 'bold')
         doc.text(title, margin, yPos)
         doc.setFont(undefined, 'normal')
-        return yPos + 8
+        return yPos + 10
       }
 
       const addContent = (text: string, yPos: number) => {
+        if (yPos > pageHeight - 40) {
+          addPageNumber()
+          doc.addPage()
+          pageNum++
+          yPos = 20
+        }
+
         doc.setFontSize(10)
         doc.setTextColor(0, 0, 0)
         const lines = doc.splitTextToSize(text, contentWidth)
         doc.text(lines, margin, yPos)
-        return yPos + (lines.length * 5) + 3
+        return yPos + (lines.length * 5) + 4
       }
 
       const addBulletList = (items: string[], yPos: number) => {
@@ -69,7 +76,7 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
         doc.setTextColor(0, 0, 0)
 
         items.forEach(item => {
-          if (yPos > pageHeight - 20) {
+          if (yPos > pageHeight - 25) {
             addPageNumber()
             doc.addPage()
             pageNum++
@@ -78,10 +85,10 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
 
           const lines = doc.splitTextToSize('• ' + item, contentWidth - 5)
           doc.text(lines, margin + 5, yPos)
-          yPos += (lines.length * 5) + 2
+          yPos += (lines.length * 5) + 3
         })
 
-        return yPos + 3
+        return yPos + 5
       }
 
       const addDivider = (yPos: number) => {
@@ -96,10 +103,10 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
       doc.setTextColor(100, 100, 100)
       doc.text(`Site web : ${clientName}`, margin, y)
       doc.text(`Créé le ${new Date().toLocaleDateString('fr-FR')}`, margin, y + 6)
-      y += 15
+      y += 18
 
       y = addDivider(y)
-      y += 5
+      y += 8
 
       y = addSectionTitle('1. Avant de commencer', y)
       y = addBulletList([
@@ -107,31 +114,30 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
         'Vous aurez besoin d\'un compte Claude (claude.ai) - gratuit ou payant',
         'Prévoyez 30-45 minutes pour créer les 2 sites (vitrine + boutique)'
       ], y)
-      y += 5
+      y += 8
 
       y = addSectionTitle('2. Créer un chat Claude pour votre site', y)
       y = addContent('Allez sur claude.ai et créez un nouveau chat dédié à votre projet :', y)
-      y += 3
+      y += 4
       y = addBulletList([
         '1. Allez sur claude.ai dans votre navigateur',
         '2. Cliquez sur "+ New chat" (en haut à gauche)',
         '3. Nommez le chat : "[CLIENT] Domaine - Création site" (remplacez par votre nom)',
         '4. Gardez ce chat ouvert, vous l\'utiliserez pour les 2 sites'
       ], y)
-      y += 5
+      y += 8
 
       y = addSectionTitle('3. Fichiers de prompts fournis', y)
       y = addContent('Vous avez 2 fichiers texte à utiliser avec Claude :', y)
-      y += 3
+      y += 4
       y = addBulletList([
         'prompt-vitrine.txt : Contient TOUS les détails pour créer votre site principal',
         'prompt-woocommerce.txt : Contient les détails pour créer votre boutique en ligne',
         'Les 2 fichiers incluent : client info, cuvées, styles, prix, arômes, images'
       ], y)
-      y += 5
+      y += 8
 
       y = addSectionTitle('4. Étape 1 : Créer votre site vitrine', y)
-      y += 3
       y = addBulletList([
         '1. Dans votre chat Claude, cliquez sur le bouton "+" pour ajouter un fichier',
         '2. Sélectionnez "prompt-vitrine.txt"',
@@ -140,14 +146,14 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
         '5. Claude va créer index.html, domaine.html, cuvees.html, contact.html, css/, js/, etc.',
         '6. Téléchargez chaque fichier en cliquant sur le bouton télécharger dans Claude'
       ], y)
-      y += 8
+      y += 10
 
       addPageNumber()
+      doc.addPage()
       pageNum++
       y = 20
 
       y = addSectionTitle('5. Étape 2 : Créer votre boutique WooCommerce', y)
-      y += 3
       y = addBulletList([
         '1. Dans le MÊME chat Claude (ou un nouveau si vous préférez)',
         '2. Cliquez sur "+" et sélectionnez "prompt-woocommerce.txt"',
@@ -156,12 +162,11 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
         '5. Claude va créer les fichiers boutique avec le design cohérent',
         '6. Téléchargez tous les fichiers générés'
       ], y)
-      y += 8
+      y += 10
 
       y = addSectionTitle('6. Uploader les fichiers sur Hostinger', y)
-      y += 3
       y = addContent('Une fois vos fichiers créés par Claude, uploadez-les :', y)
-      y += 3
+      y += 4
       y = addBulletList([
         '1. Connectez-vous à votre hPanel (panneau Hostinger)',
         '2. Allez dans Fichiers → Gestionnaire de fichiers',
@@ -171,10 +176,9 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
         '6. Attendez la fin de l\'upload (10-20 minutes selon la taille)',
         '7. Ouvrez votre domaine dans un navigateur pour vérifier'
       ], y)
-      y += 8
+      y += 10
 
       y = addSectionTitle('7. Dépannage courant', y)
-      y += 3
 
       const issues = [
         'Images qui ne s\'affichent ? Assurez-vous que le dossier "images/" est uploadé',
@@ -185,7 +189,7 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
       ]
 
       y = addBulletList(issues, y)
-      y += 8
+      y += 10
 
       addPageNumber()
       doc.addPage()
@@ -193,7 +197,6 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
       y = 20
 
       y = addSectionTitle('8. Points importants', y)
-      y += 3
 
       y = addBulletList([
         'Les 2 prompts contiennent TOUS les détails de votre domaine (prix, cuvées, styles)',
@@ -202,25 +205,24 @@ export async function generateTutorialPDF(outputPath: string, clientName: string
         'Testez tous les liens entre vitrine et boutique',
         'N\'oubliez pas de remplir le formulaire de contact avec votre email réel'
       ], y)
-      y += 8
+      y += 10
 
       y = addSectionTitle('9. Support et ressources', y)
-      y += 3
 
       y = addContent('En cas de problème ou de question :', y)
-      y += 5
+      y += 8
 
       doc.setFontSize(11)
       doc.setTextColor(176, 141, 87)
       doc.setFont(undefined, 'bold')
       doc.text('La Gabare', margin, y)
       doc.setFont(undefined, 'normal')
-      y += 6
+      y += 8
 
       doc.setFontSize(10)
       doc.setTextColor(0, 0, 0)
       doc.text('contact@la-gabare.fr', margin, y)
-      y += 6
+      y += 7
 
       doc.setFontSize(9)
       doc.setTextColor(100, 100, 100)
