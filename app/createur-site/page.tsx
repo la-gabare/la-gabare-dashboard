@@ -597,6 +597,8 @@ export default function CreateurSitePage() {
 
   const generatePromptText = (): string => {
     const client = clients.find((c) => c.id === Number(form.client_id))
+    if (!client) return ''
+
     const profil = (client?.profil_client_complet || {}) as Record<string, any>
     const templateLabel = templateOptions.find((t) => t.value === form.template_choisi)?.label || 'Non spécifié'
     const skinLabel = skinOptions.find((s) => s.value === form.skin_choisi)?.label || 'Non spécifié'
@@ -616,7 +618,97 @@ export default function CreateurSitePage() {
         client?.histoire ? `**Histoire du domaine:**\n${client.histoire}` : '',
         client?.points_forts ? `**Points forts:**\n${client.points_forts}` : '',
         client?.public_cible ? `**Public cible:** ${client.public_cible}` : '',
+        client?.style ? `**Style souhaité:** ${client.style}` : '',
+        client?.tone_voix ? `**Ton de communication:** ${client.tone_voix}` : '',
+        profil.slogan ? `**Slogan site:** ${profil.slogan}` : form.slogan ? `**Slogan site:** ${form.slogan}` : '',
+        profil.messages_cles ? `**Messages clés:**\n${profil.messages_cles}` : '',
+        '',
+        '## STYLES & MISE EN PAGE',
+        '',
         `**Pack:** ${form.pack.toUpperCase()}`,
+        `**Structure de page:** ${templateLabel}`,
+        `**Style des éléments:** ${skinLabel}`,
+        `**Polices:** ${fontLabel}`,
+        `**Couleur principale:** ${form.couleur_principale}`,
+        `**Couleur accent:** ${form.couleur_accent}`,
+        `**Couleur secondaire:** ${form.couleur_secondaire}`,
+        '',
+        '## CUVÉES À INTÉGRER',
+        '',
+        form.cuvees.length === 0 ? 'Pas de cuvées fournies. Crée 4-6 cuvées représentatives du domaine.' : form.cuvees.map((c, i) => {
+          const cuveeLines = [
+            `**${i + 1}. ${c.nom}**`,
+            c.prix ? `Prix: €${c.prix}` : '',
+            c.alcool ? `Alcool: ${c.alcool}%` : '',
+            c.description ? `Description:\n${c.description}` : '',
+            c.aromes_primaires?.length ? `Arômes primaires: ${c.aromes_primaires.join(', ')}` : '',
+            c.aromes_secondaires?.length ? `Arômes secondaires: ${c.aromes_secondaires.join(', ')}` : '',
+            c.aromes_tertiaires?.length ? `Arômes tertiaires: ${c.aromes_tertiaires.join(', ')}` : '',
+            c.cepages?.length ? `Cépages: ${c.cepages.join(', ')}` : '',
+            c.photo_url ? `Image: ${c.photo_url}` : '',
+          ].filter(Boolean).join('\n')
+          return cuveeLines
+        }).join('\n\n'),
+        '',
+        '## MÉDIAS & ASSETS',
+        '',
+        '**Logo:** À envoyer en annexe avec ce prompt',
+        '**Image héro:** À envoyer en annexe avec ce prompt',
+        '**Éléments de direction artistique:** À envoyer en annexe avec ce prompt',
+        '**Autres médias/photos:** À envoyer en annexe avec ce prompt si nécessaire',
+        '',
+        '## STRUCTURE DU SITE VITRINE',
+        '',
+        form.pack === 'essentiel' ? 'Jusqu\'à 5 pages (Accueil, Histoire/Domaine, Cuvées vitrine, Contact/Caveau)' : form.pack === 'pro' ? 'Jusqu\'à 10 pages sur-mesure' : 'Pages illimitées avec expérience immersive haut de gamme',
+        '',
+        'Pages obligatoires:',
+        '- Accueil (hero, présentation, cuvées en grille/carousel)',
+        '- Présentation du domaine',
+        '- Nos cuvées (avec détails, photos, descriptions, prix, alcool, arômes, cépages)',
+        '- Fiche cuvée détaillée (photo, description complète, prix, alcool %, arômes primaires/secondaires/tertiaires, cépages)',
+        '- Contact (formulaire + localisation)',
+        form.pack === 'essentiel' ? '- Mentions légales & Conformité' : '',
+        form.pack === 'pro' ? '- Formulaire CHR / Cavistes (section dédiée pour professionnels - tarifs de gros, échantillons)' : '',
+        form.pack === 'premium' ? '- Module Œnotourisme (calendrier interactif réservations/paiements en ligne)' : '',
+        form.pack === 'premium' ? '- Espace Pro Privatif (B2B) - zone réservée cavistes/importateurs/restaurateurs avec téléchargement grilles tarifaires et visuels HD' : '',
+        form.pack !== 'essentiel' ? '- Blog/Actualités' : '',
+        form.pack === 'premium' ? '- Sélecteur langue fluide (site bilingue)' : '',
+        '',
+        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT:** Ajouter un bouton "Acheter cette cuvée" sur chaque fiche cuvée qui redirige vers la boutique WooCommerce' : '',
+        '',
+        '## DASHBOARD DU SITE VITRINE (Back-Office)',
+        '',
+        form.pack === 'essentiel' ? '- Éditeur d\'actualités : formulaire standard pour rédiger et publier articles de blog' : form.pack === 'pro' ? '- Éditeur d\'actualités avancé\n- Générateur de Fiches Techniques PDF : bouton 1-clic pour générer fiche technique complète (format impression/presse/cavistes)\n- Maillage produit/blog : widget pour insérer fiches de vins dans articles de blog en 1 clic' : '- Éditeur d\'actualités avec IA\n- Viti-Copilot IA (Rédaction) : assistant IA pour articles de blog, histoires de millésimes, présentation domaine\n- Viti-Copilot IA (Traduction) : traduction automatique instantanée vers seconde langue\n- Générateur PDF avancé\n- Gestionnaire Œnotouristique : tableau suivi réservations, jauge participants, planning caveau',
+        '',
+        form.pack === 'essentiel' ? '- Conformité: Pop-up vérification d\'âge (+18), messages sanitaires, mentions légales' : '',
+        '',
+        '## INSTRUCTIONS TECHNIQUES',
+        '',
+        '1. Crée un site HTML/CSS responsive (mobile-first)',
+        `2. Utilise les polices Google: ${fontLabel}`,
+        `3. Applique le schéma de couleurs: principale ${form.couleur_principale}, accent ${form.couleur_accent}`,
+        `4. Respecte la mise en page: ${templateLabel}`,
+        `5. Style des éléments: ${skinLabel}`,
+        '6. Navigation cohérente et intuitive',
+        '7. Images optimisées (lazy-loading)',
+        '8. SEO-friendly (meta, structured data)',
+        '9. Loi Evin (L3323-4): pas d\'ambiance festive, pas de personnes qui boivent',
+        '10. Responsive sur mobile/tablet/desktop',
+        '',
+        '## LIVRABLES',
+        '',
+        '- Dossier `/site/` avec structure HTML complète',
+        '- `/site/css/style.css` avec variables de couleurs',
+        '- `/site/js/main.js` si interactions nécessaires',
+        '- Images placeholders avec chemins corrects',
+        '- `/site/index.html`, `/site/domaine.html`, `/site/cuvees.html`, `/site/contact.html`, etc.',
+        '- ZIP du dossier complet prêt à déployer',
+        '',
+        '## NOTES',
+        '',
+        form.demande ? `**Notes client:** ${form.demande}` : '',
+        `**Créé pour:** ${client?.nom_domaine}`,
+        `**Date:** ${new Date().toLocaleDateString('fr-FR')}`,
     ].filter(Boolean).join('\n')
 
     return lignes
@@ -624,7 +716,93 @@ export default function CreateurSitePage() {
 
   const generateWooPromptText = (): string => {
     const client = clients.find((c) => c.id === Number(form.client_id))
-    return `Tu crées une boutique WooCommerce pour ${client?.nom_domaine || 'Domaine'}. Pack: ${form.pack.toUpperCase()}`
+    if (!client) return ''
+
+    const profil = (client?.profil_client_complet || {}) as Record<string, any>
+    const cuvees = form.cuvees
+    const templateLabel = templateOptions.find((t) => t.value === form.template_choisi)?.label || 'Auto'
+    const skinLabel = skinOptions.find((s) => s.value === form.skin_choisi)?.label || 'Auto'
+    const fontLabel = fontPairings.find((f) => f.name === form.style_polices)?.name || 'Auto'
+
+    const lignes = [
+      'Tu crées une boutique WooCommerce pour un domaine viticole.',
+      'Elle doit avoir EXACTEMENT le même style et les mêmes couleurs que le site vitrine généré.',
+      '',
+      '=== INFORMATIONS COMPLÈTES DU DOMAINE ===',
+      `Nom : ${client?.nom_domaine || 'Domaine'}`,
+      `Région : ${client?.region || ''}`,
+      `Appellation : ${client?.appellation || ''}`,
+      `Cépages : ${client?.cepages || ''}`,
+      `Type : ${client?.type_vin || ''}`,
+      client?.histoire && `Histoire : ${client.histoire}`,
+      client?.points_forts && `Points forts : ${client.points_forts}`,
+      client?.public_cible && `Public cible : ${client.public_cible}`,
+      client?.style && `Style souhaité : ${client.style}`,
+      client?.tone_voix && `Ton : ${client.tone_voix}`,
+      profil.slogan && `Slogan : ${profil.slogan}`,
+      profil.messages_cles && `Messages clés : ${profil.messages_cles}`,
+      '',
+      '=== STYLES ET IDENTITÉ VISUELLE (À REPRODUIRE EXACTEMENT) ===',
+      `Structure de page : ${templateLabel}`,
+      `Style des éléments : ${skinLabel}`,
+      `Polices : ${fontLabel}`,
+      form.couleur_principale && `Couleur principale : ${form.couleur_principale}`,
+      form.couleur_accent && `Couleur accent : ${form.couleur_accent}`,
+      form.couleur_secondaire && `Couleur secondaire : ${form.couleur_secondaire}`,
+      '',
+      '=== CUVÉES À CRÉER EN TANT QUE PRODUITS WOOCOMMERCE ===',
+      '',
+      cuvees.length === 0 ? 'Aucune cuvée fournie. Crée 3-5 produits typiques pour ce domaine.' : cuvees.map((c, i) => {
+        const cuveeLines = [
+          `**${i + 1}. ${c.nom || `Cuvée ${i + 1}`}**`,
+          c.prix ? `Prix: €${c.prix}` : '',
+          c.alcool ? `Alcool: ${c.alcool}%` : '',
+          c.description ? `Description: ${c.description}` : '',
+          c.aromes_primaires?.length ? `Arômes primaires: ${c.aromes_primaires.join(', ')}` : '',
+          c.aromes_secondaires?.length ? `Arômes secondaires: ${c.aromes_secondaires.join(', ')}` : '',
+          c.aromes_tertiaires?.length ? `Arômes tertiaires: ${c.aromes_tertiaires.join(', ')}` : '',
+          c.cepages?.length ? `Cépages: ${c.cepages.join(', ')}` : '',
+          c.photo_url ? `Image: ${c.photo_url}` : '',
+        ].filter(Boolean).join('\n')
+        return cuveeLines
+      }).join('\n\n'),
+      '',
+      '=== STRUCTURE WOOCOMMERCE À CRÉER ===',
+      '',
+      'Pour chaque cuvée :',
+      '1. Nom : exactement tel que fourni',
+      '2. Prix : laisse vide (à remplir manuellement)',
+      '3. Description courte : 50-100 mots, style gustatif et accords',
+      '4. Description longue : description complète fournie',
+      '5. Image : si photo fournie, la mettre en avant',
+      '6. Catégories : Vins Rouges / Blancs / Rosés',
+      '7. Étiquettes : cépage, millésime, terroir',
+      '8. Stock : à mettre à jour après chaque vente',
+      '',
+      '=== MÉDIAS À ENVOYER EN ANNEXE ===',
+      '**Logo:** À envoyer en annexe avec ce prompt',
+      '**Image héro:** À envoyer en annexe avec ce prompt',
+      '**Éléments de direction artistique:** À envoyer en annexe avec ce prompt',
+      '',
+      '=== CONFIGURATION BOUTIQUE (STYLE IDENTIQUE AU SITE VITRINE) ===',
+      `Page d'accueil : "Nos cuvées à la vente"`,
+      'Couleurs : EXACT même palette que le site vitrine',
+      'Boutons et cartes : EXACT même style que le site vitrine',
+      'Polices : EXACT mêmes polices que le site vitrine',
+      'Paiement : PayPal et/ou Stripe',
+      'Livraison : zones géographiques et tarifs',
+      'Ton : ' + (client?.tone_voix || 'authentique'),
+      '',
+      '=== FONCTIONNALITÉS PAR PACK ===',
+      '',
+      form.pack === 'pro' ? '**PACK PRO:**\n- Tunnel d\'achat complet avec panier et paiement sécurisé\n- Gestion livraison avec tarifs et franco de port par paliers\n- Message incitatif : encourager clients à compléter carton (6-12 bouteilles)\n- Fiches produit détaillées (notes dégustation, millésimes, accords)\n- Gestion stock par millésime\n- Lien retour vers fiche cuvée site vitrine' : form.pack === 'premium' ? '**PACK PREMIUM:**\n- Boutique multilingue avec conversion devise si nécessaire\n- Tunnel d\'achat avancé avec options emballage cadeau et messages personnalisés\n- Viti-Copilot IA (Fiches Cuvées) : génération automatique à partir mots-clés\n- Gestion multi-tarifs B2B avec rôles clients (Particulier/Caviste/Export)\n- Grilles tarifaires différenciées par rôle\n- Gestionnaire stock & prix avancé\n- Export comptabilité & accises pré-formaté\n- Lien retour vers fiche cuvée site vitrine' : '**PACK ESSENTIEL:** Pas de WooCommerce inclus',
+      '',
+      form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT:** Chaque produit doit inclure un lien retour vers sa fiche cuvée correspondante sur le site vitrine' : '',
+      '',
+      'Crée les fiches produit WooCommerce avec le même design que le site vitrine.'
+    ].filter(Boolean)
+
+    return lignes.join('\n')
   }
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.nom_domaine || 'Domaine'
