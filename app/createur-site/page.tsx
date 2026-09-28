@@ -379,9 +379,13 @@ export default function CreateurSitePage() {
       '7. Étiquettes : cépage, millésime, terroir',
       '8. Stock : à mettre à jour après chaque vente',
       '',
+      '=== MÉDIAS À ENVOYER EN ANNEXE ===',
+      '**Logo:** À envoyer en annexe avec ce prompt',
+      '**Image héro:** À envoyer en annexe avec ce prompt',
+      '**Éléments de direction artistique:** À envoyer en annexe avec ce prompt',
+      '',
       '=== CONFIGURATION BOUTIQUE (STYLE IDENTIQUE AU SITE VITRINE) ===',
       `Page d'accueil : "Nos cuvées à la vente"`,
-      'Logo : EXACT même logo que le site vitrine',
       'Couleurs : EXACT même palette que le site vitrine',
       'Boutons et cartes : EXACT même style que le site vitrine',
       'Polices : EXACT mêmes polices que le site vitrine',
@@ -464,10 +468,12 @@ export default function CreateurSitePage() {
       lignes.push(
         '## MÉDIAS & ASSETS',
         '',
-        form.logo_url ? `**Logo:** ${form.logo_url}` : '**Logo:** À fournir au client',
-        form.hero_url ? `**Image héro:** ${form.hero_url}` : '**Image héro:** À fournir au client',
-        form.da_urls.length > 0 ? `**Direction artistique:** ${form.da_urls.join(', ')}` : '',
-        form.media_urls.length > 0 ? `**Autres médias:** ${form.media_urls.join(', ')}` : '',
+        '## MÉDIAS & ASSETS',
+        '',
+        '**Logo:** À envoyer en annexe avec ce prompt',
+        '**Image héro:** À envoyer en annexe avec ce prompt',
+        '**Éléments de direction artistique:** À envoyer en annexe avec ce prompt',
+        '**Autres médias/photos:** À envoyer en annexe avec ce prompt si nécessaire',
         '',
         '## STRUCTURE DU SITE',
         '',
@@ -966,40 +972,6 @@ export default function CreateurSitePage() {
               + Ajouter une cuvée
             </button>
 
-            <h3>Logo & Hero</h3>
-            <div className="form-group">
-              <label className="form-label">Logo</label>
-              <input
-                type="file"
-                accept="image/*"
-                className="form-input"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    const url = URL.createObjectURL(file)
-                    setForm((f) => ({ ...f, logo_url: url }))
-                  }
-                }}
-              />
-              {form.logo_url && <img src={form.logo_url} alt="" style={{ width: '50px', marginTop: '.5rem' }} />}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Image héro</label>
-              <input
-                type="file"
-                accept="image/*"
-                className="form-input"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    const url = URL.createObjectURL(file)
-                    setForm((f) => ({ ...f, hero_url: url }))
-                  }
-                }}
-              />
-              {form.hero_url && <img src={form.hero_url} alt="" style={{ width: '80px', marginTop: '.5rem', borderRadius: '4px' }} />}
-            </div>
           </div>
         </div>
 
