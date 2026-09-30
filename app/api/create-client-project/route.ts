@@ -270,9 +270,9 @@ export async function POST(request: NextRequest) {
       headers: { 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
     }).then(r => r.json()).catch(() => [])
 
-    const domainName = clientData?.[0]?.site_url || clientData?.[0]?.nom_domaine || client_name
+    const domainName = clientData?.[0]?.site_url || clientData?.[0]?.site || clientData?.[0]?.nom_domaine || client_name
     const profileData = clientData?.[0]?.profil_client_complet as Record<string, any> || {}
-    const detectedDomain = profileData?.site_url || profileData?.domaine || domainName
+    const detectedDomain = profileData?.site_url || profileData?.domaine || clientData?.[0]?.site || domainName
 
     // Créer publish.php dans le dossier site
     const publishPhp = generatePublishPhp(client_name, project_slug, detectedDomain)
