@@ -187,6 +187,20 @@ export default function CreateurSitePage() {
     fetchData()
   }, [])
 
+  // Auto-remplir le domaine du site quand le client change
+  useEffect(() => {
+    if (form.client_id) {
+      const client = clients.find((c) => c.id === Number(form.client_id))
+      if (client) {
+        const profil = (client.profil_client_complet || {}) as Record<string, any>
+        const detectedDomain = client.site_url || profil?.site_url || profil?.domaine || (client as any)?.site || ''
+        if (detectedDomain && form.nom_domaine !== detectedDomain) {
+          setForm((f) => ({ ...f, nom_domaine: detectedDomain }))
+        }
+      }
+    }
+  }, [form.client_id, clients])
+
   useEffect(() => {
     if (document.querySelector('link[data-font-preview]')) return
     const link = document.createElement('link')
@@ -199,15 +213,6 @@ export default function CreateurSitePage() {
   const handleClientChange = async (clientId: string) => {
     const client = clients.find((c) => c.id === Number(clientId))
     if (client) {
-      // Auto-remplir le domaine du site avec le domaine détecté
-      const profil = (client.profil_client_complet || {}) as Record<string, any>
-      const detectedDomain = client.site_url || profil?.site_url || profil?.domaine || (client as any)?.site || ''
-
-      console.log('=== handleClientChange ===')
-      console.log('client.id:', client.id, 'clientId:', clientId)
-      console.log('client.site_url:', client.site_url)
-      console.log('detectedDomain:', detectedDomain)
-
       const infosClient = [
         client.nom_domaine,
         client.region,
@@ -217,8 +222,7 @@ export default function CreateurSitePage() {
       ]
         .filter(Boolean)
         .join(' — ')
-      // Mettre à jour tous les champs en une seule fois
-      setForm((f) => ({ ...f, client_id: clientId, demande: infosClient, nom_domaine: detectedDomain }))
+      setForm((f) => ({ ...f, client_id: clientId, demande: infosClient }))
 
       // Formater toutes les infos du client
       const lignes: string[] = []
