@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client, SiteGenere } from '@/lib/types'
+import { generateMentionsLegales, generateCGV, generatePolitiqueCookies, generatePolitiqueConfidentialite, generateCGU } from '@/lib/legal-generator'
 
 const packs = ['essentiel', 'pro', 'premium']
 const colorPalettes = [
@@ -134,6 +135,7 @@ export default function CreateurSitePage() {
   const [descriptionClient, setDescriptionClient] = useState('')
   const [searchAromes, setSearchAromes] = useState<{ primaires: string; secondaires: string; tertiaires: string; cepages: string }>({ primaires: '', secondaires: '', tertiaires: '', cepages: '' })
   const [generatedProjects, setGeneratedProjects] = useState<Array<{ id: string; client_name: string; created_at: string; zipData: string; vitrinePrompt: string }>>([])
+  const [legalDocs, setLegalDocs] = useState<Record<string, string>>({})
 
   const [form, setForm] = useState({
     client_id: '',
@@ -311,6 +313,56 @@ export default function CreateurSitePage() {
     }))
   }
 
+  const generateLegalDocuments = () => {
+    if (!form.client_id) {
+      alert('Sélectionne un client d\'abord.')
+      return
+    }
+
+    const client = clients.find((c) => c.id === Number(form.client_id))
+    if (!client) return
+
+    const docs = {
+      mentions_legales: generateMentionsLegales({
+        nom_domaine: client.nom_domaine,
+        email_contact: client.email_contact || '',
+        region: client.region || '',
+        appellation: client.appellation || '',
+        site_url: form.nom_domaine || client.site_url,
+      }),
+      cgv: generateCGV({
+        nom_domaine: client.nom_domaine,
+        email_contact: client.email_contact || '',
+        region: client.region || '',
+        appellation: client.appellation || '',
+        site_url: form.nom_domaine || client.site_url,
+      }),
+      politique_cookies: generatePolitiqueCookies({
+        nom_domaine: client.nom_domaine,
+        email_contact: client.email_contact || '',
+        region: client.region || '',
+        appellation: client.appellation || '',
+        site_url: form.nom_domaine || client.site_url,
+      }),
+      politique_confidentialite: generatePolitiqueConfidentialite({
+        nom_domaine: client.nom_domaine,
+        email_contact: client.email_contact || '',
+        region: client.region || '',
+        appellation: client.appellation || '',
+        site_url: form.nom_domaine || client.site_url,
+      }),
+      cgu: generateCGU({
+        nom_domaine: client.nom_domaine,
+        email_contact: client.email_contact || '',
+        region: client.region || '',
+        appellation: client.appellation || '',
+        site_url: form.nom_domaine || client.site_url,
+      }),
+    }
+
+    setLegalDocs(docs)
+    alert('✅ Documents légaux générés!')
+  }
 
   const generate = async () => {
     if (!form.client_id) {
@@ -1090,6 +1142,11 @@ export default function CreateurSitePage() {
                 {creatingProject ? '⏳ Création...' : '📁 Créer & Générer'}
               </button>
             )}
+            {form.client_id && (
+              <button onClick={generateLegalDocuments} className="btn btn-secondary" style={{ backgroundColor: '#5C3A21', borderColor: '#8B5A2B' }}>
+                ⚖️ Documents légaux
+              </button>
+            )}
           </div>
 
           <h2 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Sites générés</h2>
@@ -1159,6 +1216,55 @@ export default function CreateurSitePage() {
             )}
           </div>
         </div>
+
+        {/* DOCUMENTS LÉGAUX */}
+        {Object.keys(legalDocs).length > 0 && (
+          <div className="gen-panel">
+            <h2 style={{ marginBottom: '1.5rem' }}>📋 Documents légaux générés</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+              {[
+                { key: 'mentions_legales', label: '📄 Mentions légales', icon: '📄' },
+                { key: 'cgv', label: '📄 CGV', icon: '📄' },
+                { key: 'politique_cookies', label: '🍪 Politique cookies', icon: '🍪' },
+                { key: 'politique_confidentialite', label: '🔒 Politique confidentialité', icon: '🔒' },
+                { key: 'cgu', label: '📄 CGU', icon: '📄' },
+              ].map(({ key, label }) => (
+                <div key={key} className="site-card">
+                  <h4>{label}</h4>
+                  <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', marginTop: '.8rem' }}>
+                    <button
+                      onClick={() => {
+                        const blob = new Blob([legalDocs[key]], { type: 'text/plain' })
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `${key}.txt`
+                        document.body.appendChild(a)
+                        a.click()
+                        window.URL.revokeObjectURL(url)
+                        document.body.removeChild(a)
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '.8rem' }}
+                    >
+                      📥 Télécharger
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(legalDocs[key])
+                        alert(`✅ ${label} copié!`)
+                      }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '.8rem' }}
+                    >
+                      📋 Copier
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODALS */}
