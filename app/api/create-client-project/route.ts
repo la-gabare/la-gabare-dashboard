@@ -1,9 +1,184 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import crypto from 'crypto'
 import { generateTutorialPDF } from '@/lib/pdf-generator'
 
 const JSZip = require('jszip')
+
+function generatePublishPhp(clientName: string, projectSlug: string): string {
+  const token = crypto.randomBytes(32).toString('hex')
+  return `<?php
+/**
+ * Publish API for ${clientName}
+ * Allows Claude to publish articles directly to the site
+ */
+
+// Security token - change this to a unique value
+define('PUBLISH_TOKEN', '${token}');
+
+// Verify token
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $headers = getallheaders();
+  $auth = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+
+  if ($auth !== 'Bearer ' . PUBLISH_TOKEN) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+  }
+}
+
+// Handle incoming article data
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $input = json_decode(file_get_contents('php://input'), true);
+
+  if (!isset($input['title']) || !isset($input['content'])) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Missing required fields: title, content']);
+    exit;
+  }
+
+  $article = [
+    'title' => sanitize($input['title']),
+    'content' => $input['content'],
+    'slug' => sanitize($input['slug'] ?? slugify($input['title'])),
+    'date' => $input['date'] ?? date('Y-m-d H:i:s'),
+    'author' => sanitize($input['author'] ?? 'Claude'),
+    'status' => $input['status'] ?? 'published'
+  ];
+
+  // Save article to articles directory
+  $articlesDir = __DIR__ . '/articles';
+  if (!is_dir($articlesDir)) {
+    mkdir($articlesDir, 0755, true);
+  }
+
+  $filename = date('Y-m-d-') . $article['slug'] . '.json';
+  $filepath = $articlesDir . '/' . $filename;
+
+  if (file_put_contents($filepath, json_encode($article, JSON_PRETTY_PRINT))) {
+    http_response_code(201);
+    echo json_encode([
+      'success' => true,
+      'message' => 'Article published successfully',
+      'slug' => $article['slug'],
+      'file' => $filename
+    ]);
+  } else {
+    http_response_code(500);
+    echo json_encode(['error' => 'Failed to publish article']);
+  }
+  exit;
+}
+
+// GET - list articles
+$articlesDir = __DIR__ . '/articles';
+$articles = [];
+
+if (is_dir($articlesDir)) {
+  $files = scandir($articlesDir);
+  foreach ($files as $file) {
+    if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
+      $content = json_decode(file_get_contents($articlesDir . '/' . $file), true);
+      $articles[] = [
+        'title' => $content['title'] ?? '',
+        'slug' => $content['slug'] ?? '',
+        'date' => $content['date'] ?? '',
+        'file' => $file
+      ];
+    }
+  }
+}
+
+header('Content-Type: application/json');
+echo json_encode(['articles' => $articles]);
+
+function sanitize($string) {
+  return htmlspecialchars(strip_tags($string), ENT_QUOTES, 'UTF-8');
+}
+
+function slugify($string) {
+  $slug = strtolower($string);
+  $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+  $slug = trim($slug, '-');
+  return $slug;
+}
+?>`
+}
+
+function generateConfigPhp(clientName: string, projectSlug: string): string {
+  return `<?php
+/**
+ * Configuration for ${clientName} site
+ */
+
+// Site settings
+define('SITE_NAME', '${clientName}');
+define('SITE_SLUG', '${projectSlug}');
+define('SITE_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']);
+
+// Directories
+define('ROOT_DIR', __DIR__);
+define('ARTICLES_DIR', ROOT_DIR . '/articles');
+define('UPLOADS_DIR', ROOT_DIR . '/uploads');
+
+// Article settings
+define('ARTICLES_PER_PAGE', 10);
+define('SHOW_DRAFT_ARTICLES', false);
+
+// Publishing API
+define('API_ENDPOINT', SITE_URL . '/publish.php');
+define('PUBLISH_TOKEN', getenv('PUBLISH_TOKEN') ?: 'change-me-in-production');
+
+// Cache settings
+define('ENABLE_CACHE', true);
+define('CACHE_DURATION', 3600); // 1 hour
+
+// Ensure articles directory exists
+if (!is_dir(ARTICLES_DIR)) {
+  mkdir(ARTICLES_DIR, 0755, true);
+}
+
+if (!is_dir(UPLOADS_DIR)) {
+  mkdir(UPLOADS_DIR, 0755, true);
+}
+
+// Helper function to get articles
+function getArticles() {
+  $articles = [];
+  if (is_dir(ARTICLES_DIR)) {
+    $files = scandir(ARTICLES_DIR, SCANDIR_SORT_DESCENDING);
+    foreach ($files as $file) {
+      if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
+        $data = json_decode(file_get_contents(ARTICLES_DIR . '/' . $file), true);
+        if (SHOW_DRAFT_ARTICLES || $data['status'] === 'published') {
+          $articles[] = array_merge($data, ['file' => $file]);
+        }
+      }
+    }
+  }
+  return $articles;
+}
+
+// Helper function to get single article
+function getArticle(\$slug) {
+  if (is_dir(ARTICLES_DIR)) {
+    \$files = scandir(ARTICLES_DIR);
+    foreach (\$files as \$file) {
+      if (pathinfo(\$file, PATHINFO_EXTENSION) === 'json') {
+        \$data = json_decode(file_get_contents(ARTICLES_DIR . '/' . \$file), true);
+        if (\$data['slug'] === \$slug) {
+          return \$data;
+        }
+      }
+    }
+  }
+  return null;
+}
+?>`
+}
+
 
 export async function POST(request: NextRequest) {
   const tempDir = path.join('/tmp', `project-${Date.now()}`)
@@ -85,6 +260,30 @@ export async function POST(request: NextRequest) {
       path.join(projectDir, 'project-config.json'),
       JSON.stringify(configFile, null, 2)
     )
+
+    // Créer publish.php dans le dossier site
+    const publishPhp = generatePublishPhp(client_name, project_slug)
+    const publishPhpPath = path.join(projectDir, 'site', 'publish.php')
+    fs.writeFileSync(publishPhpPath, publishPhp)
+    console.log('Created publish.php at:', publishPhpPath)
+
+    // Créer config.php dans le dossier site
+    const configPhp = generateConfigPhp(client_name, project_slug)
+    const configPhpPath = path.join(projectDir, 'site', 'config.php')
+    fs.writeFileSync(configPhpPath, configPhp)
+    console.log('Created config.php at:', configPhpPath)
+
+    // Créer .htaccess dans le dossier site pour router les requêtes
+    const htaccess = `<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /site/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^publish$ publish.php [L]
+</IfModule>`
+    const htaccessPath = path.join(projectDir, 'site', '.htaccess')
+    fs.writeFileSync(htaccessPath, htaccess)
+    console.log('Created .htaccess at:', htaccessPath)
 
     const zip = new JSZip()
     await addDirectoryToZip(zip, projectDir, projectName)
