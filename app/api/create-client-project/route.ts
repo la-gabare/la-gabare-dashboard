@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const tempDir = path.join('/tmp', `project-${Date.now()}`)
 
   try {
-    const { client_name, client_id, project_slug, prompt, promptWoo } = await request.json()
+    const { client_name, client_id, project_slug, prompt } = await request.json()
 
     if (!client_name || !client_id) {
       return NextResponse.json(
@@ -45,11 +45,6 @@ export async function POST(request: NextRequest) {
       prompt || 'Aucun prompt fourni'
     )
 
-    fs.writeFileSync(
-      path.join(projectDir, 'prompt-woocommerce.txt'),
-      promptWoo || 'Aucun prompt fourni'
-    )
-
     const configFile = {
       client_name,
       client_id,
@@ -58,7 +53,6 @@ export async function POST(request: NextRequest) {
       chat_name: `[CLIENT] ${client_name} - Création site`,
       files: {
         prompt_vitrine: 'prompt-vitrine.txt',
-        prompt_woocommerce: 'prompt-woocommerce.txt',
         tutoriel: 'TUTORIEL - Mettre en ligne le site.pdf'
       }
     }
