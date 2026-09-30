@@ -6,6 +6,7 @@ import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post, PlanGeneration, MailHebdoRequest } from '@/lib/types'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 import ClientEditModal from '@/components/ClientEditModal'
+import { ClientEditFormInline, ClientProfileDisplay } from '@/components/ClientFormComplet'
 import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
 
 const abonnementQuotas: Record<string, string> = {
@@ -57,6 +58,8 @@ export default function ClientDetailPage() {
   const [lastPlan, setLastPlan] = useState<PlanGeneration | null>(null)
   const [lastMail, setLastMail] = useState<MailHebdoRequest | null>(null)
   const [checkingSite, setCheckingSite] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [editData, setEditData] = useState<any>({})
 
   useEffect(() => {
     const fetchData = async () => {
@@ -171,6 +174,25 @@ export default function ClientDetailPage() {
         >
           Éditer
         </button>
+      </div>
+
+      {/* FORMULAIRE COMPLET ÉDITABLE */}
+      <div className="card">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Formulaire complet</h2>
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className={`px-4 py-2 rounded font-semibold ${editMode ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}
+          >
+            {editMode ? '✕ Annuler' : '✎ Éditer'}
+          </button>
+        </div>
+
+        {editMode ? (
+          <ClientEditFormInline client={client} onSave={(updated) => { setClient(updated); setEditMode(false); }} />
+        ) : (
+          <ClientProfileDisplay client={client} />
+        )}
       </div>
 
       <ClientEditModal
