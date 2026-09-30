@@ -6,16 +6,18 @@ import { generateTutorialPDF } from '@/lib/pdf-generator'
 
 const JSZip = require('jszip')
 
-function generatePublishPhp(clientName: string, projectSlug: string): string {
+function generatePublishPhp(clientName: string, projectSlug: string, domainName?: string): string {
   const token = crypto.randomBytes(32).toString('hex')
   return `<?php
 /**
  * Publish API for ${clientName}
+ * ${domainName ? `Domain: ${domainName}` : ''}
  * Allows Claude to publish articles directly to the site
  */
 
 // Security token - change this to a unique value
 define('PUBLISH_TOKEN', '${token}');
+define('DOMAIN_NAME', '${domainName || clientName}');
 
 // Verify token
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -107,16 +109,18 @@ function slugify($string) {
 ?>`
 }
 
-function generateConfigPhp(clientName: string, projectSlug: string): string {
+function generateConfigPhp(clientName: string, projectSlug: string, domainName?: string): string {
   return `<?php
 /**
  * Configuration for ${clientName} site
+ * ${domainName ? `Domain: ${domainName}` : ''}
  */
 
 // Site settings
 define('SITE_NAME', '${clientName}');
+define('SITE_DOMAIN', '${domainName || clientName}');
 define('SITE_SLUG', '${projectSlug}');
-define('SITE_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']);
+define('SITE_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . (defined('SITE_DOMAIN') ? SITE_DOMAIN : $_SERVER['HTTP_HOST']));
 
 // Directories
 define('ROOT_DIR', __DIR__);
@@ -261,17 +265,26 @@ export async function POST(request: NextRequest) {
       JSON.stringify(configFile, null, 2)
     )
 
+    // Récupérer le domaine depuis les données du client
+    const clientData = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/clients?id=eq.${client_id}`, {
+      headers: { 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
+    }).then(r => r.json()).catch(() => [])
+
+    const domainName = clientData?.[0]?.site_url || clientData?.[0]?.nom_domaine || client_name
+    const profileData = clientData?.[0]?.profil_client_complet as Record<string, any> || {}
+    const detectedDomain = profileData?.site_url || profileData?.domaine || domainName
+
     // Créer publish.php dans le dossier site
-    const publishPhp = generatePublishPhp(client_name, project_slug)
+    const publishPhp = generatePublishPhp(client_name, project_slug, detectedDomain)
     const publishPhpPath = path.join(projectDir, 'site', 'publish.php')
     fs.writeFileSync(publishPhpPath, publishPhp)
-    console.log('Created publish.php at:', publishPhpPath)
+    console.log('Created publish.php at:', publishPhpPath, 'for domain:', detectedDomain)
 
     // Créer config.php dans le dossier site
-    const configPhp = generateConfigPhp(client_name, project_slug)
+    const configPhp = generateConfigPhp(client_name, project_slug, detectedDomain)
     const configPhpPath = path.join(projectDir, 'site', 'config.php')
     fs.writeFileSync(configPhpPath, configPhp)
-    console.log('Created config.php at:', configPhpPath)
+    console.log('Created config.php at:', configPhpPath, 'for domain:', detectedDomain)
 
     // Créer .htaccess dans le dossier site pour router les requêtes
     const htaccess = `<IfModule mod_rewrite.c>

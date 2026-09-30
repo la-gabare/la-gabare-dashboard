@@ -594,8 +594,12 @@ export default function CreateurSitePage() {
     const skinLabel = skinOptions.find((s) => s.value === form.skin_choisi)?.label || 'Non spécifié'
     const fontLabel = fontPairings.find((f) => f.name === form.style_polices)?.name || 'Non spécifié'
 
+    // Détecter le domaine depuis les données du client
+    const domainName = client?.site_url || profil?.site_url || profil?.domaine || client?.nom_domaine
+
     const lignes = [
         'Tu crées un site Web complet pour un domaine viticole.',
+        `🌐 **Domaine:** ${domainName}`,
         '',
         '## IDENTITÉ & BRANDING DU DOMAINE',
         '',
