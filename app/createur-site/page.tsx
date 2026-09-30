@@ -195,7 +195,18 @@ export default function CreateurSitePage() {
         const profil = (client.profil_client_complet || {}) as Record<string, any>
         const detectedDomain = client.site_url || profil?.site_url || profil?.domaine || (client as any)?.site || ''
         if (detectedDomain) {
+          // Mettre à jour le state
           setForm((f) => ({ ...f, nom_domaine: detectedDomain }))
+          // Aussi mettre à jour le DOM directement en cas de delay du state
+          setTimeout(() => {
+            const inputs = document.querySelectorAll('input[type="text"]')
+            for (const input of inputs) {
+              if ((input as HTMLInputElement).placeholder?.includes('mondomaine')) {
+                (input as HTMLInputElement).value = detectedDomain
+                break
+              }
+            }
+          }, 0)
         }
       }
     }
