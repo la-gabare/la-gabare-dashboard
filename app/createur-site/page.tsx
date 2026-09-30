@@ -203,6 +203,12 @@ export default function CreateurSitePage() {
       // Auto-remplir le domaine du site avec le domaine détecté
       const profil = (client.profil_client_complet || {}) as Record<string, any>
       const detectedDomain = client.site_url || profil?.site_url || profil?.domaine || (client as any)?.site || ''
+      console.log('Client selected:', client.nom_domaine)
+      console.log('Client data keys:', Object.keys(client))
+      console.log('site_url:', client.site_url)
+      console.log('site:', (client as any).site)
+      console.log('profil:', profil)
+      console.log('detectedDomain:', detectedDomain)
 
       const infosClient = [
         client.nom_domaine,
