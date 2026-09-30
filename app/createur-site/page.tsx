@@ -200,6 +200,10 @@ export default function CreateurSitePage() {
     setForm((f) => ({ ...f, client_id: clientId }))
     const client = clients.find((c) => c.id === Number(clientId))
     if (client) {
+      // Auto-remplir le domaine du site avec le domaine détecté
+      const profil = (client.profil_client_complet || {}) as Record<string, any>
+      const detectedDomain = client.site_url || profil?.site_url || profil?.domaine || (client as any)?.site || ''
+
       const infosClient = [
         client.nom_domaine,
         client.region,
@@ -209,7 +213,7 @@ export default function CreateurSitePage() {
       ]
         .filter(Boolean)
         .join(' — ')
-      setForm((f) => ({ ...f, demande: infosClient }))
+      setForm((f) => ({ ...f, demande: infosClient, nom_domaine: detectedDomain }))
 
       // Formater toutes les infos du client
       const profil = (client.profil_client_complet || {}) as Record<string, any>
