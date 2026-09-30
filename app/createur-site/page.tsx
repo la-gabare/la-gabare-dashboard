@@ -189,17 +189,17 @@ export default function CreateurSitePage() {
 
   // Auto-remplir le domaine du site quand le client change
   useEffect(() => {
-    if (form.client_id) {
+    if (form.client_id && clients.length > 0) {
       const client = clients.find((c) => c.id === Number(form.client_id))
       if (client) {
         const profil = (client.profil_client_complet || {}) as Record<string, any>
         const detectedDomain = client.site_url || profil?.site_url || profil?.domaine || (client as any)?.site || ''
-        if (detectedDomain && form.nom_domaine !== detectedDomain) {
+        if (detectedDomain) {
           setForm((f) => ({ ...f, nom_domaine: detectedDomain }))
         }
       }
     }
-  }, [form.client_id, clients])
+  }, [form.client_id, clients.length])
 
   useEffect(() => {
     if (document.querySelector('link[data-font-preview]')) return
