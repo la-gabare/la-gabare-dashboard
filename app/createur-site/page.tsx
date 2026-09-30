@@ -197,18 +197,11 @@ export default function CreateurSitePage() {
   }, [])
 
   const handleClientChange = async (clientId: string) => {
-    setForm((f) => ({ ...f, client_id: clientId }))
     const client = clients.find((c) => c.id === Number(clientId))
     if (client) {
       // Auto-remplir le domaine du site avec le domaine détecté
       const profil = (client.profil_client_complet || {}) as Record<string, any>
       const detectedDomain = client.site_url || profil?.site_url || profil?.domaine || (client as any)?.site || ''
-      console.log('Client selected:', client.nom_domaine)
-      console.log('Client data keys:', Object.keys(client))
-      console.log('site_url:', client.site_url)
-      console.log('site:', (client as any).site)
-      console.log('profil:', profil)
-      console.log('detectedDomain:', detectedDomain)
 
       const infosClient = [
         client.nom_domaine,
@@ -219,7 +212,8 @@ export default function CreateurSitePage() {
       ]
         .filter(Boolean)
         .join(' — ')
-      setForm((f) => ({ ...f, demande: infosClient, nom_domaine: detectedDomain }))
+      // Mettre à jour tous les champs en une seule fois
+      setForm((f) => ({ ...f, client_id: clientId, demande: infosClient, nom_domaine: detectedDomain }))
 
       // Formater toutes les infos du client
       const lignes: string[] = []
