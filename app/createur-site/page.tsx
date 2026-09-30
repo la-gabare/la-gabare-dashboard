@@ -203,6 +203,11 @@ export default function CreateurSitePage() {
       const profil = (client.profil_client_complet || {}) as Record<string, any>
       const detectedDomain = client.site_url || profil?.site_url || profil?.domaine || (client as any)?.site || ''
 
+      console.log('=== handleClientChange ===')
+      console.log('client.id:', client.id, 'clientId:', clientId)
+      console.log('client.site_url:', client.site_url)
+      console.log('detectedDomain:', detectedDomain)
+
       const infosClient = [
         client.nom_domaine,
         client.region,
