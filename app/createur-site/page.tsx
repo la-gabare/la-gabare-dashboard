@@ -222,7 +222,6 @@ export default function CreateurSitePage() {
       setForm((f) => ({ ...f, demande: infosClient, nom_domaine: detectedDomain }))
 
       // Formater toutes les infos du client
-      const profil = (client.profil_client_complet || {}) as Record<string, any>
       const lignes: string[] = []
 
       lignes.push('=== FICHE CLIENT COMPLÈTE ===', '')
