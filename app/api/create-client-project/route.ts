@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const tempDir = path.join('/tmp', `project-${Date.now()}`)
 
   try {
-    const { client_name, client_id, project_slug, prompt } = await request.json()
+    const { client_name, client_id, project_slug, prompt, legalDocs } = await request.json()
 
     if (!client_name || !client_id) {
       return NextResponse.json(
@@ -44,6 +44,30 @@ export async function POST(request: NextRequest) {
       path.join(projectDir, 'prompt-vitrine.txt'),
       prompt || 'Aucun prompt fourni'
     )
+
+    // Écrire les documents légaux
+    if (legalDocs) {
+      fs.writeFileSync(
+        path.join(projectDir, 'mentions-legales.txt'),
+        legalDocs.mentions_legales || ''
+      )
+      fs.writeFileSync(
+        path.join(projectDir, 'cgv.txt'),
+        legalDocs.cgv || ''
+      )
+      fs.writeFileSync(
+        path.join(projectDir, 'politique-cookies.txt'),
+        legalDocs.politique_cookies || ''
+      )
+      fs.writeFileSync(
+        path.join(projectDir, 'politique-confidentialite.txt'),
+        legalDocs.politique_confidentialite || ''
+      )
+      fs.writeFileSync(
+        path.join(projectDir, 'cgu.txt'),
+        legalDocs.cgu || ''
+      )
+    }
 
     const configFile = {
       client_name,

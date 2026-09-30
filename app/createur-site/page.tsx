@@ -509,6 +509,45 @@ export default function CreateurSitePage() {
     try {
       const vitrinePrompt = generatePromptText()
 
+      // Générer les documents légaux
+      const legalDocs = {
+        mentions_legales: generateMentionsLegales({
+          nom_domaine: client.nom_domaine,
+          email_contact: client.email_contact || '',
+          region: client.region || '',
+          appellation: client.appellation || '',
+          site_url: form.nom_domaine || client.site_url,
+        }),
+        cgv: generateCGV({
+          nom_domaine: client.nom_domaine,
+          email_contact: client.email_contact || '',
+          region: client.region || '',
+          appellation: client.appellation || '',
+          site_url: form.nom_domaine || client.site_url,
+        }),
+        politique_cookies: generatePolitiqueCookies({
+          nom_domaine: client.nom_domaine,
+          email_contact: client.email_contact || '',
+          region: client.region || '',
+          appellation: client.appellation || '',
+          site_url: form.nom_domaine || client.site_url,
+        }),
+        politique_confidentialite: generatePolitiqueConfidentialite({
+          nom_domaine: client.nom_domaine,
+          email_contact: client.email_contact || '',
+          region: client.region || '',
+          appellation: client.appellation || '',
+          site_url: form.nom_domaine || client.site_url,
+        }),
+        cgu: generateCGU({
+          nom_domaine: client.nom_domaine,
+          email_contact: client.email_contact || '',
+          region: client.region || '',
+          appellation: client.appellation || '',
+          site_url: form.nom_domaine || client.site_url,
+        }),
+      }
+
       const response = await fetch('/api/create-client-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -517,6 +556,7 @@ export default function CreateurSitePage() {
           client_id: form.client_id,
           project_slug: `site-${client.nom_domaine.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
           prompt: vitrinePrompt,
+          legalDocs: legalDocs,
         })
       })
 
