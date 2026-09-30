@@ -137,6 +137,7 @@ export default function CreateurSitePage() {
 
   const [form, setForm] = useState({
     client_id: '',
+    nom_domaine: '',
     pack: 'essentiel',
     slogan: '',
     message_principal: '',
@@ -702,6 +703,17 @@ export default function CreateurSitePage() {
 
             {currentClient && (
               <>
+                <h3>Nom de domaine du site</h3>
+                <div className="form-group">
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="ex: www.mondomaine.fr"
+                    value={form.nom_domaine}
+                    onChange={(e) => setForm({ ...form, nom_domaine: e.target.value })}
+                  />
+                </div>
+
                 <h3>Infos client</h3>
                 <div className="form-group">
                   <label className="form-label">Domaine</label>
