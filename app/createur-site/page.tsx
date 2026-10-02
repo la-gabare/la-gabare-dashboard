@@ -480,7 +480,33 @@ export default function CreateurSitePage() {
           '- **Espace B2B Privatif** : zone réservée cavistes/importateurs/restaurateurs avec grilles tarifaires HD et visuels\n' +
           '- **Version bilingue** : sélecteur langue fluide',
         '',
-        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT (Pro & Premium):** Ajouter un bouton "Acheter cette cuvée" sur chaque fiche cuvée qui redirige vers la boutique WooCommerce' : '',
+        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT (Pro & Premium):** Ajouter un bouton "Acheter cette cuvée" qui ajoute au panier Snipcart' : '',
+        '',
+        form.pack === 'pro' ?
+          '## FICHES VINS DÉTAILLÉES (PRO) — 1 page par cuvée\n' +
+          '\n' +
+          '**Chaque fiche vin inclut :**\n' +
+          '- Photo grande format de la bouteille\n' +
+          '- Description commerciale complète (80-120 mots)\n' +
+          '- Notes de dégustation structurées (nez, bouche, finale)\n' +
+          '- Accords mets-vins (3-4 suggestions concrètes)\n' +
+          '- Infos techniques : cépage, élevage, rendement, volume, alcool\n' +
+          '- Température de service et potentiel de garde\n' +
+          '- Bouton Snipcart "ajouter au panier" avec sélection quantité\n' +
+          '- Bloc "Vous aimerez aussi" (suggestions d\'autres cuvées)\n' +
+          '\n' +
+          '**SEO Pro :**\n' +
+          '- Chaque fiche optimisée sur sa requête cible ("Chinon 2023 achat direct", etc.)\n' +
+          '- Schema.org Product (prix, disponibilité, description)\n' +
+          '- Recherche mots-clés locale (10-15 requêtes identifiées)'
+        : form.pack === 'premium' ?
+          '## FICHES VINS + CONTENU IA (PREMIUM)\n' +
+          '\n' +
+          '- Tout le Pro + Descriptions rédigées par Viti-Copilot IA\n' +
+          '- Histoires de millésimes générées automatiquement\n' +
+          '- Fiches multilingues (traduction automatique)'
+        : ''
+        ,
         '',
         '## DASHBOARD DU SITE VITRINE (Back-Office)',
         '',
@@ -518,11 +544,31 @@ export default function CreateurSitePage() {
           '- Évolution ce mois (+X nouveaux)\n' +
           '- Bouton "Voir ma liste dans Brevo"'
         : form.pack === 'pro' ?
+          '**Section "Mon site"** : Statut, dernière mise à jour, demande modifications\n' +
+          '\n' +
+          '**Section "Visiteurs"** : Visiteurs mois, évolution, courbe 6 mois, top 5 pages\n' +
+          '\n' +
+          '**Section "Google"** : Apparitions, clics, position moyenne, top 5 mots-clés\n' +
+          '\n' +
+          '**Section "Ma fiche Google"** : Note, avis, répondre aux avis\n' +
+          '\n' +
+          '**Section "Ma boutique"** :\n' +
+          '- Commandes récentes (date, client, montant, statut)\n' +
+          '- Gestion des stocks (seuils, alertes)\n' +
+          '- Codes promo actifs et performance\n' +
+          '- Exporter la liste des clients (CSV pour Brevo/marketing)\n' +
+          '\n' +
+          '**Section "Mon blog"** :\n' +
           '- Éditeur d\'actualités avancé\n' +
-          '- Générateur de Fiches Techniques PDF : bouton 1-clic pour générer fiche technique complète (format impression/presse/cavistes)\n' +
-          '- Maillage produit/blog : widget pour insérer fiches de vins dans articles de blog en 1 clic\n' +
-          '- Données Visiteurs, Google Search, Google Business Profile\n' +
-          '- Gestion des commandes e-commerce'
+          '- Générateur Fiches Techniques PDF (1 clic)\n' +
+          '- Maillage produit/blog : widget insertion fiches vins dans articles\n' +
+          '- Articles fournis par La Gabare (3 mois inclus à la livraison)\n' +
+          '\n' +
+          '**Section "Ma newsletter"** :\n' +
+          '- Nombre d\'inscrits total\n' +
+          '- Segmentation : nouveaux clients / clients récurrents / dormants\n' +
+          '- Template email prêt à l\'emploi\n' +
+          '- Accès Brevo pour envoyer newsletters'
         : '- Éditeur d\'actualités avec IA\n' +
           '- Viti-Copilot IA (Rédaction) : assistant IA pour articles de blog, histoires de millésimes, présentation domaine\n' +
           '- Viti-Copilot IA (Traduction) : traduction automatique instantanée vers seconde langue\n' +
@@ -543,6 +589,42 @@ export default function CreateurSitePage() {
           '- ❌ Pas de calendrier de publication\n' +
           '- ❌ Pas de rapport exportable'
         : '',
+        '',
+        form.pack === 'pro' ?
+          '## BOUTIQUE EN LIGNE (Snipcart + Stripe) — PRO\n' +
+          '\n' +
+          '**Configuration :**\n' +
+          '- Compte Snipcart créé et configuré\n' +
+          '- Connexion Stripe : CB, Apple Pay, Google Pay\n' +
+          '- TVA française 20% configurée\n' +
+          '- 3D Secure activé (obligatoire DSP2)\n' +
+          '\n' +
+          '**Livraison :**\n' +
+          '- Zones : France métro, DOM-TOM optionnel\n' +
+          '- Tarifs par poids ou forfaitaires\n' +
+          '- Retrait au domaine (gratuit)\n' +
+          '- Franco de port paramétrable\n' +
+          '- Transporteurs : Colissimo, Chronopost, Mondial Relay\n' +
+          '\n' +
+          '**Gestion :**\n' +
+          '- Stocks avec alertes\n' +
+          '- Codes promo\n' +
+          '- Minimum de commande\n' +
+          '- Emails automatiques (couleurs domaine)\n' +
+          '- Notification d\'expédition\n' +
+          '\n' +
+          '**Captation client :**\n' +
+          '- Acheteurs automatiquement importés dans Brevo\n' +
+          '- Tags automatiques (rouge, blanc, moelleux, etc.)\n' +
+          '- Segmentation : nouveaux / récurrents / dormants'
+        : form.pack === 'premium' ?
+          '## BOUTIQUE EN LIGNE (Snipcart + Stripe + Avancé) — PREMIUM\n' +
+          '\n' +
+          '- Tout le Pro + Module Œnotourisme avec réservations payantes en ligne\n' +
+          '- Gestion inventaires dynamiques multi-sites\n' +
+          '- API avancée pour intégrations sur-mesure'
+        : ''
+        ,
         '',
         '## INSTRUCTIONS TECHNIQUES',
         '',
@@ -747,7 +829,33 @@ export default function CreateurSitePage() {
           '- **Espace B2B Privatif** : zone réservée cavistes/importateurs/restaurateurs avec grilles tarifaires HD et visuels\n' +
           '- **Version bilingue** : sélecteur langue fluide',
         '',
-        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT (Pro & Premium):** Ajouter un bouton "Acheter cette cuvée" sur chaque fiche cuvée qui redirige vers la boutique WooCommerce' : '',
+        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT (Pro & Premium):** Ajouter un bouton "Acheter cette cuvée" qui ajoute au panier Snipcart' : '',
+        '',
+        form.pack === 'pro' ?
+          '## FICHES VINS DÉTAILLÉES (PRO) — 1 page par cuvée\n' +
+          '\n' +
+          '**Chaque fiche vin inclut :**\n' +
+          '- Photo grande format de la bouteille\n' +
+          '- Description commerciale complète (80-120 mots)\n' +
+          '- Notes de dégustation structurées (nez, bouche, finale)\n' +
+          '- Accords mets-vins (3-4 suggestions concrètes)\n' +
+          '- Infos techniques : cépage, élevage, rendement, volume, alcool\n' +
+          '- Température de service et potentiel de garde\n' +
+          '- Bouton Snipcart "ajouter au panier" avec sélection quantité\n' +
+          '- Bloc "Vous aimerez aussi" (suggestions d\'autres cuvées)\n' +
+          '\n' +
+          '**SEO Pro :**\n' +
+          '- Chaque fiche optimisée sur sa requête cible ("Chinon 2023 achat direct", etc.)\n' +
+          '- Schema.org Product (prix, disponibilité, description)\n' +
+          '- Recherche mots-clés locale (10-15 requêtes identifiées)'
+        : form.pack === 'premium' ?
+          '## FICHES VINS + CONTENU IA (PREMIUM)\n' +
+          '\n' +
+          '- Tout le Pro + Descriptions rédigées par Viti-Copilot IA\n' +
+          '- Histoires de millésimes générées automatiquement\n' +
+          '- Fiches multilingues (traduction automatique)'
+        : ''
+        ,
         '',
         '## DASHBOARD DU SITE VITRINE (Back-Office)',
         '',
@@ -785,11 +893,31 @@ export default function CreateurSitePage() {
           '- Évolution ce mois (+X nouveaux)\n' +
           '- Bouton "Voir ma liste dans Brevo"'
         : form.pack === 'pro' ?
+          '**Section "Mon site"** : Statut, dernière mise à jour, demande modifications\n' +
+          '\n' +
+          '**Section "Visiteurs"** : Visiteurs mois, évolution, courbe 6 mois, top 5 pages\n' +
+          '\n' +
+          '**Section "Google"** : Apparitions, clics, position moyenne, top 5 mots-clés\n' +
+          '\n' +
+          '**Section "Ma fiche Google"** : Note, avis, répondre aux avis\n' +
+          '\n' +
+          '**Section "Ma boutique"** :\n' +
+          '- Commandes récentes (date, client, montant, statut)\n' +
+          '- Gestion des stocks (seuils, alertes)\n' +
+          '- Codes promo actifs et performance\n' +
+          '- Exporter la liste des clients (CSV pour Brevo/marketing)\n' +
+          '\n' +
+          '**Section "Mon blog"** :\n' +
           '- Éditeur d\'actualités avancé\n' +
-          '- Générateur de Fiches Techniques PDF : bouton 1-clic pour générer fiche technique complète (format impression/presse/cavistes)\n' +
-          '- Maillage produit/blog : widget pour insérer fiches de vins dans articles de blog en 1 clic\n' +
-          '- Données Visiteurs, Google Search, Google Business Profile\n' +
-          '- Gestion des commandes e-commerce'
+          '- Générateur Fiches Techniques PDF (1 clic)\n' +
+          '- Maillage produit/blog : widget insertion fiches vins dans articles\n' +
+          '- Articles fournis par La Gabare (3 mois inclus à la livraison)\n' +
+          '\n' +
+          '**Section "Ma newsletter"** :\n' +
+          '- Nombre d\'inscrits total\n' +
+          '- Segmentation : nouveaux clients / clients récurrents / dormants\n' +
+          '- Template email prêt à l\'emploi\n' +
+          '- Accès Brevo pour envoyer newsletters'
         : '- Éditeur d\'actualités avec IA\n' +
           '- Viti-Copilot IA (Rédaction) : assistant IA pour articles de blog, histoires de millésimes, présentation domaine\n' +
           '- Viti-Copilot IA (Traduction) : traduction automatique instantanée vers seconde langue\n' +
@@ -810,6 +938,42 @@ export default function CreateurSitePage() {
           '- ❌ Pas de calendrier de publication\n' +
           '- ❌ Pas de rapport exportable'
         : '',
+        '',
+        form.pack === 'pro' ?
+          '## BOUTIQUE EN LIGNE (Snipcart + Stripe) — PRO\n' +
+          '\n' +
+          '**Configuration :**\n' +
+          '- Compte Snipcart créé et configuré\n' +
+          '- Connexion Stripe : CB, Apple Pay, Google Pay\n' +
+          '- TVA française 20% configurée\n' +
+          '- 3D Secure activé (obligatoire DSP2)\n' +
+          '\n' +
+          '**Livraison :**\n' +
+          '- Zones : France métro, DOM-TOM optionnel\n' +
+          '- Tarifs par poids ou forfaitaires\n' +
+          '- Retrait au domaine (gratuit)\n' +
+          '- Franco de port paramétrable\n' +
+          '- Transporteurs : Colissimo, Chronopost, Mondial Relay\n' +
+          '\n' +
+          '**Gestion :**\n' +
+          '- Stocks avec alertes\n' +
+          '- Codes promo\n' +
+          '- Minimum de commande\n' +
+          '- Emails automatiques (couleurs domaine)\n' +
+          '- Notification d\'expédition\n' +
+          '\n' +
+          '**Captation client :**\n' +
+          '- Acheteurs automatiquement importés dans Brevo\n' +
+          '- Tags automatiques (rouge, blanc, moelleux, etc.)\n' +
+          '- Segmentation : nouveaux / récurrents / dormants'
+        : form.pack === 'premium' ?
+          '## BOUTIQUE EN LIGNE (Snipcart + Stripe + Avancé) — PREMIUM\n' +
+          '\n' +
+          '- Tout le Pro + Module Œnotourisme avec réservations payantes en ligne\n' +
+          '- Gestion inventaires dynamiques multi-sites\n' +
+          '- API avancée pour intégrations sur-mesure'
+        : ''
+        ,
         '',
         '## INSTRUCTIONS TECHNIQUES',
         '',
