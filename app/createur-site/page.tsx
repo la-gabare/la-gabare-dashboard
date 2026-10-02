@@ -475,10 +475,16 @@ export default function CreateurSitePage() {
           '- **Espace Professionnels** : formulaire CHR/Cavistes dédié avec tarifs de gros, conditions, documentation téléchargeable\n' +
           '- Visites & Contact, Blog, Mentions Légales, Boutique (intégrée)'
         : '**Pages à créer (illimitées) :**\n' +
-          '- Toutes les pages du Pro + Pages supplémentaires sur-mesure\n' +
-          '- **Module Œnotourisme** : calendrier interactif réservations/paiements en ligne\n' +
-          '- **Espace B2B Privatif** : zone réservée cavistes/importateurs/restaurateurs avec grilles tarifaires HD et visuels\n' +
-          '- **Version bilingue** : sélecteur langue fluide',
+          '- Accueil premium : design sur-mesure, animations, storytelling immersif, événements dynamiques, avis Google live\n' +
+          '- Le Domaine : storytelling complet rédigé (interview 1h30), parcellaire, chai/cave, équipe, timeline\n' +
+          '- Fiches Vins Premium : tout le Pro + textes sommellerie, histoire cuvée, service optimal, vidéo dégustation\n' +
+          '- **Page Terroir dédiée** : carte parcelles, géologie, climat, biodiversité, photos aériennes\n' +
+          '- **Page Visites & Événements** : système réservation en ligne (Calendly ou formulaire), plusieurs formules, tarification, confirmation email\n' +
+          '- **Page Professionnels** : présentation offre pro, formulaire dédié, catalogue PDF téléchargeable\n' +
+          '- **Page Presse & Récompenses** : médailles, citations presse, logos concours/guides\n' +
+          '- **Galerie Photo/Vidéo** : masonry/slider, catégories, intégration YouTube/Vimeo\n' +
+          '- Blog premium : design magazine, alimenté 3 mois (8 articles/mois + stratégie annuelle)\n' +
+          '- **Version bilingue complète** : site + SEO + balises hreflang',
         '',
         form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT (Pro & Premium):** Ajouter un bouton "Acheter cette cuvée" qui ajoute au panier Snipcart' : '',
         '',
@@ -500,11 +506,15 @@ export default function CreateurSitePage() {
           '- Schema.org Product (prix, disponibilité, description)\n' +
           '- Recherche mots-clés locale (10-15 requêtes identifiées)'
         : form.pack === 'premium' ?
-          '## FICHES VINS + CONTENU IA (PREMIUM)\n' +
+          '## FICHES VINS PREMIUM + RÉDACTION SOMMELLERIE\n' +
           '\n' +
-          '- Tout le Pro + Descriptions rédigées par Viti-Copilot IA\n' +
-          '- Histoires de millésimes générées automatiquement\n' +
-          '- Fiches multilingues (traduction automatique)'
+          '**Chaque fiche vin Premium inclut :**\n' +
+          '- Tout le Pro\n' +
+          '- Descriptions de dégustation professionnelles (rédigées par La Gabare, expertise sommellerie)\n' +
+          '- Histoire unique de la cuvée (pourquoi ce nom, parcelle, anecdote)\n' +
+          '- Suggestions de service détaillées (carafe, verre, occasion, température)\n' +
+          '- Vidéo de dégustation intégrée (si le vigneron fournit)\n' +
+          '- Traduction bilingue complète'
         : ''
         ,
         '',
@@ -620,9 +630,65 @@ export default function CreateurSitePage() {
         : form.pack === 'premium' ?
           '## BOUTIQUE EN LIGNE (Snipcart + Stripe + Avancé) — PREMIUM\n' +
           '\n' +
-          '- Tout le Pro + Module Œnotourisme avec réservations payantes en ligne\n' +
-          '- Gestion inventaires dynamiques multi-sites\n' +
-          '- API avancée pour intégrations sur-mesure'
+          '- Tout le Pro\n' +
+          '- Configuration avancée : lots, coffrets, abonnements box\n' +
+          '- Panier et checkout ultra-optimisés pour conversion'
+        : ''
+        ,
+        '',
+        form.pack === 'premium' ?
+          '## RÉDACTION COMPLÈTE (LE DIFFÉRENCIANT PREMIUM)\n' +
+          '\n' +
+          '**Tous les textes du site sont rédigés par La Gabare — le vigneron n\'écrit rien.**\n' +
+          '\n' +
+          '**Process :**\n' +
+          '1. Interview d\'1h30 (sur place ou visio) du vigneron\n' +
+          '2. La Gabare rédige l\'intégralité du contenu\n' +
+          '3. Le vigneron valide les textes\n' +
+          '\n' +
+          '**Inclus :**\n' +
+          '- Descriptions dégustation (expertise sommellerie)\n' +
+          '- Storytelling domaine et terroir\n' +
+          '- Textes optimisés SEO + conformes loi Évin\n' +
+          '- Accords mets-vins recherchés et personnalisés\n' +
+          '- Tons et styles adaptés à l\'identité du vigneron\n' +
+          '- Articles blog (8/mois pendant 3 mois d\'abonnement Grand Cru inclus)'
+        : ''
+        ,
+        '',
+        form.pack === 'premium' ?
+          '## DESIGN SUR-MESURE HAUT DE GAMME (PREMIUM)\n' +
+          '\n' +
+          '**Direction artistique unique, pas de template :**\n' +
+          '- Brief créatif 1h + moodboard\n' +
+          '- Design unique et personnalisé\n' +
+          '- Animations et micro-interactions (parallaxe, hover bouteilles, transitions)\n' +
+          '- Typographie premium choisie\n' +
+          '- Mise en page éditoriale magazine (grands espaces, visuels immersifs)\n' +
+          '- Retouche photos et optimisation\n' +
+          '- Guide shooting fourni ou coordination photographe\n' +
+          '- Expérience mobile impeccable'
+        : ''
+        ,
+        '',
+        form.pack === 'premium' ?
+          '## SEO COMPLET, DEUX LANGUES, 10 ANNUAIRES (PREMIUM)\n' +
+          '\n' +
+          '**SEO :**\n' +
+          '- GA4 + Search Console configurés\n' +
+          '- Rapport positionnement initial\n' +
+          '- Stratégie contenu annuelle documentée\n' +
+          '\n' +
+          '**Deux langues incluses :**\n' +
+          '- Site intégralement traduit (anglais par défaut)\n' +
+          '- SEO optimisé par langue\n' +
+          '- Balises hreflang + sélecteur langue\n' +
+          '\n' +
+          '**10 annuaires :**\n' +
+          '- Google Business, Wine Tourism, Rue des Vignerons, Office tourisme, Pages Jaunes, TripAdvisor, Vin-Vigne, Wineadvisor, France Voyage, annuaire appellation\n' +
+          '- QR code caveau invite avis\n' +
+          '- Email post-achat auto (7j)\n' +
+          '- Widget avis Google live'
         : ''
         ,
         '',
@@ -824,10 +890,16 @@ export default function CreateurSitePage() {
           '- **Espace Professionnels** : formulaire CHR/Cavistes dédié avec tarifs de gros, conditions, documentation téléchargeable\n' +
           '- Visites & Contact, Blog, Mentions Légales, Boutique (intégrée)'
         : '**Pages à créer (illimitées) :**\n' +
-          '- Toutes les pages du Pro + Pages supplémentaires sur-mesure\n' +
-          '- **Module Œnotourisme** : calendrier interactif réservations/paiements en ligne\n' +
-          '- **Espace B2B Privatif** : zone réservée cavistes/importateurs/restaurateurs avec grilles tarifaires HD et visuels\n' +
-          '- **Version bilingue** : sélecteur langue fluide',
+          '- Accueil premium : design sur-mesure, animations, storytelling immersif, événements dynamiques, avis Google live\n' +
+          '- Le Domaine : storytelling complet rédigé (interview 1h30), parcellaire, chai/cave, équipe, timeline\n' +
+          '- Fiches Vins Premium : tout le Pro + textes sommellerie, histoire cuvée, service optimal, vidéo dégustation\n' +
+          '- **Page Terroir dédiée** : carte parcelles, géologie, climat, biodiversité, photos aériennes\n' +
+          '- **Page Visites & Événements** : système réservation en ligne (Calendly ou formulaire), plusieurs formules, tarification, confirmation email\n' +
+          '- **Page Professionnels** : présentation offre pro, formulaire dédié, catalogue PDF téléchargeable\n' +
+          '- **Page Presse & Récompenses** : médailles, citations presse, logos concours/guides\n' +
+          '- **Galerie Photo/Vidéo** : masonry/slider, catégories, intégration YouTube/Vimeo\n' +
+          '- Blog premium : design magazine, alimenté 3 mois (8 articles/mois + stratégie annuelle)\n' +
+          '- **Version bilingue complète** : site + SEO + balises hreflang',
         '',
         form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT (Pro & Premium):** Ajouter un bouton "Acheter cette cuvée" qui ajoute au panier Snipcart' : '',
         '',
@@ -849,11 +921,15 @@ export default function CreateurSitePage() {
           '- Schema.org Product (prix, disponibilité, description)\n' +
           '- Recherche mots-clés locale (10-15 requêtes identifiées)'
         : form.pack === 'premium' ?
-          '## FICHES VINS + CONTENU IA (PREMIUM)\n' +
+          '## FICHES VINS PREMIUM + RÉDACTION SOMMELLERIE\n' +
           '\n' +
-          '- Tout le Pro + Descriptions rédigées par Viti-Copilot IA\n' +
-          '- Histoires de millésimes générées automatiquement\n' +
-          '- Fiches multilingues (traduction automatique)'
+          '**Chaque fiche vin Premium inclut :**\n' +
+          '- Tout le Pro\n' +
+          '- Descriptions de dégustation professionnelles (rédigées par La Gabare, expertise sommellerie)\n' +
+          '- Histoire unique de la cuvée (pourquoi ce nom, parcelle, anecdote)\n' +
+          '- Suggestions de service détaillées (carafe, verre, occasion, température)\n' +
+          '- Vidéo de dégustation intégrée (si le vigneron fournit)\n' +
+          '- Traduction bilingue complète'
         : ''
         ,
         '',
@@ -969,9 +1045,65 @@ export default function CreateurSitePage() {
         : form.pack === 'premium' ?
           '## BOUTIQUE EN LIGNE (Snipcart + Stripe + Avancé) — PREMIUM\n' +
           '\n' +
-          '- Tout le Pro + Module Œnotourisme avec réservations payantes en ligne\n' +
-          '- Gestion inventaires dynamiques multi-sites\n' +
-          '- API avancée pour intégrations sur-mesure'
+          '- Tout le Pro\n' +
+          '- Configuration avancée : lots, coffrets, abonnements box\n' +
+          '- Panier et checkout ultra-optimisés pour conversion'
+        : ''
+        ,
+        '',
+        form.pack === 'premium' ?
+          '## RÉDACTION COMPLÈTE (LE DIFFÉRENCIANT PREMIUM)\n' +
+          '\n' +
+          '**Tous les textes du site sont rédigés par La Gabare — le vigneron n\'écrit rien.**\n' +
+          '\n' +
+          '**Process :**\n' +
+          '1. Interview d\'1h30 (sur place ou visio) du vigneron\n' +
+          '2. La Gabare rédige l\'intégralité du contenu\n' +
+          '3. Le vigneron valide les textes\n' +
+          '\n' +
+          '**Inclus :**\n' +
+          '- Descriptions dégustation (expertise sommellerie)\n' +
+          '- Storytelling domaine et terroir\n' +
+          '- Textes optimisés SEO + conformes loi Évin\n' +
+          '- Accords mets-vins recherchés et personnalisés\n' +
+          '- Tons et styles adaptés à l\'identité du vigneron\n' +
+          '- Articles blog (8/mois pendant 3 mois d\'abonnement Grand Cru inclus)'
+        : ''
+        ,
+        '',
+        form.pack === 'premium' ?
+          '## DESIGN SUR-MESURE HAUT DE GAMME (PREMIUM)\n' +
+          '\n' +
+          '**Direction artistique unique, pas de template :**\n' +
+          '- Brief créatif 1h + moodboard\n' +
+          '- Design unique et personnalisé\n' +
+          '- Animations et micro-interactions (parallaxe, hover bouteilles, transitions)\n' +
+          '- Typographie premium choisie\n' +
+          '- Mise en page éditoriale magazine (grands espaces, visuels immersifs)\n' +
+          '- Retouche photos et optimisation\n' +
+          '- Guide shooting fourni ou coordination photographe\n' +
+          '- Expérience mobile impeccable'
+        : ''
+        ,
+        '',
+        form.pack === 'premium' ?
+          '## SEO COMPLET, DEUX LANGUES, 10 ANNUAIRES (PREMIUM)\n' +
+          '\n' +
+          '**SEO :**\n' +
+          '- GA4 + Search Console configurés\n' +
+          '- Rapport positionnement initial\n' +
+          '- Stratégie contenu annuelle documentée\n' +
+          '\n' +
+          '**Deux langues incluses :**\n' +
+          '- Site intégralement traduit (anglais par défaut)\n' +
+          '- SEO optimisé par langue\n' +
+          '- Balises hreflang + sélecteur langue\n' +
+          '\n' +
+          '**10 annuaires :**\n' +
+          '- Google Business, Wine Tourism, Rue des Vignerons, Office tourisme, Pages Jaunes, TripAdvisor, Vin-Vigne, Wineadvisor, France Voyage, annuaire appellation\n' +
+          '- QR code caveau invite avis\n' +
+          '- Email post-achat auto (7j)\n' +
+          '- Widget avis Google live'
         : ''
         ,
         '',
