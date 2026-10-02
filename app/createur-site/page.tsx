@@ -401,8 +401,17 @@ export default function CreateurSitePage() {
     const fontLabel = fontPairings.find((f) => f.name === form.style_polices)?.name || 'Non spécifié'
 
     // SITE VITRINE (tous les packs)
+    const scopePack = form.pack === 'essentiel'
+      ? 'PACK ESSENTIEL — Le petit domaine, ou celui qui n\'a rien du tout.\nLe vigneron passe de zéro à visible. Un site propre, trouvable sur Google, conforme à la loi, prêt à accueillir du contenu.\n5 à 6 pages maximum : Accueil, Le Domaine, Nos Vins, Visites & Contact, Blog, Mentions Légales.'
+      : form.pack === 'pro'
+      ? 'PACK PRO — Le vigneron veut vendre et se faire connaître.\nSite professionnel avec fonctionnalités avancées : fiches vins détaillées, espace professionnels, blog, outils de vente.\nJusqu\'à 10 pages sur-mesure + section CHR/Cavistes.'
+      : 'PACK PREMIUM — L\'expérience immersive haut de gamme.\nPages illimitées, modules œnotourisme, espace B2B privatif, traduction automatique, IA intégrée, réservations en ligne.'
+
     const lignes = [
-        'Tu crées un site Web complet pour un domaine viticole.',
+        `Tu crées un site Web pour un domaine viticole.`,
+        '',
+        `## ${form.pack.toUpperCase()}`,
+        scopePack,
         '',
         '## IDENTITÉ & BRANDING DU DOMAINE',
         '',
@@ -451,28 +460,89 @@ export default function CreateurSitePage() {
         '',
         '## STRUCTURE DU SITE VITRINE',
         '',
-        form.pack === 'essentiel' ? 'Jusqu\'à 5 pages (Accueil, Histoire/Domaine, Cuvées vitrine, Contact/Caveau)' : form.pack === 'pro' ? 'Jusqu\'à 10 pages sur-mesure' : 'Pages illimitées avec expérience immersive haut de gamme',
+        form.pack === 'essentiel' ?
+          '**Pages à créer (5 à 6 pages) :**\n' +
+          '1. **Accueil** : Hero avec photo pleine largeur + accroche personnalisée, présentation courte (5-6 lignes), aperçu 3-4 cuvées principales (sans achat), horaires + CTA\n' +
+          '2. **Le Domaine** : Histoire du vigneron, philosophie (bio/raisonné/nature/conventionnel), terroir (sols/cépages/appellations), photos du domaine\n' +
+          '3. **Nos Vins** : Catalogue visuel avec TOUTES les cuvées, photo bouteille, nom, appellation, cépage, prix, description 2-3 lignes. Pas de fiches individuelles.\n' +
+          '4. **Visites & Contact** : Horaires, adresse + Google Maps, formulaire contact (Formspree/Brevo), téléphone cliquable, liens réseaux sociaux\n' +
+          '5. **Blog** : Section vide à la livraison, prête pour publication. Catégories : vie du domaine, cuvées, événements, accords mets-vins\n' +
+          '6. **Mentions Légales** : Identité éditeur, hébergeur, copyright, bandeau vérification d\'âge, message sanitaire loi Évin'
+        : form.pack === 'pro' ?
+          '**Pages à créer (jusqu\'à 10 pages) :**\n' +
+          '- Accueil, Le Domaine, Nos Vins\n' +
+          '- **Fiches cuvées détaillées** : une page par vin avec photo, description complète, prix, alcool %, arômes (primaires/secondaires/tertiaires), cépages\n' +
+          '- **Espace Professionnels** : formulaire CHR/Cavistes dédié avec tarifs de gros, conditions, documentation téléchargeable\n' +
+          '- Visites & Contact, Blog, Mentions Légales, Boutique (intégrée)'
+        : '**Pages à créer (illimitées) :**\n' +
+          '- Toutes les pages du Pro + Pages supplémentaires sur-mesure\n' +
+          '- **Module Œnotourisme** : calendrier interactif réservations/paiements en ligne\n' +
+          '- **Espace B2B Privatif** : zone réservée cavistes/importateurs/restaurateurs avec grilles tarifaires HD et visuels\n' +
+          '- **Version bilingue** : sélecteur langue fluide',
         '',
-        'Pages obligatoires:',
-        '- Accueil (hero, présentation, cuvées en grille/carousel)',
-        '- Présentation du domaine',
-        '- Nos cuvées (avec détails, photos, descriptions, prix, alcool, arômes, cépages)',
-        '- Fiche cuvée détaillée (photo, description complète, prix, alcool %, arômes primaires/secondaires/tertiaires, cépages)',
-        '- Contact (formulaire + localisation)',
-        form.pack === 'essentiel' ? '- Mentions légales & Conformité' : '',
-        form.pack === 'pro' ? '- Formulaire CHR / Cavistes (section dédiée pour professionnels - tarifs de gros, échantillons)' : '',
-        form.pack === 'premium' ? '- Module Œnotourisme (calendrier interactif réservations/paiements en ligne)' : '',
-        form.pack === 'premium' ? '- Espace Pro Privatif (B2B) - zone réservée cavistes/importateurs/restaurateurs avec téléchargement grilles tarifaires et visuels HD' : '',
-        form.pack !== 'essentiel' ? '- Blog/Actualités' : '',
-        form.pack === 'premium' ? '- Sélecteur langue fluide (site bilingue)' : '',
-        '',
-        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT:** Ajouter un bouton "Acheter cette cuvée" sur chaque fiche cuvée qui redirige vers la boutique WooCommerce' : '',
+        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT (Pro & Premium):** Ajouter un bouton "Acheter cette cuvée" sur chaque fiche cuvée qui redirige vers la boutique WooCommerce' : '',
         '',
         '## DASHBOARD DU SITE VITRINE (Back-Office)',
         '',
-        form.pack === 'essentiel' ? '- Éditeur d\'actualités : formulaire standard pour rédiger et publier articles de blog' : form.pack === 'pro' ? '- Éditeur d\'actualités avancé\n- Générateur de Fiches Techniques PDF : bouton 1-clic pour générer fiche technique complète (format impression/presse/cavistes)\n- Maillage produit/blog : widget pour insérer fiches de vins dans articles de blog en 1 clic' : '- Éditeur d\'actualités avec IA\n- Viti-Copilot IA (Rédaction) : assistant IA pour articles de blog, histoires de millésimes, présentation domaine\n- Viti-Copilot IA (Traduction) : traduction automatique instantanée vers seconde langue\n- Générateur PDF avancé\n- Gestionnaire Œnotouristique : tableau suivi réservations, jauge participants, planning caveau',
+        form.pack === 'essentiel' ?
+          '**Section "Mon site"**\n' +
+          '- Statut du site : en ligne ✅ / en maintenance 🔧\n' +
+          '- Date de dernière mise à jour\n' +
+          '- Bouton "Demander une modification" (envoie email à La Gabare)\n' +
+          '\n' +
+          '**Section "Visiteurs"** (Google Analytics simplifié)\n' +
+          '- Nombre de visiteurs ce mois (gros chiffre)\n' +
+          '- Évolution vs mois précédent (flèche + pourcentage)\n' +
+          '- Courbe visites sur 6 derniers mois\n' +
+          '- Top 5 des pages les plus visitées\n' +
+          '\n' +
+          '**Section "Google"** (Search Console simplifié)\n' +
+          '- Nombre d\'apparitions dans Google ce mois\n' +
+          '- Nombre de clics depuis Google\n' +
+          '- Position moyenne sur requêtes principales\n' +
+          '- Top 5 des mots-clés qui amènent du trafic\n' +
+          '\n' +
+          '**Section "Ma fiche Google"**\n' +
+          '- Note moyenne (ex : 4.6 ⭐)\n' +
+          '- Nombre total d\'avis\n' +
+          '- Derniers avis reçus + bouton "répondre sur Google"\n' +
+          '\n' +
+          '**Section "Mon blog"**\n' +
+          '- Liste articles publiés (titre, date, vues)\n' +
+          '- Bouton "Écrire un article" → éditeur simplifié\n' +
+          '- Brouillons en cours\n' +
+          '- Articles proposés par La Gabare (si abonné)\n' +
+          '\n' +
+          '**Section "Ma newsletter"**\n' +
+          '- Nombre d\'inscrits\n' +
+          '- Évolution ce mois (+X nouveaux)\n' +
+          '- Bouton "Voir ma liste dans Brevo"'
+        : form.pack === 'pro' ?
+          '- Éditeur d\'actualités avancé\n' +
+          '- Générateur de Fiches Techniques PDF : bouton 1-clic pour générer fiche technique complète (format impression/presse/cavistes)\n' +
+          '- Maillage produit/blog : widget pour insérer fiches de vins dans articles de blog en 1 clic\n' +
+          '- Données Visiteurs, Google Search, Google Business Profile\n' +
+          '- Gestion des commandes e-commerce'
+        : '- Éditeur d\'actualités avec IA\n' +
+          '- Viti-Copilot IA (Rédaction) : assistant IA pour articles de blog, histoires de millésimes, présentation domaine\n' +
+          '- Viti-Copilot IA (Traduction) : traduction automatique instantanée vers seconde langue\n' +
+          '- Générateur PDF avancé\n' +
+          '- Gestionnaire Œnotouristique : tableau suivi réservations, jauge participants, planning caveau',
         '',
-        form.pack === 'essentiel' ? '- Conformité: Pop-up vérification d\'âge (+18), messages sanitaires, mentions légales' : '',
+        form.pack === 'essentiel' ?
+          '**Capacités du vigneron dans le Dashboard**\n' +
+          '- Écrire et publier un article de blog\n' +
+          '- Voir ses statistiques de base\n' +
+          '- Valider ou refuser articles proposés par La Gabare (si abonné)\n' +
+          '- Demander une modification du site\n' +
+          '\n' +
+          '**Non visible dans l\'Essentiel**\n' +
+          '- ❌ Pas de données boutique (pas de boutique)\n' +
+          '- ❌ Pas de données réseaux sociaux\n' +
+          '- ❌ Pas d\'email marketing détaillé (juste compteur inscrits)\n' +
+          '- ❌ Pas de calendrier de publication\n' +
+          '- ❌ Pas de rapport exportable'
+        : '',
         '',
         '## INSTRUCTIONS TECHNIQUES',
         '',
@@ -657,28 +727,89 @@ export default function CreateurSitePage() {
         '',
         '## STRUCTURE DU SITE VITRINE',
         '',
-        form.pack === 'essentiel' ? 'Jusqu\'à 5 pages (Accueil, Histoire/Domaine, Cuvées vitrine, Contact/Caveau)' : form.pack === 'pro' ? 'Jusqu\'à 10 pages sur-mesure' : 'Pages illimitées avec expérience immersive haut de gamme',
+        form.pack === 'essentiel' ?
+          '**Pages à créer (5 à 6 pages) :**\n' +
+          '1. **Accueil** : Hero avec photo pleine largeur + accroche personnalisée, présentation courte (5-6 lignes), aperçu 3-4 cuvées principales (sans achat), horaires + CTA\n' +
+          '2. **Le Domaine** : Histoire du vigneron, philosophie (bio/raisonné/nature/conventionnel), terroir (sols/cépages/appellations), photos du domaine\n' +
+          '3. **Nos Vins** : Catalogue visuel avec TOUTES les cuvées, photo bouteille, nom, appellation, cépage, prix, description 2-3 lignes. Pas de fiches individuelles.\n' +
+          '4. **Visites & Contact** : Horaires, adresse + Google Maps, formulaire contact (Formspree/Brevo), téléphone cliquable, liens réseaux sociaux\n' +
+          '5. **Blog** : Section vide à la livraison, prête pour publication. Catégories : vie du domaine, cuvées, événements, accords mets-vins\n' +
+          '6. **Mentions Légales** : Identité éditeur, hébergeur, copyright, bandeau vérification d\'âge, message sanitaire loi Évin'
+        : form.pack === 'pro' ?
+          '**Pages à créer (jusqu\'à 10 pages) :**\n' +
+          '- Accueil, Le Domaine, Nos Vins\n' +
+          '- **Fiches cuvées détaillées** : une page par vin avec photo, description complète, prix, alcool %, arômes (primaires/secondaires/tertiaires), cépages\n' +
+          '- **Espace Professionnels** : formulaire CHR/Cavistes dédié avec tarifs de gros, conditions, documentation téléchargeable\n' +
+          '- Visites & Contact, Blog, Mentions Légales, Boutique (intégrée)'
+        : '**Pages à créer (illimitées) :**\n' +
+          '- Toutes les pages du Pro + Pages supplémentaires sur-mesure\n' +
+          '- **Module Œnotourisme** : calendrier interactif réservations/paiements en ligne\n' +
+          '- **Espace B2B Privatif** : zone réservée cavistes/importateurs/restaurateurs avec grilles tarifaires HD et visuels\n' +
+          '- **Version bilingue** : sélecteur langue fluide',
         '',
-        'Pages obligatoires:',
-        '- Accueil (hero, présentation, cuvées en grille/carousel)',
-        '- Présentation du domaine',
-        '- Nos cuvées (avec détails, photos, descriptions, prix, alcool, arômes, cépages)',
-        '- Fiche cuvée détaillée (photo, description complète, prix, alcool %, arômes primaires/secondaires/tertiaires, cépages)',
-        '- Contact (formulaire + localisation)',
-        form.pack === 'essentiel' ? '- Mentions légales & Conformité' : '',
-        form.pack === 'pro' ? '- Formulaire CHR / Cavistes (section dédiée pour professionnels - tarifs de gros, échantillons)' : '',
-        form.pack === 'premium' ? '- Module Œnotourisme (calendrier interactif réservations/paiements en ligne)' : '',
-        form.pack === 'premium' ? '- Espace Pro Privatif (B2B) - zone réservée cavistes/importateurs/restaurateurs avec téléchargement grilles tarifaires et visuels HD' : '',
-        form.pack !== 'essentiel' ? '- Blog/Actualités' : '',
-        form.pack === 'premium' ? '- Sélecteur langue fluide (site bilingue)' : '',
-        '',
-        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT:** Ajouter un bouton "Acheter cette cuvée" sur chaque fiche cuvée qui redirige vers la boutique WooCommerce' : '',
+        form.pack === 'pro' || form.pack === 'premium' ? '**IMPORTANT (Pro & Premium):** Ajouter un bouton "Acheter cette cuvée" sur chaque fiche cuvée qui redirige vers la boutique WooCommerce' : '',
         '',
         '## DASHBOARD DU SITE VITRINE (Back-Office)',
         '',
-        form.pack === 'essentiel' ? '- Éditeur d\'actualités : formulaire standard pour rédiger et publier articles de blog' : form.pack === 'pro' ? '- Éditeur d\'actualités avancé\n- Générateur de Fiches Techniques PDF : bouton 1-clic pour générer fiche technique complète (format impression/presse/cavistes)\n- Maillage produit/blog : widget pour insérer fiches de vins dans articles de blog en 1 clic' : '- Éditeur d\'actualités avec IA\n- Viti-Copilot IA (Rédaction) : assistant IA pour articles de blog, histoires de millésimes, présentation domaine\n- Viti-Copilot IA (Traduction) : traduction automatique instantanée vers seconde langue\n- Générateur PDF avancé\n- Gestionnaire Œnotouristique : tableau suivi réservations, jauge participants, planning caveau',
+        form.pack === 'essentiel' ?
+          '**Section "Mon site"**\n' +
+          '- Statut du site : en ligne ✅ / en maintenance 🔧\n' +
+          '- Date de dernière mise à jour\n' +
+          '- Bouton "Demander une modification" (envoie email à La Gabare)\n' +
+          '\n' +
+          '**Section "Visiteurs"** (Google Analytics simplifié)\n' +
+          '- Nombre de visiteurs ce mois (gros chiffre)\n' +
+          '- Évolution vs mois précédent (flèche + pourcentage)\n' +
+          '- Courbe visites sur 6 derniers mois\n' +
+          '- Top 5 des pages les plus visitées\n' +
+          '\n' +
+          '**Section "Google"** (Search Console simplifié)\n' +
+          '- Nombre d\'apparitions dans Google ce mois\n' +
+          '- Nombre de clics depuis Google\n' +
+          '- Position moyenne sur requêtes principales\n' +
+          '- Top 5 des mots-clés qui amènent du trafic\n' +
+          '\n' +
+          '**Section "Ma fiche Google"**\n' +
+          '- Note moyenne (ex : 4.6 ⭐)\n' +
+          '- Nombre total d\'avis\n' +
+          '- Derniers avis reçus + bouton "répondre sur Google"\n' +
+          '\n' +
+          '**Section "Mon blog"**\n' +
+          '- Liste articles publiés (titre, date, vues)\n' +
+          '- Bouton "Écrire un article" → éditeur simplifié\n' +
+          '- Brouillons en cours\n' +
+          '- Articles proposés par La Gabare (si abonné)\n' +
+          '\n' +
+          '**Section "Ma newsletter"**\n' +
+          '- Nombre d\'inscrits\n' +
+          '- Évolution ce mois (+X nouveaux)\n' +
+          '- Bouton "Voir ma liste dans Brevo"'
+        : form.pack === 'pro' ?
+          '- Éditeur d\'actualités avancé\n' +
+          '- Générateur de Fiches Techniques PDF : bouton 1-clic pour générer fiche technique complète (format impression/presse/cavistes)\n' +
+          '- Maillage produit/blog : widget pour insérer fiches de vins dans articles de blog en 1 clic\n' +
+          '- Données Visiteurs, Google Search, Google Business Profile\n' +
+          '- Gestion des commandes e-commerce'
+        : '- Éditeur d\'actualités avec IA\n' +
+          '- Viti-Copilot IA (Rédaction) : assistant IA pour articles de blog, histoires de millésimes, présentation domaine\n' +
+          '- Viti-Copilot IA (Traduction) : traduction automatique instantanée vers seconde langue\n' +
+          '- Générateur PDF avancé\n' +
+          '- Gestionnaire Œnotouristique : tableau suivi réservations, jauge participants, planning caveau',
         '',
-        form.pack === 'essentiel' ? '- Conformité: Pop-up vérification d\'âge (+18), messages sanitaires, mentions légales' : '',
+        form.pack === 'essentiel' ?
+          '**Capacités du vigneron dans le Dashboard**\n' +
+          '- Écrire et publier un article de blog\n' +
+          '- Voir ses statistiques de base\n' +
+          '- Valider ou refuser articles proposés par La Gabare (si abonné)\n' +
+          '- Demander une modification du site\n' +
+          '\n' +
+          '**Non visible dans l\'Essentiel**\n' +
+          '- ❌ Pas de données boutique (pas de boutique)\n' +
+          '- ❌ Pas de données réseaux sociaux\n' +
+          '- ❌ Pas d\'email marketing détaillé (juste compteur inscrits)\n' +
+          '- ❌ Pas de calendrier de publication\n' +
+          '- ❌ Pas de rapport exportable'
+        : '',
         '',
         '## INSTRUCTIONS TECHNIQUES',
         '',
