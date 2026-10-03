@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import crypto from 'crypto'
 import { generateTutorialPDF } from '@/lib/pdf-generator'
 
 const JSZip = require('jszip')
 
+function makeToken(domainName?: string, clientName?: string): string {
+  // Token déterministe : "<domaine>2309" (sans protocole ni www, en minuscules)
+  const base = (domainName || clientName || 'site')
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/.*$/, '')
+    .trim()
+  return `${base}2309`
+}
+
 function generatePublishPhp(clientName: string, projectSlug: string, domainName?: string): string {
-  const token = crypto.randomBytes(32).toString('hex')
+  const token = makeToken(domainName, clientName)
   return `<?php
 /**
  * Publish API for ${clientName}
@@ -133,7 +143,7 @@ define('SHOW_DRAFT_ARTICLES', false);
 
 // Publishing API
 define('API_ENDPOINT', SITE_URL . '/publish.php');
-define('PUBLISH_TOKEN', getenv('PUBLISH_TOKEN') ?: 'change-me-in-production');
+define('PUBLISH_TOKEN', '${makeToken(domainName, clientName)}');
 
 // Cache settings
 define('ENABLE_CACHE', true);
@@ -179,6 +189,84 @@ function getArticle(\$slug) {
     }
   }
   return null;
+}
+?>`
+}
+
+function generateLagabarePhp(clientName: string, domainName?: string): string {
+  const token = makeToken(domainName, clientName)
+  const domain = (domainName || clientName || '')
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/.*$/, '')
+    .trim()
+  return `<?php
+/**
+ * Connecteur La Gabare pour ${clientName}
+ * Recupere les articles publies depuis le dashboard central (modele "pull").
+ * Cle = le domaine du client (champ clients.domaine cote dashboard).
+ */
+
+define('LAGABARE_API', 'https://admin.la-gabare.fr/api/public/articles');
+define('LAGABARE_DOMAIN', '${domain}');
+define('LAGABARE_TOKEN', '${token}');
+
+function lagabare_domain() {
+    $d = LAGABARE_DOMAIN;
+    if (!$d) { $d = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : ''; }
+    return preg_replace('/^www\\./', '', strtolower($d));
+}
+
+function lagabare_fetch($url) {
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 6,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+        $body = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($body !== false && $code >= 200 && $code < 300) return $body;
+        return null;
+    }
+    $ctx = stream_context_create(['http' => ['timeout' => 6]]);
+    $body = @file_get_contents($url, false, $ctx);
+    return $body === false ? null : $body;
+}
+
+function lagabare_get_articles() {
+    $url = LAGABARE_API . '?domain=' . urlencode(lagabare_domain());
+    $body = lagabare_fetch($url);
+    if ($body === null) return [];
+    $data = json_decode($body, true);
+    if (!isset($data['publications']) || !is_array($data['publications'])) return [];
+    return array_map(function ($a) {
+        return [
+            'titre'   => isset($a['titre']) ? $a['titre'] : (isset($a['title']) ? $a['title'] : ''),
+            'contenu' => isset($a['contenu']) ? $a['contenu'] : (isset($a['content']) ? $a['content'] : ''),
+            'slug'    => isset($a['slug']) ? $a['slug'] : '',
+            'date'    => isset($a['date_publication']) ? $a['date_publication'] : (isset($a['date_publication_prevue']) ? $a['date_publication_prevue'] : ''),
+            'image'   => isset($a['image_url']) ? $a['image_url'] : '',
+            'angle'   => isset($a['angle']) ? $a['angle'] : '',
+        ];
+    }, $data['publications']);
+}
+
+function lagabare_get_article($slug) {
+    foreach (lagabare_get_articles() as $a) {
+        if ($a['slug'] === $slug) return $a;
+    }
+    return null;
+}
+
+function lagabare_date_fr($d) {
+    if (!$d) return '';
+    $ts = strtotime($d);
+    return $ts ? date('d/m/Y', $ts) : '';
 }
 ?>`
 }
@@ -285,6 +373,12 @@ export async function POST(request: NextRequest) {
     const configPhpPath = path.join(projectDir, 'site', 'config.php')
     fs.writeFileSync(configPhpPath, configPhp)
     console.log('Created config.php at:', configPhpPath, 'for domain:', detectedDomain)
+
+    // Créer lagabare.php (connecteur "pull" : le site récupère les articles publiés depuis le dashboard)
+    const lagabarePhp = generateLagabarePhp(client_name, detectedDomain)
+    const lagabarePhpPath = path.join(projectDir, 'site', 'lagabare.php')
+    fs.writeFileSync(lagabarePhpPath, lagabarePhp)
+    console.log('Created lagabare.php at:', lagabarePhpPath, 'for domain:', detectedDomain, 'token:', `${detectedDomain}2309`)
 
     // Créer .htaccess dans le dossier site pour router les requêtes
     const htaccess = `<IfModule mod_rewrite.c>
