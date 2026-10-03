@@ -8,10 +8,12 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization') || ''
-  let clientId = null
+  const body = await req.json()
+  let clientId: number | null = null
 
   if (authHeader.startsWith('Bearer admin_')) {
-    clientId = 7 // Domaine Moreau
+    // Admin : cible le client passé dans le body, sinon 7 (Domaine Moreau) par défaut
+    clientId = body.client_id ? Number(body.client_id) : 7
   } else if (authHeader.startsWith('Bearer ')) {
     // Supabase token - à implémenter si besoin
     return withCors(
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { titre, contenu, date_publication, slug, image_url } = await req.json()
+  const { titre, contenu, date_publication, slug, image_url } = body
 
   if (!titre || !contenu || !slug) {
     return withCors(
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
       slug,
       date_publication: date_publication || new Date().toISOString(),
       image_url,
-      statut: 'publié'
+      statut: 'publie'
     })
     .select('id, slug, date_publication')
     .single()
