@@ -300,7 +300,7 @@ export async function computeStats() {
   const NY = new Date().getFullYear()
   const today = todayStr()
   const rows = await fetchAll<any>(() => db().from('prospects').select(
-    'dept,zone,site_status,status,prio,pack,abo,deal,mrr,eff_code,legal,successor,dir_birth,nb_open,bio,created,growth,vinifie,email,phone,url,audit_at,obs,next_action,score',
+    'dept,zone,site_status,url_source,status,prio,pack,abo,deal,mrr,eff_code,legal,successor,dir_birth,nb_open,bio,created,growth,vinifie,email,phone,url,audit_at,obs,next_action,score',
   ).order('siren'))
   const total = rows.length
   if (!total) return { total: 0 }
@@ -315,7 +315,7 @@ export async function computeStats() {
   const legal: Record<string, number> = {}
   const by_prio: Record<string, number> = {}
   const sig = { transmission: 0, multi: 0, bio: 0, recent: 0, growth: 0, vinifie: 0, has_email: 0, has_phone: 0, has_url: 0, audited: 0, employers: 0 }
-  const seg = { sans: 0, refonte: 0, abo_only: 0, a_auditer: 0 }
+  const seg = { sans: 0, a_confirmer: 0, refonte: 0, abo_only: 0, a_auditer: 0 }
   let qualified = 0, prioA = 0, due = 0, obsSum = 0, obsN = 0
   for (const r of rows) {
     if (r.score >= 42) qualified++
@@ -338,7 +338,9 @@ export async function computeStats() {
       const a = abo.get(r.abo) || { k: r.abo, c: 0, m: 0 }
       a.c++; a.m += r.mrr || 0
       abo.set(r.abo, a)
-      if (r.site_status === 'aucun' || r.site_status === 'hs') seg.sans++
+      // « sans site » = confirmé (saisi à la main / fiche Google) ou site injoignable ; « non trouvé » = à confirmer
+      if (r.site_status === 'hs' || (r.site_status === 'aucun' && r.url_source === 'manual')) seg.sans++
+      else if (r.site_status === 'aucun') seg.a_confirmer++
       else if (r.site_status === 'obsolete' || r.site_status === 'vieillissant') seg.refonte++
       else if (r.site_status === 'moderne') seg.abo_only++
       else if (r.site_status === 'inconnu') seg.a_auditer++

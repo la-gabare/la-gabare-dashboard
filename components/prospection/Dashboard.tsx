@@ -46,7 +46,8 @@ export default function Dashboard({ cfg, onOpen, onPreset, goImport, onStats }: 
 
       <SectionTitle>Opportunités par offre (prospects A + B)</SectionTitle>
       <div className={grid}>
-        <Kpi label="Création de site" value={num(seg.sans)} hint="sans site ou site HS" tone="hot" />
+        <Kpi label="Création de site" value={num(seg.sans)} hint="sans site confirmé ou site HS" tone="hot" />
+        <Kpi label="Site non trouvé" value={num(seg.a_confirmer)} hint="à confirmer avant contact (Google)" tone="wine" />
         <Kpi label="Refonte" value={num(seg.refonte)} hint="site obsolète / vieillissant" tone="hot" />
         <Kpi label="Abonnement seul" value={num(seg.abo_only)} hint="site correct, besoin de contenu" tone="wine" />
         <Kpi label="À qualifier" value={num(seg.a_auditer)} hint="site non vérifié" />
