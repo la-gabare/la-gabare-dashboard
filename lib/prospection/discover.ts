@@ -43,7 +43,7 @@ const APPEL: Record<string, RegExp> = {
 const APPEL_DEFAULT = /val de loire|vignobles? de loire|vin de loire/
 
 /** Noms de domaine plausibles (domaine-des-xxx.fr, lahautexxx.com, chateau-xxx.fr…) à partir du nom légal / de l'enseigne. */
-export function guessDomains(nameMain: string | null | undefined, nameAlt: string | null | undefined): string[] {
+export function guessDomains(nameMain: string | null | undefined, nameAlt: string | null | undefined, commune?: string | null): string[] {
   const variants: string[][] = []
   const seen = new Set<string>()
   const add = (w: string[]) => {
@@ -67,6 +67,10 @@ export function guessDomains(nameMain: string | null | undefined, nameAlt: strin
     // nom/prénom inversés : « PICHON CLAUDE MICHEL » -> claude-michel-pichon
     const perm = (a: string[]): string[][] => (a.length <= 1 ? [a] : a.flatMap((x, i) => perm([...a.slice(0, i), ...a.slice(i + 1)]).map((r) => [x, ...r])))
     if (core.length >= 2 && core.length <= 3) perm(core).forEach(add)
+    // « LA TAILLE AUX LOUPS » -> tailleauxloups (sans l'article initial)
+    if (words.length >= 2 && ARTICLES.has(words[0])) add(words.slice(1))
+    // « PIERRE ET BERTRAND COULY » -> pb-couly (initiales des prénoms + nom)
+    if (noFamily.length >= 3 && noFamily.length <= 4) add([noFamily.slice(0, -1).map((x) => x[0]).join(''), noFamily[noFamily.length - 1]])
     // sous-ensembles contigus : « PIERRE LUNEAU PAPIN » -> luneau-papin ; « JEAN MONNIER » -> monnier
     if (core.length >= 2 && core.length <= 4) {
       for (let i = 0; i < core.length; i++) for (let j = i + 1; j <= core.length; j++) {
@@ -86,7 +90,14 @@ export function guessDomains(nameMain: string | null | undefined, nameAlt: strin
       push(`${base}${j}vins`)
     }
   }
-  return out.slice(0, 130)
+  // « coulydutheil-chinon » : nom + commune (très courant en Touraine)
+  const cs = stripAcc(commune || '').toLowerCase().replace(/(saint|sainte)/g, 'st').split(/[^a-z0-9]+/).filter((x) => x && !PARTICLES.has(x))
+  if (cs.length && cs.join('').length <= 14) {
+    for (const v of variants.slice(0, 3)) {
+      push(`${v.join('')}-${cs.join('-')}`); push(`${v.join('-')}-${cs.join('-')}`); push(`${v.join('')}${cs.join('')}`)
+    }
+  }
+  return out.slice(0, 140)
 }
 
 // dns.lookup passe par le pool de 4 fils de libuv : des centaines de requêtes s'y bloquent (faux « introuvable »).
@@ -228,7 +239,7 @@ export async function discoverSite(row: Prospect, settings: Settings): Promise<D
     gbp = await serperLookup(row, settings.serper_key)
     if (gbp?.website) return { status: 'found', url: normalizeUrl(gbp.website), verified: 1, gbp, gbp_confirms_none: false }
   }
-  const slugs = guessDomains(row.brand, row.name)
+  const slugs = guessDomains(row.brand, row.name, row.commune)
   const hosts = slugs.flatMap((s) => [`${s}.fr`, `${s}.com`])
   const ok: boolean[] = []
   for (let i = 0; i < hosts.length; i += 60) ok.push(...(await Promise.all(hosts.slice(i, i + 60).map(resolves))))
