@@ -49,9 +49,9 @@ export function scoreLead(P: L): ScoreResult {
   // A. Besoin de site (35)
   let A = ({ aucun: 35, hs: 35, obsolete: 30, vieillissant: 18, moderne: 5, inconnu: 15 } as Record<string, number>)[st] ?? 15
   if (st === 'aucun') {
-    const confirmed = P.url_source === 'manual'
+    const confirmed = P.url_source === 'manual' || P.url_source === 'search'
     if (!confirmed) A = 26 // détection automatique : probable mais pas certaine
-    signals.push({ k: 'nosite', label: confirmed ? 'Sans site web' : 'Sans site (à confirmer)', tone: 'hot' })
+    signals.push({ k: 'nosite', label: P.url_source === 'search' ? 'Sans site (vérifié par recherche)' : confirmed ? 'Sans site web' : 'Sans site (à confirmer)', tone: 'hot' })
     pitch.push('Aucun site trouvé : pack de création complet (vitrine + vente directe).' + (confirmed ? '' : ' À confirmer par une recherche Google avant contact.'))
   } else if (st === 'hs') {
     signals.push({ k: 'hs', label: 'Site injoignable', tone: 'hot' })

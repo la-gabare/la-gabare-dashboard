@@ -24,7 +24,7 @@ interface Props {
 
 function SiteCell({ L }: { L: LeadRow }) {
   const [label, tone] = SITE[L.site_status] || ['?', '']
-  const unconfirmed = L.site_status === 'aucun' && L.url_source !== 'manual'
+  const unconfirmed = L.site_status === 'aucun' && L.url_source !== 'manual' && L.url_source !== 'search'
   const host = L.url ? L.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '') : ''
   return (
     <>

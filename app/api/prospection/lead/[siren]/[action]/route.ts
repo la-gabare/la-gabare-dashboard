@@ -18,7 +18,10 @@ export async function POST(req: NextRequest, { params }: { params: { siren: stri
       const r = await discoverProspect(siren)
       return NextResponse.json({ ...(await getProspect(siren)), _discover: r })
     }
-    if (action === 'nosite') return NextResponse.json(await confirmNoSite(siren))
+    if (action === 'nosite') {
+      const source = body.source === 'search' ? 'search' : 'manual'
+      return NextResponse.json(await confirmNoSite(siren, source, String(body.detail || '').slice(0, 200)))
+    }
     if (action === 'note') {
       const kind = ['note', 'appel', 'email', 'rdv'].includes(body.kind) ? body.kind : 'note'
       await logActivity(siren, kind, String(body.text || '').slice(0, 2000))

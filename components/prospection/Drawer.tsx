@@ -73,7 +73,7 @@ export default function Drawer({ siren, cfg, onClose, onChanged }: { siren: stri
         <div className="text-xs text-gray-500">{L.name} · SIREN {L.siren}</div>
         <div className="mt-2 flex gap-1.5 flex-wrap items-center">
           <Prio p={L.prio} /><b className="text-lg">{Math.round(L.score)}/100</b>
-          <Tag tone={siteTone}>{siteLabel}{L.site_status === 'aucun' && L.url_source !== 'manual' ? ' (à confirmer)' : ''}</Tag>
+          <Tag tone={siteTone}>{siteLabel}{L.site_status === 'aucun' && L.url_source !== 'manual' && L.url_source !== 'search' ? ' (à confirmer)' : ''}</Tag>
           {L.pack ? <Tag tone="wine">Pack {L.pack}</Tag> : null}<Tag>Abo {L.abo}</Tag><Tag tone="ok">{eurFull(L.deal)} 1re année</Tag>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function Drawer({ siren, cfg, onClose, onChanged }: { siren: stri
           </div>
           {L.url_source === 'auto' && L.url ? <div className="text-xs text-gray-500 mb-1.5">URL détectée automatiquement — vérifiez que c&apos;est bien le bon domaine.</div> : null}
           {L.site_status === 'inconnu' && !L.url ? <div className="text-sm bg-blue-50 text-blue-900 rounded-lg px-3 py-2 mb-2">Site non vérifié : cliquez « Détecter automatiquement » (ou saisissez l&apos;URL) avant de contacter, pour personnaliser le message.</div> : null}
-          {L.site_status === 'aucun' && L.url_source !== 'manual' ? <div className="text-sm bg-amber-50 text-amber-900 rounded-lg px-3 py-2 mb-2">Aucun site n&apos;a été trouvé automatiquement. Vérifiez avec les recherches ci-dessous avant de contacter, puis cliquez « Confirmer : aucun site ».</div> : null}
+          {L.site_status === 'aucun' && L.url_source !== 'manual' && L.url_source !== 'search' ? <div className="text-sm bg-amber-50 text-amber-900 rounded-lg px-3 py-2 mb-2">Aucun site n&apos;a été trouvé automatiquement. Vérifiez avec les recherches ci-dessous avant de contacter, puis cliquez « Confirmer : aucun site ».</div> : null}
           {!A ? <div className="text-sm text-gray-500">{L.url ? 'Site non audité.' : 'Aucune URL.'}</div> : A.error ? <div className="text-sm bg-amber-50 text-amber-900 rounded-lg px-3 py-2">{A.error}</div> : (
             <>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">

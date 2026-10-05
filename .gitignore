@@ -16,3 +16,7 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# verificateur : donnees locales
+tools/verificateur/verificateur-etat.json
+tools/verificateur/rapport-verification.csv

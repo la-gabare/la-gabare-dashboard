@@ -1,0 +1,8 @@
+{
+  "name": "verificateur-sites",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Verifie, via un vrai navigateur (Edge/Chrome) sur votre PC, si les domaines viticoles ont un site web. Gratuit.",
+  "dependencies": { "playwright-core": "^1.48.0" }
+}

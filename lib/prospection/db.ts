@@ -264,9 +264,9 @@ export async function discoverProspect(siren: string): Promise<'found' | 'none' 
   return 'none'
 }
 
-export async function confirmNoSite(siren: string) {
-  await patchAndRescore(siren, { url: null, site_status: 'aucun', url_source: 'manual', audit: null })
-  await logActivity(siren, 'note', 'Absence de site confirmée manuellement')
+export async function confirmNoSite(siren: string, source: 'manual' | 'search' = 'manual', detail = '') {
+  await patchAndRescore(siren, { url: null, site_status: 'aucun', url_source: source, audit: null })
+  await logActivity(siren, 'note', source === 'search' ? `Absence de site vérifiée par recherche web${detail ? ` (${detail})` : ''}` : 'Absence de site confirmée manuellement')
   return getProspect(siren)
 }
 
@@ -339,7 +339,7 @@ export async function computeStats() {
       a.c++; a.m += r.mrr || 0
       abo.set(r.abo, a)
       // « sans site » = confirmé (saisi à la main / fiche Google) ou site injoignable ; « non trouvé » = à confirmer
-      if (r.site_status === 'hs' || (r.site_status === 'aucun' && r.url_source === 'manual')) seg.sans++
+      if (r.site_status === 'hs' || (r.site_status === 'aucun' && (r.url_source === 'manual' || r.url_source === 'search'))) seg.sans++
       else if (r.site_status === 'aucun') seg.a_confirmer++
       else if (r.site_status === 'obsolete' || r.site_status === 'vieillissant') seg.refonte++
       else if (r.site_status === 'moderne') seg.abo_only++
