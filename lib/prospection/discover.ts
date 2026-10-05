@@ -67,6 +67,13 @@ export function guessDomains(nameMain: string | null | undefined, nameAlt: strin
     // nom/prénom inversés : « PICHON CLAUDE MICHEL » -> claude-michel-pichon
     const perm = (a: string[]): string[][] => (a.length <= 1 ? [a] : a.flatMap((x, i) => perm([...a.slice(0, i), ...a.slice(i + 1)]).map((r) => [x, ...r])))
     if (core.length >= 2 && core.length <= 3) perm(core).forEach(add)
+    // sous-ensembles contigus : « PIERRE LUNEAU PAPIN » -> luneau-papin ; « JEAN MONNIER » -> monnier
+    if (core.length >= 2 && core.length <= 4) {
+      for (let i = 0; i < core.length; i++) for (let j = i + 1; j <= core.length; j++) {
+        const sub = core.slice(i, j)
+        if (sub.length < core.length && sub.join('').length >= 5) add(sub)
+      }
+    }
   }
   const out: string[] = []
   const push = (s: string) => { if (s.length >= 4 && s.length <= 45 && !out.includes(s)) out.push(s) }
@@ -79,16 +86,23 @@ export function guessDomains(nameMain: string | null | undefined, nameAlt: strin
       push(`${base}${j}vins`)
     }
   }
-  return out.slice(0, 80)
+  return out.slice(0, 130)
 }
 
+// dns.lookup passe par le pool de 4 fils de libuv : des centaines de requêtes s'y bloquent (faux « introuvable »).
+// Resolver (c-ares) est entièrement asynchrone et supporte des centaines de requêtes simultanées.
+const resolver = new dns.Resolver({ timeout: 2500, tries: 2 })
+
 async function resolves(host: string): Promise<boolean> {
-  try {
-    await Promise.race([dns.lookup(host), new Promise((_, rej) => setTimeout(() => rej(new Error('t')), 3000))])
-    return true
-  } catch {
-    return false
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return (await resolver.resolve4(host)).length > 0
+    } catch (e: any) {
+      if (e?.code === 'ENOTFOUND' || e?.code === 'ENODATA') return false // le domaine n'existe pas
+      // délai / erreur transitoire : on retente une fois
+    }
   }
+  return false
 }
 
 export function haversineKm(aLat: number, aLon: number, bLat: number, bLon: number): number {
