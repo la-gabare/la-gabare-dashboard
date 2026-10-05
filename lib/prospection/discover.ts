@@ -1,6 +1,6 @@
 import 'server-only'
 import dns from 'node:dns/promises'
-import { safeFetch, safeJson, stripAcc } from './net'
+import { NetError, safeFetch, safeJson, stripAcc } from './net'
 import { normalizeUrl } from './audit'
 import type { Gbp, Prospect, Settings } from './types'
 
@@ -10,7 +10,6 @@ const STOP_TOKENS = new Set(['domaine', 'domaines', 'chateau', 'château', 'clos
   'sas', 'sasu', 'eurl', 'vignoble', 'vignobles', 'viticole', 'exploitation', 'les', 'des', 'de', 'du', 'la', 'le', 'et', 'famille',
   'vins', 'vin', 'ets', 'sci', 'gfa', 'monsieur', 'madame', 'mme', 'fils', 'pere', 'and', 'cie', 'societe', 'agricole', 'gaecs',
   'viti', 'vigneron', 'vignerons', 'sa', 'sca'])
-const SKIP_WORDS = new Set(['scea', 'earl', 'sarl', 'sas', 'sasu', 'eurl', 'gaec', 'sci', 'gfa', 'ets', 'la', 'le', 'les', 'de', 'du', 'des', 'et', 'l', 'd'])
 const WINE_RE = /\bvins?\b|vigneron|domaine|vignoble|cuvee|millesime|appellation/
 
 export function nameTokens(...names: (string | null | undefined)[]): string[] {
@@ -23,29 +22,64 @@ export function nameTokens(...names: (string | null | undefined)[]): string[] {
   return [...new Set(toks)]
 }
 
-/** Noms de domaine plausibles (domaine-xxx.fr, chateau-xxx.com…). */
-export function guessDomains(nameMain: string | null | undefined, nameAlt: string | null | undefined, toks: string[]): string[] {
-  const partsSets: string[][] = []
+const LEGAL_WORDS = new Set(['scea', 'earl', 'sarl', 'sas', 'sasu', 'eurl', 'gaec', 'sci', 'gfa', 'ets', 'sa', 'sca', 'scev', 'snc', 'ei',
+  'societe', 'civile', 'exploitation', 'agricole', 'abreviation', 'groupement', 'foncier', 'viticole'])
+const PARTICLES = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'l', 'd', 'et', 'en', 'sur', 'aux', 'au'])
+const PREFIX_WORDS = ['domaine', 'domaines', 'chateau', 'clos', 'vignoble', 'vignobles', 'cave', 'caves', 'maison', 'manoir', 'vins', 'famille']
+const FAMILY_WORDS = new Set(['pere', 'fils', 'freres', 'frere', 'et', 'famille'])
+const ARTICLES = new Set(['la', 'le', 'les', 'l'])
+
+// Mots de l'appellation / du terroir : filet de sécurité quand la commune n'apparaît pas sur le site
+const APPEL: Record<string, RegExp> = {
+  '44': /muscadet|gros[ -]plant|coteaux d.ancenis|pays nantais|fiefs vend|loire-atlantique|clisson|vallet/,
+  '49': /anjou|saumur|layon|savenni|aubance|bonnezeaux|quarts? de chaume|maine-et-loire|champigny|coteaux du loir/,
+  '37': /touraine|vouvray|chinon|bourgueil|montlouis|indre-et-loire|jasni/,
+  '41': /touraine|cheverny|cour-cheverny|valen[cç]ay|loir-et-cher|coteaux du vend/,
+  '18': /sancerre|menetou|quincy|reuilly|pouilly|centre-loire|cher\b/,
+  '36': /reuilly|valen[cç]ay|centre-loire|indre\b/,
+  '45': /orl[eé]ans|giennois|loiret|centre-loire|cl[eé]ry/,
+  '58': /pouilly|giennois|nievre|centre-loire|coteaux du giennois/,
+}
+const APPEL_DEFAULT = /val de loire|vignobles? de loire|vin de loire/
+
+/** Noms de domaine plausibles (domaine-des-xxx.fr, lahautexxx.com, chateau-xxx.fr…) à partir du nom légal / de l'enseigne. */
+export function guessDomains(nameMain: string | null | undefined, nameAlt: string | null | undefined): string[] {
+  const variants: string[][] = []
+  const seen = new Set<string>()
+  const add = (w: string[]) => {
+    const k = w.join(' ')
+    if (w.length && w.length <= 7 && !seen.has(k)) { seen.add(k); variants.push(w) }
+  }
   for (const n of [nameMain, nameAlt]) {
-    const w = stripAcc((n || '').replace(/\(.*?\)/g, ' ')).toLowerCase().split(/[^a-z0-9]+/).filter((x) => x && !SKIP_WORDS.has(x))
-    if (w.length) partsSets.push(w)
+    if (!n) continue
+    const clean = stripAcc(n.replace(/\(.*?\)/g, ' ')).toLowerCase().replace(/ et par abreviation.*$/, '')
+    const words = clean.split(/[^a-z0-9]+/).filter((x) => x && !LEGAL_WORDS.has(x))
+    const noPart = words.filter((x) => !PARTICLES.has(x))
+    const core = noPart.filter((x) => !PREFIX_WORDS.includes(x))
+    const noFamily = noPart.filter((x) => !FAMILY_WORDS.has(x))
+    add(words); add(noPart); add(core); add(noFamily)
+    add(noFamily.filter((x) => !PREFIX_WORDS.includes(x)))
+    // « EARL LA PEPIERE » -> domaine-de-la-pepiere ; « DES HERBAUGES » -> domaine-des-herbauges
+    if (words.length && !PREFIX_WORDS.includes(words[0])) {
+      if (ARTICLES.has(words[0])) { add(['domaine', 'de', ...words]); add(['chateau', 'de', ...words]) }
+      if (words[0] === 'des' || words[0] === 'du') { add(['domaine', ...words]); add(['chateau', ...words]) }
+    }
+    // nom/prénom inversés : « PICHON CLAUDE MICHEL » -> claude-michel-pichon
+    const perm = (a: string[]): string[][] => (a.length <= 1 ? [a] : a.flatMap((x, i) => perm([...a.slice(0, i), ...a.slice(i + 1)]).map((r) => [x, ...r])))
+    if (core.length >= 2 && core.length <= 3) perm(core).forEach(add)
   }
-  const cores: string[][] = []
-  for (const w of partsSets) {
-    const core = w.filter((x) => !STOP_TOKENS.has(x))
-    if (core.length && core.length <= 4) cores.push(core)
-  }
-  for (const t of toks.slice(0, 2)) if (t.length >= 4) cores.push([t])
   const out: string[] = []
-  for (const core of cores) {
-    for (const j of ['', '-']) {
-      const c = core.join(j)
-      for (const pre of ['', `domaine${j}`, `chateau${j}`, `clos${j}`, `vignoble${j}`, `domaines${j}`, `cave${j}`, `vins${j}`]) out.push(pre + c)
-      out.push(`${c}${j}vins`)
-      out.push(`${c}${j}vigneron`)
+  const push = (s: string) => { if (s.length >= 4 && s.length <= 45 && !out.includes(s)) out.push(s) }
+  for (const v of variants) {
+    const startsWithPrefix = PREFIX_WORDS.includes(v[0])
+    for (const j of ['-', '']) {
+      const base = v.join(j)
+      push(base)
+      if (!startsWithPrefix) for (const pre of ['domaine', 'chateau', 'clos', 'vignoble', 'cave']) push(pre + j + base)
+      push(`${base}${j}vins`)
     }
   }
-  return [...new Set(out)].filter((s) => s.length >= 4 && s.length <= 40).slice(0, 22)
+  return out.slice(0, 80)
 }
 
 async function resolves(host: string): Promise<boolean> {
@@ -126,29 +160,49 @@ export interface DiscoverResult {
   gbp_confirms_none: boolean
 }
 
-async function verifyCandidate(c: string, row: Prospect, toks: string[]): Promise<string | null> {
+interface Candidate { url: string; verified: number }
+
+const norm = (t: string) => stripAcc(t).toLowerCase()
+
+async function verifyCandidate(c: string, row: Prospect, toks: string[]): Promise<Candidate | null> {
   let host: string
   try { host = new URL(c).host.toLowerCase() } catch { return null }
   let r
   try {
-    r = await safeFetch(c, { timeoutMs: 9000, maxBytes: 250_000 })
-  } catch {
+    r = await safeFetch(c, { timeoutMs: 12000, maxBytes: 250_000 })
+  } catch (e) {
+    // Le domaine existe (DNS) mais le serveur ne répond pas : si TOUS les mots du nom figurent dans l'adresse,
+    // c'est très probablement le site du domaine, actuellement en panne (opportunité « site HS »).
+    const code = (e as NetError).code
+    const hostN0 = norm(host).replace(/[^a-z0-9]/g, '')
+    if (!['ENOTFOUND', 'PRIVATE', 'BADURL', 'CERT', 'REDIRECTS'].includes(code) && toks.length >= 1 &&
+        toks.every((t) => hostN0.includes(t)) && (toks.length >= 2 || toks[0].length >= 7)) return { url: c, verified: 0 }
     return null
   }
   if (r.status >= 400) return null
   const fh = new URL(r.url).host.toLowerCase().replace('www.', '')
   if (PARKING_HOSTS.some((b) => fh.includes(b)) || fh.split('.').slice(-2).join('.') !== host.replace('www.', '').split('.').slice(-2).join('.')) return null
-  const txt = stripAcc(r.text.slice(0, 250_000)).toLowerCase()
+  const txt = norm(r.text.slice(0, 250_000))
+  if (!WINE_RE.test(txt)) return null
   const title = /<title[^>]*>([\s\S]*?)<\/title>/.exec(txt)?.[1] || ''
-  const hitHost = toks.filter((t) => stripAcc(host).includes(t))
+  const hostN = norm(host).replace(/[^a-z0-9]/g, '')
+  const hitHost = toks.filter((t) => hostN.includes(t))
   const hitTxt = toks.filter((t) => title.includes(t) || txt.slice(0, 20000).includes(t))
-  const wine = WINE_RE.test(txt)
-  const communeOk = row.commune ? txt.includes(stripAcc(row.commune).toLowerCase()) : false
-  const cpOk = !!row.cp && txt.includes(row.cp)
-  if (toks.length && wine && (hitHost.length || (hitTxt.length >= Math.max(1, Math.min(2, toks.length)) && communeOk))) {
-    // sans commune/CP sur la page, risque d'homonyme (autre région) : on rejette
-    if (communeOk || cpOk) return r.url
+  const strongHost = hitHost.length >= Math.min(2, toks.length) && hitHost.length > 0
+  if (!(hitHost.length || (hitTxt.length >= Math.max(1, Math.min(2, toks.length))))) return null
+  const commune = row.commune ? norm(row.commune) : ''
+  const located = (t: string) => (!!commune && t.includes(commune)) || (!!row.cp && t.includes(row.cp))
+  if (located(txt)) return { url: r.url, verified: 1 }
+  // la commune/le code postal figurent souvent sur la page contact ou les mentions légales
+  const links = [...r.text.matchAll(/href=["']([^"'#]*(?:contact|mention|acces|nous-trouver|ou-nous)[^"'#]*)["']/gi)].map((m) => m[1]).slice(0, 2)
+  for (const l of links) {
+    try {
+      const p = await safeFetch(new URL(l, r.url).toString(), { timeoutMs: 6000, maxBytes: 200_000 })
+      if (p.status < 400 && located(norm(p.text))) return { url: r.url, verified: 1 }
+    } catch { /* page facultative */ }
   }
+  // filet de sécurité : mots du terroir (muscadet, anjou…) + nom du domaine dans l'adresse du site → à vérifier par l'utilisateur
+  if (strongHost && (APPEL[row.dept] || APPEL_DEFAULT).test(txt)) return { url: r.url, verified: 0 }
   return null
 }
 
@@ -160,19 +214,21 @@ export async function discoverSite(row: Prospect, settings: Settings): Promise<D
     gbp = await serperLookup(row, settings.serper_key)
     if (gbp?.website) return { status: 'found', url: normalizeUrl(gbp.website), verified: 1, gbp, gbp_confirms_none: false }
   }
-  const slugs = guessDomains(row.brand, row.name, toks)
+  const slugs = guessDomains(row.brand, row.name)
   const hosts = slugs.flatMap((s) => [`${s}.fr`, `${s}.com`])
-  const ok = await Promise.all(hosts.map(resolves))
-  const cands = hosts.filter((_, i) => ok[i]).slice(0, 6).map((h) => `https://${h}/`)
-  const verified = await Promise.all(cands.map((c) => verifyCandidate(c, row, toks)))
-  const hit = verified.find(Boolean)
-  if (hit) return { status: 'found', url: hit, verified: 1, gbp, gbp_confirms_none: false }
+  const ok: boolean[] = []
+  for (let i = 0; i < hosts.length; i += 60) ok.push(...(await Promise.all(hosts.slice(i, i + 60).map(resolves))))
+  const resolved = hosts.filter((_, i) => ok[i]).slice(0, 8)
+  const results = await Promise.all(resolved.map((h) => verifyCandidate(`https://${h}/`, row, toks)))
+  // meilleur candidat : d'abord les sites localisés (verified = 1), dans l'ordre de pertinence des noms
+  const hit = results.find((x) => x && x.verified === 1) || results.find(Boolean)
+  if (hit) return { status: 'found', url: hit.url, verified: hit.verified, gbp, gbp_confirms_none: false }
   const osm = await osmWebsite(row, toks)
   if (osm) {
     const u = normalizeUrl(osm)
     try {
       const r = await safeFetch(u, { timeoutMs: 10000, maxBytes: 120_000 })
-      if (r.status < 400 && WINE_RE.test(stripAcc(r.text).toLowerCase())) return { status: 'found', url: r.url, verified: 1, gbp, gbp_confirms_none: false }
+      if (r.status < 400 && WINE_RE.test(norm(r.text))) return { status: 'found', url: r.url, verified: 1, gbp, gbp_confirms_none: false }
     } catch {
       return { status: 'found', url: u, verified: 1, gbp, gbp_confirms_none: false }
     }
