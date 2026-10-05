@@ -1,5 +1,5 @@
 import 'server-only'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { prospectionDb } from './client'
 import { DEFAULT_SETTINGS, EFF_LABEL, STATUS_PROBA, STATUSES } from './constants'
 import { auditUrl } from './audit'
 import { discoverSite } from './discover'
@@ -7,7 +7,7 @@ import { buildMessage, computeScoreColumns, scoreLead } from './scoring'
 import type { IdentityRow } from './sirene'
 import type { Prospect, Settings } from './types'
 
-const db = () => supabaseAdmin
+const db = () => prospectionDb
 const nowIso = () => new Date().toISOString()
 const todayStr = () => new Date().toISOString().slice(0, 10)
 
