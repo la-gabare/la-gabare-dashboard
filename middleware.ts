@@ -29,7 +29,9 @@ export function middleware(req: NextRequest) {
     try {
       const [u, ...rest] = atob(header.slice(6)).split(':')
       const p = rest.join(':')
-      if (safeEqual(u, user) && safeEqual(p, password)) return NextResponse.next()
+      // l'identifiant est insensible à la casse et aux espaces (« La Gabare » = « lagabare »)
+      const norm = (x: string) => x.toLowerCase().replace(/\s+/g, '')
+      if (safeEqual(norm(u), norm(user)) && safeEqual(p, password)) return NextResponse.next()
     } catch { /* en-tête invalide */ }
   }
   return new NextResponse('Authentification requise', {
