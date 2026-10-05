@@ -103,13 +103,13 @@ export default function Drawer({ siren, cfg, onClose, onChanged }: { siren: stri
             <Btn disabled={!!busy} onClick={() => run('audit', async () => { await api(`/lead/${siren}`, { url: f.url.trim() }); apply(await api(`/lead/${siren}/audit`, {})) })}>{busy === 'audit' ? '…' : 'Auditer'}</Btn>
           </div>
           <div className="flex gap-1.5 flex-wrap my-2">
-            <Btn small disabled={!!busy} onClick={() => run('disc', async () => { const d = await api(`/lead/${siren}/discover`, {}); apply(d); say(d._discover === 'found' ? 'Site trouvé' : 'Aucun site trouvé automatiquement') })}>{busy === 'disc' ? '…' : 'Détecter automatiquement'}</Btn>
+            <a className="px-2.5 py-1 text-[13px] rounded-lg border border-wine bg-wine text-white hover:bg-[#5a2530]" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/search?q=${g(`${L.brand || L.name} ${L.commune || ''} vin`)}`}>Chercher sur Google ↗</a>
             <Btn small disabled={!!busy} onClick={() => run('nosite', async () => { apply(await api(`/lead/${siren}/nosite`, {})); say('Absence de site confirmée') })}>Confirmer : aucun site</Btn>
             {L.url ? <Btn small disabled={!!busy} onClick={() => run('psi', async () => { const d = await api(`/lead/${siren}/psi`, {}); if (d._error) say(`PageSpeed : ${String(d._error).slice(0, 80)}`); apply(d) })}>{busy === 'psi' ? '…' : 'PageSpeed mobile'}</Btn> : null}
             {L.url ? <a className="px-2.5 py-1 text-[13px] rounded-lg border border-gray-200 bg-white hover:bg-gray-50" target="_blank" rel="noopener noreferrer" href={L.url.startsWith('http') ? L.url : `https://${L.url}`}>Ouvrir ↗</a> : null}
           </div>
           {L.url_source === 'auto' && L.url ? <div className="text-xs text-gray-500 mb-1.5">URL détectée automatiquement — vérifiez que c&apos;est bien le bon domaine.</div> : null}
-          {L.site_status === 'inconnu' && !L.url ? <div className="text-sm bg-blue-50 text-blue-900 rounded-lg px-3 py-2 mb-2">Site non vérifié : cliquez « Détecter automatiquement » (ou saisissez l&apos;URL) avant de contacter, pour personnaliser le message.</div> : null}
+          {L.site_status === 'inconnu' && !L.url ? <div className="text-sm bg-blue-50 text-blue-900 rounded-lg px-3 py-2 mb-2">Site non vérifié : cliquez « Chercher sur Google » puis collez l&apos;URL du site ci-dessus (ou cliquez « Confirmer : aucun site »).</div> : null}
           {L.site_status === 'aucun' && L.url_source !== 'manual' && L.url_source !== 'search' ? <div className="text-sm bg-amber-50 text-amber-900 rounded-lg px-3 py-2 mb-2">Aucun site n&apos;a été trouvé automatiquement. Vérifiez avec les recherches ci-dessous avant de contacter, puis cliquez « Confirmer : aucun site ».</div> : null}
           {!A ? <div className="text-sm text-gray-500">{L.url ? 'Site non audité.' : 'Aucune URL.'}</div> : A.error ? <div className="text-sm bg-amber-50 text-amber-900 rounded-lg px-3 py-2">{A.error}</div> : (
             <>

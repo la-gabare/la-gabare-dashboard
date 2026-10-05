@@ -17,6 +17,10 @@ const USER = process.env.PROSPECTION_USER || 'admin'
 const DEPTS = String(args.dept || '37')
 const LIMIT = parseInt(args.limit || '1000', 10)
 const CONFIRM_NONE = !args['no-confirm']
+const DEBUG = !!args.debug
+const WORKERS = Math.max(1, Math.min(4, parseInt(args.workers || '3', 10)))
+const FAST = args.slow ? 1 : 0.35 // facteur sur les pauses (défaut : rapide)
+const dbg = (...a) => { if (DEBUG) console.log('   ·', ...a) }
 const BROWSER = String(args.browser || 'msedge') // msedge | chrome
 const STATE_FILE = new URL('./verificateur-etat.json', import.meta.url)
 const REPORT_FILE = new URL('./rapport-verification.csv', import.meta.url)
@@ -78,16 +82,19 @@ function decodeBing(h) {
   return h
 }
 
-let browser, page
+let browser
+const pages = []
 async function openBrowser() {
   browser = await chromium.launch({ channel: BROWSER, headless: false, args: ['--disable-blink-features=AutomationControlled', '--window-size=1100,750'] })
-  const ctx = await browser.newContext({ locale: 'fr-FR', viewport: { width: 1100, height: 700 } })
-  page = await ctx.newPage()
+  for (let i = 0; i < WORKERS; i++) {
+    const ctx = await browser.newContext({ locale: 'fr-FR', viewport: { width: 1100, height: 700 } })
+    pages.push(await ctx.newPage())
+  }
 }
 
 let consecutiveEmpty = 0, pauses = 0
 /** Retourne { urls: string[], ok: boolean } — ok=false si la recherche semble bloquée. */
-async function bingSearch(q) {
+async function bingSearch(page, q) {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       await page.goto('https://www.bing.com/search?setlang=fr&cc=fr&q=' + encodeURIComponent(q), { waitUntil: 'domcontentloaded', timeout: 30000 })
@@ -120,7 +127,7 @@ async function guardBlock(res) {
 // ---------------------------------------------------------------- vérification d'un site candidat
 async function getPage(url, ms = 12000) {
   const r = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(ms), headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36', 'Accept-Language': 'fr-FR,fr;q=0.9' } })
-  const buf = Buffer.from(await r.arrayBuffer()).subarray(0, 400000)
+  const buf = Buffer.from(await r.arrayBuffer()).subarray(0, 3000000)
   const ct = r.headers.get('content-type') || ''
   let cs = /charset=([\w-]+)/i.exec(ct)?.[1] || /charset=["']?([\w-]+)/i.exec(buf.subarray(0, 4000).toString('latin1'))?.[1] || 'utf-8'
   let text
@@ -134,17 +141,22 @@ async function verify(host, row, toks) {
   for (const proto of ['https', 'http']) {
     try { r = await getPage(`${proto}://${host}/`); break } catch { /* essai suivant */ }
   }
-  if (!r || r.status >= 400) return null
+  const hostTok = toks.some((t) => host.replace(/[^a-z0-9]/g, '').includes(t))
+  if (!r || r.status >= 400) {
+    dbg(host, 'injoignable ou HTTP', r?.status)
+    // le serveur existe et porte le nom du domaine mais bloque les robots : probablement le bon site, à vérifier à la main
+    return hostTok && (!r || [403, 429, 503].includes(r.status)) ? { level: 'weak', url: `https://${host}/` } : null
+  }
   const fh = new URL(r.url).host.toLowerCase().replace(/^www\./, '')
-  if (PARKING.some((p) => fh.includes(p))) return null
-  const txt = stripAcc(r.text).toLowerCase()
-  if (!WINE.test(txt)) return null
+  if (PARKING.some((p) => fh.includes(p))) { dbg(host, 'domaine parking'); return null }
+  const txt = stripAcc(r.text.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ')).toLowerCase()
+  if (!WINE.test(txt)) { dbg(host, 'aucun mot viticole'); return null }
   const title = /<title[^>]*>([\s\S]*?)<\/title>/.exec(txt)?.[1] || ''
   const h1 = [...txt.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/g)].map((m) => m[1]).join(' ')
   const hostN = fh.replace(/[^a-z0-9]/g, '')
   const hits = toks.filter((t) => hostN.includes(t) || title.includes(t) || h1.includes(t) || txt.slice(0, 30000).includes(t))
   const need = Math.max(1, Math.ceil(toks.length / 2))
-  if (toks.length && hits.length < need) return null
+  if (toks.length && hits.length < need) { dbg(host, `nom absent (jetons ${toks.join('/')}, trouvés ${hits.join('/') || 'aucun'})`); return null }
   const commune = stripAcc(row.commune || '').toLowerCase()
   const located = (t) => (commune && t.includes(commune)) || (row.cp && t.includes(row.cp))
   if (located(txt)) return { level: 'ok', url: r.url }
@@ -156,7 +168,8 @@ async function verify(host, row, toks) {
     } catch { /* page facultative */ }
   }
   const hostHit = toks.some((t) => hostN.includes(t))
-  if (hostHit && APPEL.test(txt)) return { level: 'weak', url: r.url }
+  if (hostHit) return { level: 'weak', url: r.url }
+  dbg(host, `commune/CP introuvables (${row.commune} ${row.cp})`)
   return null
 }
 
@@ -198,8 +211,10 @@ async function main() {
   log(`${list.total} domaines sans site détecté, ${todo.length} à vérifier (les autres sont déjà traités).`)
   if (!todo.length) return finish(0)
   await openBrowser()
-  let n = 0
-  for (const item of todo) {
+  let n = 0, next = 0
+  const work = async (page) => {
+  while (next < todo.length) {
+    const item = todo[next++]
     if (stopping) break
     n++
     const row = await api(`/lead/${item.siren}`)
@@ -209,10 +224,11 @@ async function main() {
     const queries = [`${label} ${row.commune} vin site officiel`, `${label} vigneron ${row.commune} contact`]
     let outcome = null, searches = 0, emptyBoth = false, socials = []
     for (const q of queries) {
-      const res = await bingSearch(q)
+      const res = await bingSearch(page, q)
       searches += res.ok && res.urls.length ? 1 : 0
       if (!res.ok) { await guardBlock(res); continue }
       const { hosts, socials: s } = candidatesFrom(res.urls, toks)
+      dbg(`recherche « ${q} » → candidats : ${hosts.join(', ') || 'aucun'}`)
       socials.push(...s)
       let weak = null
       for (const h of hosts) {
@@ -223,7 +239,7 @@ async function main() {
       if (outcome) break
       if (weak && !outcome) outcome = weak
       if (outcome) break
-      await sleep(7000 + Math.random() * 5000)
+      await sleep((7000 + Math.random() * 5000) * FAST)
     }
     const tag = `[${n}/${todo.length}] ${label} (${row.commune})`
     if (outcome?.level === 'ok') {
@@ -241,8 +257,10 @@ async function main() {
     }
     if (outcome || (searches >= 2 && CONFIRM_NONE)) state.done[item.siren] = { at: new Date().toISOString() } // les « incertains » seront retentés
     if (n % 5 === 0) saveState()
-    await sleep(6000 + Math.random() * 5000)
+    await sleep((6000 + Math.random() * 5000) * FAST)
   }
+  }
+  await Promise.all(pages.map((pg) => work(pg)))
   await finish(0)
 }
 main().catch(async (e) => { console.error('Erreur :', e.message); await finish(1) })

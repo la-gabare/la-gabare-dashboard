@@ -9,5 +9,5 @@ set DEPT=%1
 if "%DEPT%"=="" set DEPT=37
 echo Verification des sites - departement(s) %DEPT%
 echo Une fenetre Edge va s'ouvrir : laissez-la travailler, ne la fermez pas.
-node verifier.mjs --dept=%DEPT%
+node verifier.mjs --dept=%DEPT% --workers=3
 pause
