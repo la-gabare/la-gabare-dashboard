@@ -15,7 +15,7 @@ const todayStr = () => new Date().toISOString().slice(0, 10)
 const LIST_COLS = [
   'siren', 'name', 'brand', 'legal', 'legal_code', 'commune', 'dept', 'zone', 'cp', 'dirigeant', 'eff_code', 'eff_mid', 'ca', 'created',
   'url', 'url_source', 'url_verified', 'site_status', 'email', 'phone', 'status', 'next_action', 'last_contact', 'score', 'prio', 'pack',
-  'abo', 'deal', 'mrr', 'signals', 'obs', 'socials', 'updated_at',
+  'abo', 'deal', 'mrr', 'signals', 'obs', 'socials', 'saved', 'updated_at',
 ].join(',')
 
 // --------------------------------------------------------------------------- //
@@ -90,6 +90,7 @@ export function applyFilters(query: any, p: Params): any {
   if (g('no_https') === '1') q = q.eq('f_no_https', 1)
   if (g('tourism') === '1') q = q.eq('f_tourism', 1)
   if (g('hide_coop') === '1') q = q.eq('coop', 0).eq('coopteur', 0)
+  if (g('saved') === '1') q = q.eq('saved', 1)
   if (g('due') === '1') q = q.not('next_action', 'is', null).lte('next_action', todayStr())
   if (g('has_url') === '1') q = q.not('url', 'is', null).neq('url', '')
   if (g('has_url') === '0') q = q.or('url.is.null,url.eq.')
@@ -167,16 +168,17 @@ async function patchAndRescore(siren: string, patch: Record<string, unknown>): P
   return { ...merged, ...cols } as Prospect
 }
 
-const EDITABLE = new Set(['url', 'email', 'phone', 'notes', 'status', 'next_action', 'last_contact', 'site_status', 'dirigeant', 'dir_first'])
+const EDITABLE = new Set(['url', 'email', 'phone', 'notes', 'status', 'next_action', 'last_contact', 'site_status', 'dirigeant', 'dir_first', 'saved'])
 
 export async function updateProspect(siren: string, data: Record<string, any>) {
   const old = await loadRow(siren)
   if (!old) return null
   const patch: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(data)) {
-    if (!EDITABLE.has(k)) continue
+    if (v === undefined || !EDITABLE.has(k)) continue
     if (k === 'status' && !(STATUSES as readonly string[]).includes(v)) continue
     patch[k] = v === '' && (k === 'next_action' || k === 'last_contact') ? null : v
+    if (k === 'saved') { patch.saved = v ? 1 : 0; patch.saved_at = v ? nowIso() : null }
   }
   if (patch.status && patch.status !== old.status) {
     await logActivity(siren, 'status', `${old.status} → ${patch.status}`)
@@ -190,8 +192,8 @@ export async function updateProspect(siren: string, data: Record<string, any>) {
   return getProspect(siren)
 }
 
-export async function bulkUpdate(sirens: string[], data: { status?: string; next_action?: string }) {
-  for (const s of sirens) await updateProspect(s, { status: data.status, next_action: data.next_action })
+export async function bulkUpdate(sirens: string[], data: { status?: string; next_action?: string; saved?: boolean }) {
+  for (const s of sirens) await updateProspect(s, { status: data.status, next_action: data.next_action, ...(data.saved === undefined ? {} : { saved: data.saved ? 1 : 0 }) })
 }
 
 /** Insère/met à jour l'identité SIRENE en conservant le suivi commercial existant, puis recalcule le score. */
@@ -300,7 +302,7 @@ export async function computeStats() {
   const NY = new Date().getFullYear()
   const today = todayStr()
   const rows = await fetchAll<any>(() => db().from('prospects').select(
-    'dept,zone,site_status,url_source,status,prio,pack,abo,deal,mrr,eff_code,legal,successor,dir_birth,nb_open,bio,created,growth,vinifie,email,phone,url,audit_at,obs,next_action,score',
+    'dept,zone,site_status,url_source,saved,status,prio,pack,abo,deal,mrr,eff_code,legal,successor,dir_birth,nb_open,bio,created,growth,vinifie,email,phone,url,audit_at,obs,next_action,score',
   ).order('siren'))
   const total = rows.length
   if (!total) return { total: 0 }
@@ -314,7 +316,7 @@ export async function computeStats() {
   const eff: Record<string, number> = {}
   const legal: Record<string, number> = {}
   const by_prio: Record<string, number> = {}
-  const sig = { transmission: 0, multi: 0, bio: 0, recent: 0, growth: 0, vinifie: 0, has_email: 0, has_phone: 0, has_url: 0, audited: 0, employers: 0 }
+  const sig = { saved: 0, transmission: 0, multi: 0, bio: 0, recent: 0, growth: 0, vinifie: 0, has_email: 0, has_phone: 0, has_url: 0, audited: 0, employers: 0 }
   const seg = { sans: 0, a_confirmer: 0, refonte: 0, abo_only: 0, a_auditer: 0 }
   let qualified = 0, prioA = 0, due = 0, obsSum = 0, obsN = 0
   for (const r of rows) {
@@ -348,6 +350,7 @@ export async function computeStats() {
     inc(eff, r.eff_code || 'NN')
     inc(legal, r.legal || '—')
     inc(by_prio, r.prio)
+    if (r.saved === 1) sig.saved++
     if (r.successor === 1 || (r.dir_birth && r.dir_birth <= NY - 60)) sig.transmission++
     if ((r.nb_open || 0) >= 2) sig.multi++
     if (r.bio === 1) sig.bio++

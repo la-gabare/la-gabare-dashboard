@@ -69,7 +69,11 @@ export default function Drawer({ siren, cfg, onClose, onChanged }: { siren: stri
     <Shell onClose={onClose}>
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-5 py-4">
         <button className="absolute right-4 top-3 text-2xl text-gray-400 hover:text-gray-700" onClick={onClose} aria-label="Fermer">×</button>
-        <h2 className="text-lg font-bold pr-8">{L.brand || L.name}</h2>
+        <h2 className="text-lg font-bold pr-8">
+          <button title={L.saved ? 'Retirer des prospects sauvegardés' : 'Sauvegarder ce prospect'} className={`mr-1.5 text-xl align-middle ${L.saved ? 'text-amber-500' : 'text-gray-300 hover:text-amber-400'}`}
+            onClick={() => run('save', async () => { apply(await api(`/lead/${siren}`, { saved: L.saved ? 0 : 1 })); say(L.saved ? 'Retiré des sauvegardés' : 'Prospect sauvegardé') })}>{L.saved ? '★' : '☆'}</button>
+          {L.brand || L.name}
+        </h2>
         <div className="text-xs text-gray-500">{L.name} · SIREN {L.siren}</div>
         <div className="mt-2 flex gap-1.5 flex-wrap items-center">
           <Prio p={L.prio} /><b className="text-lg">{Math.round(L.score)}/100</b>

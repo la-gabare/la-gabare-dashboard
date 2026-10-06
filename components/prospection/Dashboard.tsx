@@ -39,6 +39,7 @@ export default function Dashboard({ cfg, onOpen, onPreset, goImport, onStats }: 
         <Kpi label="Prospects en base" value={num(s.total)} hint={`${num(sg.employers)} employeurs`} />
         <Kpi label="Qualifiés (score ≥ 42)" value={num(s.qualified)} hint={`${pct(s.qualified, s.total)} de la base`} tone="wine" />
         <Kpi label="Priorité A" value={num(s.prioA)} hint="à contacter en premier" tone="hot" />
+        <Kpi label="★ Sauvegardés" value={num(sg.saved)} hint="mis de côté par vous" tone="wine" />
         <Kpi label="Sites détectés" value={num(sg.has_url)} hint={`${pct(sg.has_url, s.total)} · ${num(sg.audited)} audités`} />
         <Kpi label="Valeur potentielle A+B" value={eur(abTotal)} hint="création + 12 mois d'abonnement" />
         <Kpi label="MRR potentiel A+B" value={`${eur(mrrAB)}/mois`} hint="abonnements recommandés" />

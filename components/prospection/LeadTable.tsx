@@ -6,7 +6,7 @@ export interface LeadRow {
   siren: string; name: string; brand?: string; commune?: string; dept: string; legal?: string; dirigeant?: string
   eff_code?: string; ca?: number; url?: string; url_source?: string; site_status: string; obs?: number | null
   signals: { k: string; label: string; tone: string }[]; score: number; prio: string; pack?: string | null; abo: string
-  deal: number; status: string; next_action?: string | null
+  deal: number; status: string; next_action?: string | null; saved?: number
 }
 
 interface Props {
@@ -75,7 +75,7 @@ export default function LeadTable({ items, effLabels, compact, sort, dir, onSort
                 </td>
               )}
               <td className="px-3 py-2.5 min-w-[220px]">
-                <div className="font-semibold">{L.brand || L.name}</div>
+                <div className="font-semibold">{L.saved ? <span className="text-amber-500 mr-1" title="Prospect sauvegardé">★</span> : null}{L.brand || L.name}</div>
                 <div className="text-xs text-gray-500">{L.commune} ({L.dept}) · {L.legal}{L.dirigeant ? ` · ${L.dirigeant}` : ''}</div>
               </td>
               <td className="px-3 py-2.5 whitespace-nowrap">{effLabels[L.eff_code || ''] || 'n.c.'}<div className="text-xs text-gray-500">{L.ca ? `CA ${eur(L.ca)}` : ''}</div></td>

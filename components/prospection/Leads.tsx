@@ -9,6 +9,7 @@ export type Filters = Record<string, string | string[]>
 export const DEFAULT_FILTERS: Filters = { hide_coop: '1' }
 
 export const PRESETS: Record<string, { label: string; f: Filters }> = {
+  saved: { label: '★ Sauvegardés', f: { saved: '1' } },
   hot: { label: 'Sans site · employeurs', f: { site: ['aucun', 'hs'], employer: '1', hide_coop: '1' } },
   refonte: { label: 'Refontes prioritaires', f: { site: ['obsolete', 'vieillissant'], min_score: '40', hide_coop: '1' } },
   boutique: { label: 'Boutique à créer', f: { no_shop: '1', eff_min: '3', hide_coop: '1' } },
@@ -157,7 +158,7 @@ export default function Leads({ cfg, F, setF, onOpen, refreshKey }: {
         <Group title="Contact"><Check k="has_email" label="Email trouvé" /><Check k="has_phone" label="Téléphone trouvé" /></Group>
         <Group title="Pipeline">
           <Chips k="status" opts={cfg.statuses.map((x: string) => [x, x] as [string, string])} />
-          <div className="mt-1.5"><Check k="due" label="Relance due" /></div>
+          <div className="mt-1.5"><Check k="saved" label="★ Sauvegardés uniquement" /><Check k="due" label="Relance due" /></div>
         </Group>
         <div className="px-4 py-3"><Btn onClick={() => { setPage(1); setQ(''); setF({ ...DEFAULT_FILTERS }) }}>Réinitialiser les filtres</Btn></div>
       </div>
@@ -188,6 +189,8 @@ export default function Leads({ cfg, F, setF, onOpen, refreshKey }: {
                 </select>
                 <input type="date" className="text-gray-900 rounded px-2 py-1 text-sm" value={bDate} onChange={(e) => setBDate(e.target.value)} title="Prochaine action" />
                 <Btn small onClick={applyBulk} disabled={busy}>Appliquer</Btn>
+                <Btn small onClick={async () => { setBusy(true); await api('/bulk', { sirens: [...sel], saved: true }); setBusy(false); setSel(new Set()); load() }} disabled={busy}>★ Sauvegarder</Btn>
+                <Btn small onClick={async () => { setBusy(true); await api('/bulk', { sirens: [...sel], saved: false }); setBusy(false); setSel(new Set()); load() }} disabled={busy}>Retirer ★</Btn>
                 <Btn small onClick={async () => { setBusy(true); for (let i = 0; i < sel.size; i += 4) await api('/batch', { kind: 'audit', sirens: [...sel].slice(i, i + 4) }); setBusy(false); load() }} disabled={busy}>Auditer</Btn>
                 <Btn small onClick={() => setSel(new Set())}>Vider</Btn>
               </div>

@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS prospects (
   audit_at       timestamptz,
   gbp            jsonb,
   -- suivi commercial
+  saved          smallint DEFAULT 0,   -- 1 = prospect sauvegardé (mis de côté par l'utilisateur)
+  saved_at       timestamptz,
   status         text DEFAULT 'Nouveau',
   notes          text DEFAULT '',
   next_action    date,
