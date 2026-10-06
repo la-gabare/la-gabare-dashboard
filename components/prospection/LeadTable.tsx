@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { Prio, SITE, STATUS_TONE, Tag, eur } from './ui'
 
 export interface LeadRow {
@@ -19,6 +20,7 @@ interface Props {
   selected?: Set<string>
   onToggle?: (siren: string, on: boolean) => void
   onToggleAll?: (on: boolean) => void
+  onToggleMany?: (sirens: string[], on: boolean) => void
   onOpen: (siren: string) => void
 }
 
@@ -45,7 +47,8 @@ function ScoreCell({ L }: { L: LeadRow }) {
   )
 }
 
-export default function LeadTable({ items, effLabels, compact, sort, dir, onSort, selected, onToggle, onToggleAll, onOpen }: Props) {
+export default function LeadTable({ items, effLabels, compact, sort, dir, onSort, selected, onToggle, onToggleAll, onToggleMany, onOpen }: Props) {
+  const lastIdx = useRef<number | null>(null) // dernière case cochée : point de départ du Maj + clic
   if (!items.length) return <div className="card text-center text-gray-500 py-12">Aucun prospect ne correspond à ces filtres.</div>
   const Th = ({ k, children }: { k: string; children: string }) => (
     <th className={`px-3 py-2.5 text-left text-[11px] uppercase tracking-wide text-gray-500 font-semibold whitespace-nowrap ${onSort ? 'cursor-pointer select-none' : ''}`} onClick={() => onSort?.(k)}>
@@ -67,11 +70,20 @@ export default function LeadTable({ items, effLabels, compact, sort, dir, onSort
           </tr>
         </thead>
         <tbody>
-          {items.map((L) => (
+          {items.map((L, idx) => (
             <tr key={L.siren} className="border-b border-gray-100 hover:bg-rose-50/40 cursor-pointer align-top" onClick={() => onOpen(L.siren)}>
               {!compact && (
                 <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
-                  <input type="checkbox" checked={!!selected?.has(L.siren)} onChange={(e) => onToggle?.(L.siren, e.target.checked)} />
+                  <input type="checkbox" checked={!!selected?.has(L.siren)} title="Maj + clic : sélectionne toute la plage"
+                    onChange={(e) => {
+                      const on = e.target.checked
+                      const shift = (e.nativeEvent as MouseEvent).shiftKey
+                      if (shift && lastIdx.current !== null && onToggleMany) {
+                        const [a, b] = [Math.min(lastIdx.current, idx), Math.max(lastIdx.current, idx)]
+                        onToggleMany(items.slice(a, b + 1).map((x) => x.siren), on)
+                      } else onToggle?.(L.siren, on)
+                      lastIdx.current = idx
+                    }} />
                 </td>
               )}
               <td className="px-3 py-2.5 min-w-[220px]">

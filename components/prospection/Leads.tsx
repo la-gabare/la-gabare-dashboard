@@ -175,6 +175,7 @@ export default function Leads({ cfg, F, setF, onOpen, refreshKey }: {
               items={data.items} effLabels={cfg.eff_labels} sort={sort} dir={dir} onOpen={onOpen} selected={sel}
               onSort={(k) => { if (sort === k) setDir(dir === 'asc' ? 'desc' : 'asc'); else { setSort(k); setDir(k === 'name' ? 'asc' : 'desc') } }}
               onToggle={(s, on) => { const n = new Set(sel); on ? n.add(s) : n.delete(s); setSel(n) }}
+              onToggleMany={(list, on) => { const n = new Set(sel); list.forEach((s) => (on ? n.add(s) : n.delete(s))); setSel(n) }}
               onToggleAll={(on) => setSel(on ? new Set(data.items.map((i: any) => i.siren)) : new Set())}
             />
             <div className="flex items-center justify-center gap-3 mt-3 text-sm text-gray-500">
