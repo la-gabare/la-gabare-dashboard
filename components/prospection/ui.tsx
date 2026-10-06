@@ -87,7 +87,7 @@ export function Btn({ children, onClick, primary, small, disabled, href, title }
   children: ReactNode; onClick?: () => void; primary?: boolean; small?: boolean; disabled?: boolean; href?: string; title?: string
 }) {
   const cls = `${small ? 'px-2.5 py-1 text-[13px]' : 'px-3.5 py-2 text-sm'} rounded-lg border font-medium transition disabled:opacity-50 ${
-    primary ? 'bg-wine text-white border-wine hover:bg-[#5a2530]' : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+    primary ? 'bg-wine text-white border-wine hover:bg-[#5a2530]' : 'bg-white text-gray-900 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
   }`
   if (href) return <a className={`${cls} inline-block`} href={href} title={title}>{children}</a>
   return <button className={cls} onClick={onClick} disabled={disabled} title={title}>{children}</button>
