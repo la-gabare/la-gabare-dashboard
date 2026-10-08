@@ -10,6 +10,7 @@ export const DEFAULT_FILTERS: Filters = { hide_coop: '1' }
 
 export const PRESETS: Record<string, { label: string; f: Filters }> = {
   saved: { label: '★ Sauvegardés', f: { saved: '1' } },
+  nouveaux: { label: 'Nouveaux (7 j)', f: { added: '7', hide_coop: '1' } },
   hot: { label: 'Sans site · employeurs', f: { site: ['aucun', 'hs'], employer: '1', hide_coop: '1' } },
   refonte: { label: 'Refontes prioritaires', f: { site: ['obsolete', 'vieillissant'], min_score: '40', hide_coop: '1' } },
   boutique: { label: 'Boutique à créer', f: { no_shop: '1', eff_min: '3', hide_coop: '1' } },
@@ -114,6 +115,12 @@ export default function Leads({ cfg, F, setF, onOpen, refreshKey }: {
           </div>
         </div>
         <Group title="Recherche"><input className={inputCls} type="search" placeholder="Nom, commune, dirigeant, SIREN…" value={q} onChange={(e) => onQ(e.target.value)} /></Group>
+        <Group title="Nouveaux prospects">
+          <select className={inputCls} value={(F.added as string) || ''} onChange={(e) => upd('added', e.target.value)}>
+            <option value="">Date d&apos;ajout : toutes</option><option value="1">Ajoutés aujourd&apos;hui (24 h)</option><option value="3">Ajoutés ces 3 derniers jours</option>
+            <option value="7">Ajoutés cette semaine (7 j)</option><option value="30">Ajoutés ce mois-ci (30 j)</option>
+          </select>
+        </Group>
         <Group title="Priorité & score">
           <Chips k="prio" opts={[['A', 'A — chaud'], ['B', 'B — tiède'], ['C', 'C — froid']]} />
           <div className="flex items-center gap-2 mt-2 text-[13px] text-gray-500">Score ≥ <input className={`${inputCls} !w-20`} type="number" min={0} max={100} value={(F.min_score as string) || ''} onChange={(e) => upd('min_score', e.target.value)} /></div>

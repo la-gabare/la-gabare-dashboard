@@ -7,7 +7,7 @@ export interface LeadRow {
   siren: string; name: string; brand?: string; commune?: string; dept: string; legal?: string; dirigeant?: string
   eff_code?: string; ca?: number; url?: string; url_source?: string; site_status: string; obs?: number | null
   signals: { k: string; label: string; tone: string }[]; score: number; prio: string; pack?: string | null; abo: string
-  deal: number; status: string; next_action?: string | null; saved?: number
+  deal: number; status: string; next_action?: string | null; saved?: number; created_at?: string
 }
 
 interface Props {
@@ -87,7 +87,7 @@ export default function LeadTable({ items, effLabels, compact, sort, dir, onSort
                 </td>
               )}
               <td className="px-3 py-2.5 min-w-[220px]">
-                <div className="font-semibold">{L.saved ? <span className="text-amber-500 mr-1" title="Prospect sauvegardé">★</span> : null}{L.brand || L.name}</div>
+                <div className="font-semibold">{L.saved ? <span className="text-amber-500 mr-1" title="Prospect sauvegardé">★</span> : null}{L.created_at && Date.now() - new Date(L.created_at).getTime() < 7 * 86400000 ? <span className="text-[10px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded mr-1.5 align-middle" title="Ajouté ces 7 derniers jours">NOUVEAU</span> : null}{L.brand || L.name}</div>
                 <div className="text-xs text-gray-500">{L.commune} ({L.dept}) · {L.legal}{L.dirigeant ? ` · ${L.dirigeant}` : ''}</div>
               </td>
               <td className="px-3 py-2.5 whitespace-nowrap">{effLabels[L.eff_code || ''] || 'n.c.'}<div className="text-xs text-gray-500">{L.ca ? `CA ${eur(L.ca)}` : ''}</div></td>

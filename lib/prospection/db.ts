@@ -15,7 +15,7 @@ const todayStr = () => new Date().toISOString().slice(0, 10)
 const LIST_COLS = [
   'siren', 'name', 'brand', 'legal', 'legal_code', 'commune', 'dept', 'zone', 'cp', 'dirigeant', 'eff_code', 'eff_mid', 'ca', 'created',
   'url', 'url_source', 'url_verified', 'site_status', 'email', 'phone', 'status', 'next_action', 'last_contact', 'score', 'prio', 'pack',
-  'abo', 'deal', 'mrr', 'signals', 'obs', 'socials', 'saved', 'updated_at',
+  'abo', 'deal', 'mrr', 'signals', 'obs', 'socials', 'saved', 'created_at', 'updated_at',
 ].join(',')
 
 // --------------------------------------------------------------------------- //
@@ -91,6 +91,8 @@ export function applyFilters(query: any, p: Params): any {
   if (g('tourism') === '1') q = q.eq('f_tourism', 1)
   if (g('hide_coop') === '1') q = q.eq('coop', 0).eq('coopteur', 0)
   if (g('saved') === '1') q = q.eq('saved', 1)
+  // « nouveaux » : fiches ajoutées à la base depuis N jours (created_at = date d'ajout, pas la création de l'entreprise)
+  if (g('added')) q = q.gte('created_at', new Date(Date.now() - Math.max(1, parseInt(g('added'), 10) || 1) * 86400000).toISOString())
   if (g('due') === '1') q = q.not('next_action', 'is', null).lte('next_action', todayStr())
   if (g('has_url') === '1') q = q.not('url', 'is', null).neq('url', '')
   if (g('has_url') === '0') q = q.or('url.is.null,url.eq.')
