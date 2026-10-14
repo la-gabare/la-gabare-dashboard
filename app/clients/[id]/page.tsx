@@ -11,7 +11,7 @@ import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
 
 const abonnementQuotas: Record<string, string> = {
   village: '4 articles + 4 posts + 4 idées story / mois',
-  reserve: '8 articles + 8 posts (4 idées photo, 2 carrousels, 2 scripts vidéo) + 12 idées story / mois',
+  reserve: '8 articles + 8 posts (6 idées photo, 2 carrousels) + 12 idées story / mois',
   grand_cru: '12 articles + 12 posts (4 idées photo, 4 carrousels, 4 scripts vidéo) + 20 idées story / mois',
 }
 
