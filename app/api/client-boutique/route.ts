@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
-import { stripe } from '@/lib/stripe'
+import { stripeBoutique as stripe, messageStripe } from '@/lib/boutique/stripe'
 import { sendMail } from '@/lib/mailer'
 import { BoutiqueConfig, PORT_DEFAUT, Produit, slugify } from '@/lib/boutique/core'
 import { mailExpedition } from '@/lib/boutique/emails'
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
         return json({ ok: true })
       }
 
-      case 'stripe_connecter': {
+      case 'stripe_connecter': try {
         let accountId = client.stripe_account_id as string | null
         if (!accountId) {
           const acct = await stripe.accounts.create({
@@ -212,6 +212,9 @@ export async function POST(req: NextRequest) {
           return_url: 'https://la-gabare.fr/espace-client.html?boutique=stripe',
         })
         return json({ url: link.url })
+      } catch (err) {
+        console.error('stripe_connecter', err)
+        return json({ error: messageStripe(err) }, 502)
       }
 
       case 'publier': {

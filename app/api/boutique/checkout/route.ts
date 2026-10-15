@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { stripeBoutique as stripe } from '@/lib/boutique/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { clientParDomaine, fraisPort, siteBase, BoutiqueConfig, LigneCommande, Produit } from '@/lib/boutique/core'
