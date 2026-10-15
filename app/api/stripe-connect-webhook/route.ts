@@ -8,7 +8,8 @@ import { mailConfirmationAcheteur, mailNouvelleCommandeDomaine } from '@/lib/bou
 
 // Webhook "Connect" : reçoit les événements des comptes Stripe des domaines.
 // Stripe > Développeurs > Webhooks > Ajouter un endpoint > "Événements sur les comptes connectés"
-// Événements : checkout.session.completed, checkout.session.expired, checkout.session.async_payment_failed
+// Événements : checkout.session.completed, checkout.session.async_payment_succeeded,
+// checkout.session.expired, checkout.session.async_payment_failed
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const signature = req.headers.get('stripe-signature')
@@ -48,7 +49,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
-  if (event.type === 'checkout.session.completed' && session.payment_status === 'paid' && commande.statut === 'en_attente') {
+  const paye = event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded'
+  if (paye && session.payment_status === 'paid' && commande.statut === 'en_attente') {
     const details = session.customer_details
     const shipping = session.collected_information?.shipping_details
     const { data: payee, error } = await supabaseAdmin.rpc('boutique_payer', {
