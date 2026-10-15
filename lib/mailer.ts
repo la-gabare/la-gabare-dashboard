@@ -11,12 +11,14 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export async function sendMail(to: string, subject: string, html: string) {
+export async function sendMail(to: string, subject: string, html: string, options: { fromName?: string; replyTo?: string } = {}) {
+  const fromName = (options.fromName || 'La Gabare').replace(/["<>]/g, '')
   await transporter.sendMail({
-    from: `"La Gabare" <${process.env.SMTP_USER}>`,
+    from: `"${fromName}" <${process.env.SMTP_USER}>`,
     to,
     subject,
     html,
+    replyTo: options.replyTo,
   })
 }
 
