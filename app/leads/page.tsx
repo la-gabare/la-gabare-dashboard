@@ -3,10 +3,36 @@
 import { Fragment, useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Lead, CahierDesCharges } from '@/lib/types'
-import { ChevronDown, ChevronUp, Send, UserPlus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Send, UserPlus, Trash2, FileText } from 'lucide-react'
 import CreateClientModal from '@/components/CreateClientModal'
 
 type DisplayLead = Lead & { _source: 'leads' | 'cahier_des_charges' }
+type Brief = Record<string, unknown> & { id: number; lead_id?: number | null; email?: string | null; created_at: string }
+
+// Libellés du brief détaillé (formulaire-complet.html), dans l'ordre d'affichage
+const briefLabels: [string, string][] = [
+  ['nom_domaine', 'Domaine'], ['appellation', 'Appellation'], ['slogan', 'Slogan'], ['presentation', 'Présentation'],
+  ['liste_cuvees', 'Cuvées'], ['site_existant', 'Site existant'], ['site_url', 'URL du site'],
+  ['instagram_handle', 'Instagram'], ['facebook_page', 'Facebook'], ['tiktok_handle', 'TikTok'],
+  ['manager', 'Gestion actuelle'], ['budget_actuel', 'Budget actuel'], ['concurrents', 'Concurrents'],
+  ['positionnement', 'Positionnement'], ['kpi_12mois', 'Objectif 12 mois'], ['kpis', 'Indicateurs'],
+  ['budget_solution', 'Budget'], ['urgence', 'Urgence'], ['type_site', 'Type de site'], ['style_visuel', 'Style'],
+  ['couleurs', 'Couleurs'], ['lien_inspirations', 'Inspirations'], ['photos_disponibles', 'Photos'],
+  ['frequence_publication', 'Fréquence de publication'], ['reseaux_prioritaires', 'Réseaux prioritaires'],
+  ['messages_cles', 'Messages clés'], ['blog_souhaite', 'Blog'], ['loi_evin', 'Loi Évin'],
+  ['certifications', 'Certifications'], ['restrictions', 'Restrictions'], ['remarques', 'Remarques'],
+  ['nom_contact', 'Contact'], ['fonction', 'Fonction'], ['telephone', 'Téléphone'], ['email', 'E-mail'],
+  ['decision_maker', 'Décisionnaire'], ['disponibilite', 'Disponibilité'],
+]
+const briefCases: [string, string][] = [
+  ['reseau_instagram', 'Instagram'], ['reseau_facebook', 'Facebook'], ['reseau_linkedin', 'LinkedIn'], ['reseau_tiktok', 'TikTok'],
+  ['cible_particuliers', 'Cible : particuliers'], ['cible_cavistes', 'Cible : cavistes'], ['cible_restaurants', 'Cible : restaurants'],
+  ['cible_export', 'Cible : export'], ['cible_professionnels', 'Cible : professionnels'],
+  ['obj_vente', 'Objectif : ventes directes'], ['obj_visibilite', 'Objectif : visibilité'], ['obj_fidelite', 'Objectif : fidélisation'],
+  ['obj_recrutement', 'Objectif : revendeurs'], ['obj_engagement', 'Objectif : communauté'], ['obj_conformite', 'Objectif : loi Évin'],
+  ['contenu_textes', 'Contenus : textes'], ['contenu_photos', 'Contenus : photos'], ['contenu_videos', 'Contenus : vidéos'],
+  ['contenu_documents', 'Contenus : documents'], ['contenu_rien', 'Contenus : à créer'],
+]
 
 function cahierToLead(c: CahierDesCharges): DisplayLead {
   return {
@@ -60,12 +86,16 @@ export default function LeadsPage() {
   const [filter, setFilter] = useState<'tous' | 'site' | 'abonnement'>('tous')
   const [sending, setSending] = useState<number | null>(null)
   const [clientLead, setClientLead] = useState<Lead | null>(null)
+  const [briefs, setBriefs] = useState<Brief[]>([])
+  const [briefOuvert, setBriefOuvert] = useState<Brief | null>(null)
 
   const fetchLeads = async () => {
-    const [leadsData, cahiersData] = await Promise.all([
+    const [leadsData, cahiersData, briefsData] = await Promise.all([
       fetchAdminData<Lead>('leads', { order_column: 'created_at', order_asc: 'false' }),
       fetchAdminData<CahierDesCharges>('cahier_des_charges', { order_column: 'created_at', order_asc: 'false' }),
+      fetchAdminData<Brief>('formulaire_complet', { order_column: 'created_at', order_asc: 'false' }),
     ])
+    setBriefs(briefsData)
     const merged: DisplayLead[] = [
       ...leadsData.map((l) => ({ ...l, _source: 'leads' as const })),
       ...cahiersData.map(cahierToLead),
@@ -78,34 +108,30 @@ export default function LeadsPage() {
     fetchLeads()
   }, [])
 
+  // Brief détaillé d'un lead : rattaché par lead_id, sinon par adresse e-mail
+  const briefDe = (lead: DisplayLead) => {
+    if (lead._source !== 'leads') return null
+    const email = (lead.email || '').toLowerCase()
+    return briefs.find((b) => b.lead_id === lead.id)
+      || briefs.find((b) => !b.lead_id && email && (b.email || '').toLowerCase() === email)
+      || null
+  }
+
   const triggerMail = async (lead: DisplayLead) => {
+    if (!confirm(`Envoyer le mail de prise de contact à ${lead.email} ?`)) return
     setSending(lead.id)
     try {
-      if (lead._source === 'cahier_des_charges') {
-        const res = await fetch('/api/cahier-des-charges', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: lead.id, traite: false }),
-        })
-        if (!res.ok) {
-          const err = await res.json()
-          alert('Erreur: ' + err.error)
-          return
-        }
-        alert('Le mail sera envoyé automatiquement dans les 2 prochaines minutes.')
-      } else {
-        const res = await fetch('/api/leads', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: lead.id, statut: 'reception' }),
-        })
-        if (!res.ok) {
-          const err = await res.json()
-          alert('Erreur: ' + err.error)
-          return
-        }
-        alert('Statut remis à "reception" — le mail sera envoyé automatiquement dans les 2 prochaines minutes.')
+      const res = await fetch('/api/leads/envoyer-mail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: lead.id, source: lead._source }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert("Le mail n'est pas parti : " + (data.error || res.status))
+        return
       }
+      alert(`Mail envoyé à ${data.email}.`)
       fetchLeads()
     } finally {
       setSending(null)
@@ -202,6 +228,16 @@ export default function LeadsPage() {
                             <Send size={14} />
                             <span>{sending === lead.id ? '...' : 'Mail'}</span>
                           </button>
+                          {briefDe(lead) && (
+                            <button
+                              onClick={() => setBriefOuvert(briefDe(lead))}
+                              title="Voir le brief détaillé rempli par le prospect"
+                              className="flex items-center space-x-1 text-xs px-2 py-1 rounded bg-green-700 text-white hover:opacity-90"
+                            >
+                              <FileText size={14} />
+                              <span>Brief</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => setClientLead(lead)}
                             title="Créer le client (après le RDV)"
@@ -259,6 +295,35 @@ export default function LeadsPage() {
           </div>
         )}
       </div>
+
+      {briefOuvert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setBriefOuvert(null)}>
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">Brief — {String(briefOuvert.nom_domaine || '')}</h2>
+                <p className="text-sm text-gray-500">Reçu le {new Date(briefOuvert.created_at).toLocaleString('fr-FR')}</p>
+              </div>
+              <button onClick={() => setBriefOuvert(null)} className="text-gray-500 hover:text-gray-800 text-xl" aria-label="Fermer">✕</button>
+            </div>
+            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              {briefLabels.filter(([k]) => briefOuvert[k]).map(([k, label]) => (
+                <div key={k} className={String(briefOuvert[k]).length > 60 ? 'md:col-span-2' : ''}>
+                  <dt className="text-gray-500">{label}</dt>
+                  <dd className="whitespace-pre-line">{String(briefOuvert[k])}</dd>
+                </div>
+              ))}
+            </dl>
+            {briefCases.some(([k]) => briefOuvert[k]) && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {briefCases.filter(([k]) => briefOuvert[k]).map(([k, label]) => (
+                  <span key={k} className="badge badge-info">{label}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {clientLead && (
         <CreateClientModal
