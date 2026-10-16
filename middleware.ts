@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Protège UNIQUEMENT le module Prospection (page + API) par authentification HTTP Basic.
-// Le reste de l'admin et les API publiques (publish-article, formulaires…) ne sont pas touchés.
+// Protège TOUT le dashboard (pages + API) par authentification HTTP Basic,
+// sauf les adresses appelées par les sites des clients, l'espace client (qui a sa propre connexion)
+// et les services externes (Stripe, Google, Meta).
 export const config = {
-  matcher: ['/prospection/:path*', '/api/prospection/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
+
+const ROUTES_PUBLIQUES = [
+  /^\/api\/public\//,                 // formulaires du site, articles publiés
+  /^\/api\/boutique\//,               // boutique des domaines (catalogue, paiement)
+  /^\/api\/client-[a-z-]+$/,          // espace client : authentifié par la session Supabase du client
+  /^\/api\/stripe-webhook$/,
+  /^\/api\/stripe-connect-webhook$/,
+  /^\/api\/(google|meta)-oauth-callback$/,
+  /^\/api\/publish-(article|post)$/,  // espace client
+  /^\/api\/delete-article$/,          // espace client + admin des sites (clé API)
+  /^\/api\/update-api-key$/,          // admin des sites (clé API)
+]
 
 function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false
@@ -14,16 +27,19 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export function middleware(req: NextRequest) {
-  const password = process.env.PROSPECTION_PASSWORD
+  const { pathname } = req.nextUrl
+  if (req.method === 'OPTIONS' || ROUTES_PUBLIQUES.some((r) => r.test(pathname))) return NextResponse.next()
+
+  const password = process.env.ADMIN_PASSWORD || process.env.PROSPECTION_PASSWORD
   if (!password) {
-    // En développement local, accès libre. En production, le module reste verrouillé tant que le mot de passe n'est pas défini.
+    // En développement local, accès libre. En production, le dashboard reste verrouillé tant que le mot de passe n'est pas défini.
     if (process.env.NODE_ENV !== 'production') return NextResponse.next()
     return new NextResponse(
-      'Module Prospection verrouillé : définissez la variable PROSPECTION_PASSWORD dans Vercel (Settings > Environment Variables).',
+      'Dashboard verrouillé : définissez la variable ADMIN_PASSWORD (ou PROSPECTION_PASSWORD) dans Vercel (Settings > Environment Variables).',
       { status: 503 },
     )
   }
-  const user = process.env.PROSPECTION_USER || 'admin'
+  const user = process.env.ADMIN_USER || process.env.PROSPECTION_USER || 'admin'
   const header = req.headers.get('authorization') || ''
   if (header.startsWith('Basic ')) {
     try {
@@ -36,6 +52,6 @@ export function middleware(req: NextRequest) {
   }
   return new NextResponse('Authentification requise', {
     status: 401,
-    headers: { 'WWW-Authenticate': 'Basic realm="La Gabare - Prospection", charset="UTF-8"' },
+    headers: { 'WWW-Authenticate': 'Basic realm="La Gabare - Dashboard", charset="UTF-8"' },
   })
 }
