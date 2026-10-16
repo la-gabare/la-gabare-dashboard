@@ -1,23 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { randomBytes } from 'crypto'
 import { generateTutorialPDF } from '@/lib/pdf-generator'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const JSZip = require('jszip')
 
-function makeToken(domainName?: string, clientName?: string): string {
-  // Token déterministe : "<domaine>2309" (sans protocole ni www, en minuscules)
-  const base = (domainName || clientName || 'site')
-    .toLowerCase()
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(/\/.*$/, '')
-    .trim()
-  return `${base}2309`
+// Jeton de publication aléatoire, propre à chaque site. Enregistré dans clients.publish_token.
+// (L'ancien jeton « <domaine>2309 » était devinable par n'importe qui.)
+function makeToken(): string {
+  return randomBytes(32).toString('hex')
 }
 
-function generatePublishPhp(clientName: string, projectSlug: string, domainName?: string): string {
-  const token = makeToken(domainName, clientName)
+function generatePublishPhp(clientName: string, projectSlug: string, token: string, domainName?: string): string {
   return `<?php
 /**
  * Publish API for ${clientName}
@@ -119,7 +115,7 @@ function slugify($string) {
 ?>`
 }
 
-function generateConfigPhp(clientName: string, projectSlug: string, domainName?: string): string {
+function generateConfigPhp(clientName: string, projectSlug: string, token: string, domainName?: string): string {
   return `<?php
 /**
  * Configuration for ${clientName} site
@@ -143,7 +139,7 @@ define('SHOW_DRAFT_ARTICLES', false);
 
 // Publishing API
 define('API_ENDPOINT', SITE_URL . '/publish.php');
-define('PUBLISH_TOKEN', '${makeToken(domainName, clientName)}');
+define('PUBLISH_TOKEN', '${token}');
 
 // Cache settings
 define('ENABLE_CACHE', true);
@@ -194,7 +190,6 @@ function getArticle(\$slug) {
 }
 
 function generateLagabarePhp(clientName: string, domainName?: string): string {
-  const token = makeToken(domainName, clientName)
   const domain = (domainName || clientName || '')
     .toLowerCase()
     .replace(/^https?:\/\//, '')
@@ -210,7 +205,6 @@ function generateLagabarePhp(clientName: string, domainName?: string): string {
 
 define('LAGABARE_API', 'https://admin.la-gabare.fr/api/public/articles');
 define('LAGABARE_DOMAIN', '${domain}');
-define('LAGABARE_TOKEN', '${token}');
 
 function lagabare_domain() {
     $d = LAGABARE_DOMAIN;
@@ -362,14 +356,21 @@ export async function POST(request: NextRequest) {
     const profileData = clientData?.[0]?.profil_client_complet as Record<string, any> || {}
     const detectedDomain = profileData?.site_url || profileData?.domaine || clientData?.[0]?.site || domainName
 
+    // Jeton de publication unique pour ce site, mémorisé sur la fiche client
+    const publishToken = makeToken()
+    if (client_id) {
+      const { error: tokenError } = await supabaseAdmin.from('clients').update({ publish_token: publishToken }).eq('id', client_id)
+      if (tokenError) console.error('publish_token non enregistré :', tokenError.message)
+    }
+
     // Créer publish.php dans le dossier site
-    const publishPhp = generatePublishPhp(client_name, project_slug, detectedDomain)
+    const publishPhp = generatePublishPhp(client_name, project_slug, publishToken, detectedDomain)
     const publishPhpPath = path.join(projectDir, 'site', 'publish.php')
     fs.writeFileSync(publishPhpPath, publishPhp)
     console.log('Created publish.php at:', publishPhpPath, 'for domain:', detectedDomain)
 
     // Créer config.php dans le dossier site
-    const configPhp = generateConfigPhp(client_name, project_slug, detectedDomain)
+    const configPhp = generateConfigPhp(client_name, project_slug, publishToken, detectedDomain)
     const configPhpPath = path.join(projectDir, 'site', 'config.php')
     fs.writeFileSync(configPhpPath, configPhp)
     console.log('Created config.php at:', configPhpPath, 'for domain:', detectedDomain)
@@ -378,7 +379,7 @@ export async function POST(request: NextRequest) {
     const lagabarePhp = generateLagabarePhp(client_name, detectedDomain)
     const lagabarePhpPath = path.join(projectDir, 'site', 'lagabare.php')
     fs.writeFileSync(lagabarePhpPath, lagabarePhp)
-    console.log('Created lagabare.php at:', lagabarePhpPath, 'for domain:', detectedDomain, 'token:', `${detectedDomain}2309`)
+    console.log('Created lagabare.php at:', lagabarePhpPath, 'for domain:', detectedDomain)
 
     // Créer .htaccess dans le dossier site pour router les requêtes
     const htaccess = `<IfModule mod_rewrite.c>

@@ -66,10 +66,12 @@ export function normaliserDomaine(d: string): string {
   return d.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '')
 }
 
-// Même règle que create-client-project : "<domaine>2309", sauf token propre au client
-export function publishToken(client: { publish_token?: string | null; domaine?: string | null; site_url?: string | null }): string {
-  if (client.publish_token) return client.publish_token
-  return `${normaliserDomaine(client.domaine || client.site_url || 'site')}2309`
+// Jeton aléatoire propre au site (clients.publish_token), le même que dans son boutique-publish.php
+export function publishToken(client: { publish_token?: string | null }): string {
+  if (!client.publish_token) {
+    throw new Error('Jeton de publication manquant pour ce site : contactez La Gabare.')
+  }
+  return client.publish_token
 }
 
 export async function clientParDomaine(domaine: string) {
