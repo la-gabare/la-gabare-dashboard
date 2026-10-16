@@ -10,6 +10,7 @@ export const config = {
 const ROUTES_PUBLIQUES = [
   /^\/api\/public\//,                 // formulaires du site, articles publiés
   /^\/api\/boutique\//,               // boutique des domaines (catalogue, paiement)
+  /^\/api\/pro\//,                    // espace professionnels des domaines (lien d'accès personnel)
   /^\/api\/client-[a-z-]+$/,          // espace client : authentifié par la session Supabase du client
   /^\/api\/stripe-webhook$/,
   /^\/api\/stripe-connect-webhook$/,

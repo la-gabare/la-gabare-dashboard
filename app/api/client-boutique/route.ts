@@ -7,6 +7,9 @@ import { sendMail } from '@/lib/mailer'
 import { BoutiqueConfig, PORT_DEFAUT, Produit, slugify } from '@/lib/boutique/core'
 import { mailExpedition } from '@/lib/boutique/emails'
 import { publierBoutique } from '@/lib/boutique/publier'
+import { nouvelAcces, lienAcces } from '@/lib/pro/core'
+import { mailAccesPro } from '@/lib/pro/emails'
+import { siteBase } from '@/lib/boutique/core'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,11 +49,15 @@ export async function GET(req: NextRequest) {
   const debutMois = new Date()
   debutMois.setDate(1); debutMois.setHours(0, 0, 0, 0)
 
-  const [produitsRes, commandesRes, stripeEtat] = await Promise.all([
+  const [produitsRes, commandesRes, stripeEtat, prosRes, demandesRes] = await Promise.all([
     supabaseAdmin.from('produits').select('*').eq('client_id', client.id).order('ordre').order('id'),
     supabaseAdmin.from('commandes').select('*').eq('client_id', client.id)
       .in('statut', STATUTS_SUIVIS).order('paid_at', { ascending: false }).limit(300),
     etatStripe(client.stripe_account_id),
+    supabaseAdmin.from('pros').select('id, email, entreprise, siret, activite, nom, telephone, ville, message, statut, created_at, valide_at, derniere_connexion_at, acces_expire_at')
+      .eq('client_id', client.id).order('created_at', { ascending: false }).limit(500),
+    supabaseAdmin.from('pro_demandes').select('*, pros(entreprise, nom, email, telephone)')
+      .eq('client_id', client.id).order('created_at', { ascending: false }).limit(200),
   ])
 
   const commandes = commandesRes.data || []
@@ -74,6 +81,9 @@ export async function GET(req: NextRequest) {
     },
     produits: produitsRes.data || [],
     commandes,
+    // Espace pro (tables créées par sql/create_espace_pro.sql ; vides tant que la migration n'est pas faite)
+    pros: prosRes.error ? [] : prosRes.data || [],
+    demandes_pros: demandesRes.error ? [] : demandesRes.data || [],
     stats: {
       ca_mois_cents: duMois.reduce((s, c) => s + c.total_cents, 0),
       commandes_mois: duMois.length,
@@ -109,6 +119,11 @@ function nettoyerProduit(p: Record<string, unknown>) {
     stock: entier(p.stock, 0, 100000, 0),
     seuil_alerte: entier(p.seuil_alerte, 0, 10000, 12),
     image_url: texte(p.image_url, 1000),
+    ...(p.prix_pro !== undefined ? {
+      // Prix professionnel HT (vide = cuvée non proposée aux pros)
+      prix_pro_cents: String(p.prix_pro ?? '').trim() === '' ? null : Math.max(0, Math.round(Number(String(p.prix_pro).replace(',', '.')) * 100)) || null,
+      fiche_technique_url: texte(p.fiche_technique_url, 1000),
+    } : {}),
     actif: p.actif !== false,
     ordre: entier(p.ordre, 0, 10000, 0),
     updated_at: new Date().toISOString(),
@@ -215,6 +230,44 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         console.error('stripe_connecter', err)
         return json({ error: messageStripe(err) }, 502)
+      }
+
+      case 'pro_statut': {
+        const statut = String(body.statut)
+        if (!['valide', 'refuse', 'revoque'].includes(statut)) return json({ error: 'Statut invalide' }, 400)
+        const { data: pro, error } = await supabaseAdmin.from('pros')
+          .update({ statut, ...(statut === 'valide' ? { valide_at: new Date().toISOString() } : { acces_hash: null, acces_expire_at: null }) })
+          .eq('id', Number(body.id)).eq('client_id', client.id).select().single()
+        if (error || !pro) return json({ error: error?.message || 'Professionnel introuvable' }, 404)
+        let mail = false
+        if (statut === 'valide') {
+          const jeton = await nouvelAcces(pro.id)
+          await sendMail(pro.email, `Votre accès professionnel — ${client.nom_domaine}`,
+            mailAccesPro(client.nom_domaine, pro.nom, lienAcces(siteBase(client), jeton), true),
+            { fromName: client.nom_domaine, replyTo: (client.boutique_config as BoutiqueConfig)?.email_notif || client.email_contact })
+          mail = true
+        }
+        return json({ pro: { ...pro, acces_hash: undefined }, mail_envoye: mail })
+      }
+
+      case 'pro_renvoyer_lien': {
+        const { data: pro } = await supabaseAdmin.from('pros').select('id, email, nom, statut')
+          .eq('id', Number(body.id)).eq('client_id', client.id).single()
+        if (!pro || pro.statut !== 'valide') return json({ error: "Ce professionnel n'est pas validé" }, 400)
+        const jeton = await nouvelAcces(pro.id)
+        await sendMail(pro.email, `Votre accès professionnel — ${client.nom_domaine}`,
+          mailAccesPro(client.nom_domaine, pro.nom, lienAcces(siteBase(client), jeton), false), { fromName: client.nom_domaine })
+        return json({ ok: true, email: pro.email })
+      }
+
+      case 'demande_pro_statut': {
+        const statut = String(body.statut)
+        if (!['nouvelle', 'traitee', 'annulee'].includes(statut)) return json({ error: 'Statut invalide' }, 400)
+        const { data, error } = await supabaseAdmin.from('pro_demandes')
+          .update({ statut, traitee_at: statut === 'traitee' ? new Date().toISOString() : null })
+          .eq('id', Number(body.id)).eq('client_id', client.id).select('*, pros(entreprise, nom, email, telephone)').single()
+        if (error || !data) return json({ error: error?.message || 'Demande introuvable' }, 404)
+        return json({ demande: data })
       }
 
       case 'publier': {
