@@ -43,5 +43,7 @@ Aujourd'hui : la boutique est en **mode test** ; les abonnements utilisent encor
 ## Tests restant à faire (mode test, avant le lancement)
 - [ ] Boutique : terminer l'inscription Stripe du domaine de démo, achat avec la carte `4242 4242 4242 4242`,
       vérifier commande, stock, e-mails, expédition.
+- [ ] Espace pro : demande d'accès depuis `professionnels.html`, validation dans Ma boutique › Professionnels,
+      ouverture du lien reçu par e-mail, envoi d'une demande de commande et d'échantillons.
 - [ ] Abonnements : passer `STRIPE_SECRET_KEY` sur la clé de test + `STRIPE_WEBHOOK_SECRET` sur le webhook
       de test « abonnements-la-gabare » (déjà créé), puis tester un lien de paiement.
