@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Checklist de lancement complète — La Gabare</title>
+<style>
+  @page { size: A4; margin: 15mm 14mm 17mm; }
+  :root { --navy:#2e3e50; --gold:#d4ae3c; --gold-d:#9a7a2c; --line:#e3e6ea; --red:#c0392b; --green:#2f7d4f; --blue:#2c5d8a; }
+  body { margin:0; color:var(--navy); font-family: Helvetica, Arial, sans-serif; font-size:9.6pt; line-height:1.42; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .hero { background:var(--navy); color:#fff; padding:9mm 10mm 7mm; border-bottom:4px solid var(--gold); margin-bottom:5mm; }
+  .hero h1 { margin:0 0 2mm; font-size:22pt; }
+  .hero p { margin:0; color:var(--gold); text-transform:uppercase; letter-spacing:1.1px; font-size:9pt; }
+  .intro { display:grid; grid-template-columns:1fr 1fr; gap:4mm; margin-bottom:4mm; }
+  .boite { border:1px solid var(--line); border-radius:4px; padding:3.5mm 4.5mm; background:#fafbfc; }
+  .boite h3 { margin:0 0 1.5mm; font-size:10.5pt; }
+  .boite ol, .boite ul { margin:0; padding-left:5mm; }
+  .alerte { border-left:5px solid var(--red); background:#fdf3f2; padding:3mm 4.5mm; border-radius:3px; margin-bottom:4mm; }
+  .alerte b { color:var(--red); }
+  h2 { font-size:12pt; text-transform:uppercase; margin:6mm 0 2.5mm; padding-bottom:1.3mm; border-bottom:2px solid var(--gold); break-after:avoid; }
+  h2 small { font-size:8.5pt; color:#7a838d; text-transform:none; font-weight:normal; margin-left:2mm; }
+  ul.check { list-style:none; padding:0; margin:0; }
+  ul.check li { position:relative; padding:1.4mm 0 1.4mm 7.5mm; border-bottom:1px solid var(--line); break-inside:avoid; }
+  ul.check li::before { content:""; position:absolute; left:0; top:2mm; width:3.4mm; height:3.4mm; border:1.3px solid var(--navy); border-radius:1px; }
+  .qui { display:inline-block; font-size:7.3pt; font-weight:bold; letter-spacing:.4px; padding:.2mm 1.6mm; border-radius:2px; margin-right:1.5mm; vertical-align:1px; }
+  .toi { background:#eef2f7; color:var(--blue); }
+  .claude { background:#eaf5ee; color:var(--green); }
+  .ext { background:#f7f0e3; color:var(--gold-d); }
+  .note { color:#6b7480; font-size:8.6pt; }
+  code { font-family: Consolas, monospace; font-size:8.4pt; background:#f3f4f6; padding:.2mm 1mm; border-radius:2px; word-break:break-all; }
+  .prio { color:var(--red); font-weight:bold; }
+  table { width:100%; border-collapse:collapse; font-size:9pt; margin:1mm 0 2mm; }
+  th { background:var(--navy); color:#fff; text-align:left; padding:1.8mm 2.5mm; font-size:8pt; }
+  td { padding:1.8mm 2.5mm; border-bottom:1px solid var(--line); vertical-align:top; }
+  section { break-inside:auto; }
+  .pied { margin-top:7mm; color:#8a929c; font-size:8pt; border-top:1px solid var(--line); padding-top:2mm; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Checklist de lancement complète</h1>
+  <p>La Gabare · agence web &amp; communication pour domaines viticoles · toutes les tâches, dans l'ordre</p>
+</div>
+
+<div class="intro">
+  <div class="boite">
+    <h3>L'ordre à suivre</h3>
+    <ol>
+      <li>Créer l'entreprise (parties 1 à 3)</li>
+      <li>Mettre l'identité légale partout (partie 4)</li>
+      <li>Passer la technique en réel (parties 5 à 9)</li>
+      <li>Nettoyer et tester (parties 10 et 11)</li>
+      <li>Lancer la prospection (partie 13)</li>
+    </ol>
+  </div>
+  <div class="boite">
+    <h3>Légende</h3>
+    <ul style="list-style:none;padding:0">
+      <li><span class="qui toi">TOI</span> à faire par toi (compte, signature, paiement)</li>
+      <li><span class="qui claude">CLAUDE</span> Claude peut le faire avec toi</li>
+      <li><span class="qui ext">PRO</span> avec un professionnel (comptable, assureur, juriste)</li>
+    </ul>
+    <p class="note" style="margin:1.5mm 0 0">Les points juridiques et fiscaux sont des repères : fais-les valider par un expert-comptable.</p>
+  </div>
+</div>
+
+<div class="alerte"><b>Jusqu'au lancement :</b> ne génère <b>aucun lien de paiement d'abonnement</b> depuis le dashboard (il encaisserait de vrais euros). La boutique des domaines est en mode test, tout le reste peut être utilisé.</div>
+
+<h2>1. Créer l'entreprise <small>1 à 3 semaines</small></h2>
+<ul class="check">
+  <li><span class="qui ext">PRO</span>Choisir le statut avec un expert-comptable : micro-entreprise (simple, plafond de chiffre d'affaires) ou société (SASU / EURL : plus crédible, TVA, possibilité d'associés). Avec des abonnements mensuels récurrents, comparer les deux sur 3 ans.</li>
+  <li><span class="qui toi">TOI</span>Vérifier que le nom « La Gabare » est libre (INPI, recherche de marques) et sur Google / registres d'entreprises.</li>
+  <li><span class="qui toi">TOI</span>Option : déposer la marque « La Gabare » à l'INPI (classes services de création de sites et de communication).</li>
+  <li><span class="qui toi">TOI</span>Société seulement : rédiger les statuts, ouvrir un compte de dépôt du capital, publier l'annonce légale.</li>
+  <li><span class="qui toi">TOI</span>Déclarer l'entreprise sur le guichet unique (formalites.entreprises.gouv.fr) avec le code d'activité adapté (création de sites, conseil en communication).</li>
+  <li><span class="qui toi">TOI</span>Recevoir SIRET / SIREN (et Kbis pour une société), numéro de TVA intracommunautaire si assujetti.</li>
+  <li><span class="qui toi">TOI</span>Créer l'espace professionnel sur impots.gouv.fr et l'espace URSSAF.</li>
+</ul>
+
+<h2>2. Banque, assurance, fiscalité, comptabilité</h2>
+<ul class="check">
+  <li><span class="qui toi">TOI</span>Ouvrir un compte bancaire professionnel (obligatoire pour une société, recommandé en micro) et récupérer l'IBAN.</li>
+  <li><span class="qui toi">TOI</span>Souscrire une <b>assurance responsabilité civile professionnelle</b> couvrant la création de sites et la gestion de contenus (erreur, panne, perte de données d'un client).</li>
+  <li><span class="qui ext">PRO</span>Régime de TVA : franchise en base ou TVA à facturer (vérifier le seuil en vigueur). Adapter les prix « HT » du site en conséquence (mention « TVA non applicable, art. 293 B du CGI » en franchise).</li>
+  <li><span class="qui ext">PRO</span>Choisir un outil de facturation conforme et préparer la <b>facturation électronique</b> (réception obligatoire pour toutes les entreprises depuis le calendrier 2026, émission ensuite : à vérifier avec le comptable).</li>
+  <li><span class="qui toi">TOI</span>Mettre en place la numérotation des factures, le modèle de devis et de facture (mentions obligatoires : SIRET, TVA, conditions de paiement, pénalités de retard, indemnité forfaitaire de 40 €).</li>
+  <li><span class="qui toi">TOI</span>Organiser la compta : expert-comptable ou outil en ligne, rapprochement bancaire mensuel, conservation des justificatifs.</li>
+  <li><span class="qui toi">TOI</span>Lister les abonnements de l'agence à passer au nom de l'entreprise : Hostinger, Vercel, Supabase, Stripe, Anthropic, nom de domaine, e-mail.</li>
+</ul>
+
+<h2>3. Juridique et documents commerciaux</h2>
+<ul class="check">
+  <li><span class="qui ext">PRO</span><b>CGV de La Gabare</b> à mettre à jour : packs, abonnements (engagement 12 mois, préavis 2 mois, remise annuelle 10 %), échéancier 40 / 30 / 30, propriété du site et du code, ce que La Gabare n'encaisse jamais (ventes du domaine via Stripe Connect).</li>
+  <li><span class="qui claude">CLAUDE</span>Contrat de prestation (création de site) et contrat d'abonnement (communication), signés par le client avant le premier paiement.</li>
+  <li><span class="qui ext">PRO</span><b>Contrat de sous-traitance RGPD</b> (annexe aux CGV) : La Gabare traite des données pour le compte des domaines (commandes, clients, pros, newsletters).</li>
+  <li><span class="qui claude">CLAUDE</span>Registre des traitements RGPD de l'agence (leads, prospection, clients) et politique de confidentialité à jour (prestataires : Supabase, Vercel, Hostinger, Stripe, Anthropic, n8n).</li>
+  <li><span class="qui ext">PRO</span>Prospection par e-mail auprès de professionnels : vérifier les règles (intérêt légitime, lien de désinscription, base de 1 206 prospects d'origine publique).</li>
+  <li><span class="qui claude">CLAUDE</span>Modèle de CGV de vente de vin pour les domaines (rétractation 14 jours, livraison, vente interdite aux mineurs, casse) à fournir avec chaque Pack Pro.</li>
+  <li><span class="qui claude">CLAUDE</span>Fiche « obligations du vigneron » pour la vente à distance (douanes, capsules / documents d'accompagnement, loi Évin) à remettre en formation.</li>
+</ul>
+
+<h2>4. Identité légale partout</h2>
+<ul class="check">
+  <li><span class="qui claude">CLAUDE</span>la-gabare.fr › <b>mentions légales</b> : raison sociale, forme, SIRET, RCS, capital, TVA, adresse, directeur de publication, hébergeur (Hostinger) et dashboard (Vercel).</li>
+  <li><span class="qui claude">CLAUDE</span>la-gabare.fr › CGV et politique de confidentialité : nouvelles versions de la partie 3.</li>
+  <li><span class="qui claude">CLAUDE</span>Remplacer l'adresse de contact personnelle (<code>louisbruz50@gmail.com</code>) par l'adresse professionnelle (<code>contact@la-gabare.fr</code>) sur le site, dans les e-mails et dans le plugin.</li>
+  <li><span class="qui toi">TOI</span>Créer la fiche <b>Google Business Profile</b> de La Gabare et la page LinkedIn.</li>
+  <li><span class="qui claude">CLAUDE</span>Mettre à jour le PDF des offres et la checklist avec les mentions légales.</li>
+</ul>
+
+<h2>5. Stripe en mode réel <small>≈ 30 min</small></h2>
+<ul class="check">
+  <li><span class="qui toi">TOI</span>Compléter le compte Stripe réel « La gabare » : SIRET, IBAN pro, identité du dirigeant.</li>
+  <li><span class="qui toi">TOI</span><b>Connect</b> en mode réel : « Plateforme », « Vos commerçants collectent directement les paiements », comptes Standard, profil de plateforme, accepter les conditions.</li>
+  <li><span class="qui claude">CLAUDE</span>Webhook <b>abonnements</b> (« Votre compte ») : <code>https://admin.la-gabare.fr/api/stripe-webhook</code> — <code>checkout.session.completed</code>.</li>
+  <li><span class="qui claude">CLAUDE</span>Webhook <b>boutique</b> (« Comptes connectés ») : <code>https://admin.la-gabare.fr/api/stripe-connect-webhook</code> — <code>checkout.session.completed</code>, <code>async_payment_succeeded</code>, <code>expired</code>, <code>async_payment_failed</code>.</li>
+  <li><span class="qui toi">TOI</span>Activer les reçus Stripe, le logo et la couleur La Gabare sur les pages de paiement.</li>
+</ul>
+
+<h2>6. Vercel (admin.la-gabare.fr)</h2>
+<table>
+  <tr><th>Variable</th><th>Valeur au lancement</th><th>Qui</th></tr>
+  <tr><td><code>STRIPE_SECRET_KEY</code></td><td>clé réelle <code>sk_live_…</code> (abonnements)</td><td>Toi</td></tr>
+  <tr><td><code>STRIPE_WEBHOOK_SECRET</code></td><td><code>whsec_…</code> du webhook abonnements réel</td><td>Toi</td></tr>
+  <tr><td><code>STRIPE_BOUTIQUE_SECRET_KEY</code></td><td>clé réelle <code>sk_live_…</code> (boutique)</td><td>Toi</td></tr>
+  <tr><td><code>STRIPE_CONNECT_WEBHOOK_SECRET</code></td><td><code>whsec_…</code> du webhook boutique réel</td><td>Toi</td></tr>
+  <tr><td><code>AGENCE_NOTIF_EMAIL</code></td><td>adresse qui reçoit les nouveaux leads et briefs</td><td>Toi</td></tr>
+</table>
+<ul class="check">
+  <li><span class="qui toi">TOI</span>Redeploy après les changements, puis attendre « Ready ».</li>
+  <li><span class="qui toi">TOI</span>Choisir un <b>mot de passe fort</b> pour le dashboard (<code>ADMIN_PASSWORD</code> / <code>PROSPECTION_PASSWORD</code>) et le mettre dans un gestionnaire de mots de passe.</li>
+  <li><span class="qui toi">TOI</span>Passer le projet Vercel au nom de l'entreprise (facturation, équipe).</li>
+</ul>
+
+<h2>7. n8n sur un serveur</h2>
+<ul class="check">
+  <li><span class="qui toi">TOI</span>Louer un serveur (VPS Hostinger ou n8n Cloud). Aujourd'hui n8n tourne sur ton PC : PC éteint = plus de contenus, newsletters, posts ni relances.</li>
+  <li><span class="qui claude">CLAUDE</span>Installer n8n, importer les 6 workflows actifs (sauvegarde dans <code>la-gabare-dashboard/n8n/sauvegardes/</code>), mettre n8n à jour.</li>
+  <li><span class="qui toi">TOI</span>Recréer les credentials sur le serveur : Supabase, SMTP La gabare, Anthropic, Notion, <b>Admin La Gabare</b> (identifiant du dashboard).</li>
+  <li><span class="qui claude">CLAUDE</span>Vérifier une exécution de chaque workflow, puis arrêter le n8n local.</li>
+  <li><span class="qui toi">TOI</span>Supprimer définitivement les 38 workflows archivés et les 11 credentials inutiles.</li>
+</ul>
+
+<h2>8. Supabase</h2>
+<ul class="check">
+  <li><span class="qui toi">TOI</span>Passer le projet en offre payante au lancement : sauvegardes automatiques quotidiennes et pas de mise en pause pour inactivité.</li>
+  <li><span class="qui claude">CLAUDE</span>Vérifier les conseils de sécurité de Supabase (Security Advisor) et les politiques des 27 tables.</li>
+  <li><span class="qui toi">TOI</span>Activer l'authentification à deux facteurs sur Supabase, Vercel, Stripe, Hostinger, GitHub et n8n.</li>
+</ul>
+
+<h2>9. Hostinger</h2>
+<ul class="check">
+  <li><span class="qui toi">TOI</span>Supprimer les 7 sites de test <code>*.hostingersite.com</code> (garder <b>la-gabare.fr</b>).</li>
+  <li><span class="qui toi">TOI</span>Vérifier la boîte <code>contact@la-gabare.fr</code> (SPF, DKIM, DMARC) pour que les e-mails aux prospects et aux clients n'arrivent pas en spam.</li>
+  <li><span class="qui toi">TOI</span>Vérifier le renouvellement automatique du nom de domaine et de l'hébergement.</li>
+</ul>
+
+<h2>10. Nettoyage</h2>
+<ul class="check">
+  <li><span class="qui claude">CLAUDE</span>Supabase : supprimer le client n° 17 « Domaine Moreau (démo) », ses cuvées et commandes, l'utilisateur <code>louisbruz50+demo@gmail.com</code>, le lead de test n° 22 et son brief n° 7.</li>
+  <li><span class="qui toi">TOI</span>Stripe (test) : supprimer le webhook en double de l'environnement de test si inutile, et les comptes connectés de test.</li>
+  <li><span class="qui toi">TOI</span>Bureau : supprimer « mdp outlook gabare.txt » ; trier « Archives La Gabare (2026-10-16) » quand tout fonctionne.</li>
+  <li><span class="qui claude">CLAUDE</span>Template Pro : retirer les pages de démonstration (cuvées Domaine Moreau) avant de l'utiliser pour un client.</li>
+</ul>
+
+<h2>11. Tests avant le lancement <small>mode test Stripe</small></h2>
+<ul class="check">
+  <li><span class="qui claude">CLAUDE</span><b>Boutique</b> : inscription Stripe du domaine de démo, achat avec la carte <code>4242 4242 4242 4242</code>, commande, stock, e-mails, expédition.</li>
+  <li><span class="qui claude">CLAUDE</span><b>Espace pro</b> : demande d'accès, validation dans Ma boutique › Professionnels, lien reçu par e-mail, demande de commande et d'échantillons.</li>
+  <li><span class="qui claude">CLAUDE</span><b>Abonnements</b> : clés de test dans Vercel + webhook de test « abonnements-la-gabare », lien de paiement, client activé, invitation à l'espace client.</li>
+  <li><span class="qui claude">CLAUDE</span><b>Leads</b> : formulaire Commander → mail de prise de contact, notification agence, brief détaillé relié au lead, relance après 5 jours.</li>
+  <li><span class="qui claude">CLAUDE</span><b>Contenu</b> : génération du plan éditorial, validation par le client, publication d'un article sur le site via <code>lagabare.php</code>.</li>
+  <li><span class="qui claude">CLAUDE</span>Vérifier tous les e-mails sur mobile et dans Gmail / Outlook (pas de spam).</li>
+</ul>
+
+<h2>12. Fonctions à construire</h2>
+<ul class="check">
+  <li><span class="qui claude">CLAUDE</span><span class="prio">Avant de vendre un Premium :</span> sommelier IA (accords mets-vins, réponses aux visiteurs).</li>
+  <li><span class="qui claude">CLAUDE</span><span class="prio">Avant de vendre un Premium :</span> réservation de visites avec acompte Stripe et rappels automatiques.</li>
+  <li><span class="qui claude">CLAUDE</span><span class="prio">Avant de vendre un Premium :</span> recommandations de cuvées, fiches produits et traductions générées par IA.</li>
+  <li><span class="qui claude">CLAUDE</span>Factures PDF automatiques des commandes de la boutique (numérotation continue).</li>
+  <li><span class="qui claude">CLAUDE</span>Étiquettes d'expédition (Boxtal / Sendcloud) et codes promo dans Ma boutique.</li>
+  <li><span class="qui claude">CLAUDE</span>Créateur de projet du dashboard : générer aussi <code>boutique-publish.php</code> avec le jeton du client.</li>
+</ul>
+
+<h2>13. Commercial et lancement</h2>
+<ul class="check">
+  <li><span class="qui claude">CLAUDE</span>Préparer un site de démonstration en ligne (Domaine Moreau) pour les rendez-vous : vitrine, boutique, espace pro.</li>
+  <li><span class="qui claude">CLAUDE</span>Kit de rendez-vous : PDF des offres, phrases clés, objections fréquentes, démo de l'espace client.</li>
+  <li><span class="qui toi">TOI</span>Définir l'objectif des 3 premiers mois (nombre de rendez-vous, de Packs Pro, d'abonnements Réserve).</li>
+  <li><span class="qui claude">CLAUDE</span>Campagne de prospection depuis le module Prospection (séquences d'e-mails, relances, suivi).</li>
+  <li><span class="qui toi">TOI</span>Premiers clients : offre de lancement éventuelle, demande d'avis Google et de témoignage après livraison.</li>
+  <li><span class="qui claude">CLAUDE</span>Contenus de La Gabare : 1 article par mois sur le blog, posts LinkedIn / Instagram.</li>
+</ul>
+
+<h2>14. Pour chaque nouveau client</h2>
+<ul class="check">
+  <li><span class="qui toi">TOI</span>Devis signé, contrat, premier versement (40 %) via un lien de paiement du dashboard.</li>
+  <li><span class="qui toi">TOI</span>Dashboard › Créateur de site : fiche client complète, domaine exact, pack, génération du dossier client.</li>
+  <li><span class="qui claude">CLAUDE</span><code>/recherche-client</code> → DA dans <b>Claude Design</b> (export dans <code>charte/da/</code>) → <code>/creer-site</code>.</li>
+  <li><span class="qui toi">TOI</span>Maquette validée par le client (deuxième versement, 30 %).</li>
+  <li><span class="qui toi">TOI</span>Mise en ligne sur Hostinger, fiche client : <code>boutique_active</code> (Pro / Premium).</li>
+  <li><span class="qui toi">TOI</span>Formation : connexion à l'espace client, Stripe du vigneron, cuvées et prix pros, publication de la boutique, validation des pros.</li>
+  <li><span class="qui toi">TOI</span>Dernier versement (30 %) et lancement de l'abonnement.</li>
+</ul>
+
+<h2>15. Après le lancement</h2>
+<ul class="check">
+  <li><span class="qui claude">CLAUDE</span>Mettre à jour Next.js (version 14 → 16) de l'admin, avec tests.</li>
+  <li><span class="qui toi">TOI</span>Chaque mois : vérifier les sauvegardes (Supabase, sites Hostinger, n8n) et les paiements Stripe.</li>
+  <li><span class="qui claude">CLAUDE</span>Chaque trimestre : audit de sécurité (dépendances, accès, clés) et du référencement de la-gabare.fr.</li>
+  <li><span class="qui toi">TOI</span>Suivre les indicateurs : leads, taux de signature, chiffre d'affaires mensuel récurrent, résiliations.</li>
+</ul>
+
+<p class="pied">La Gabare · Document interne · Octobre 2026 · généré à partir de l'audit du 16/10/2026</p>
+</body>
+</html>
