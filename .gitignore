@@ -20,3 +20,6 @@ next-env.d.ts
 # verificateur : donnees locales
 tools/verificateur/verificateur-etat.json
 tools/verificateur/rapport-verification.csv
+
+# sauvegardes n8n : peuvent contenir des données sensibles
+n8n/sauvegardes/

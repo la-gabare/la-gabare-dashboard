@@ -348,9 +348,9 @@ export async function POST(request: NextRequest) {
     )
 
     // Récupérer le domaine depuis les données du client
-    const clientData = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/clients?id=eq.${client_id}`, {
-      headers: { 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
-    }).then(r => r.json()).catch(() => [])
+    const { data: clientData } = client_id
+      ? await supabaseAdmin.from('clients').select('*').eq('id', client_id).limit(1)
+      : { data: [] as Record<string, any>[] }
 
     const domainName = clientData?.[0]?.site_url || clientData?.[0]?.site || clientData?.[0]?.nom_domaine || client_name
     const profileData = clientData?.[0]?.profil_client_complet as Record<string, any> || {}

@@ -6,7 +6,7 @@ async function ensureBucketExists(bucketName: string) {
   try {
     const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/bucket`
     const headers = {
-      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      'Authorization': `Bearer ${process.env.GABARE_SERVICE_ROLE_KEY}`,
       'Content-Type': 'application/json',
     }
 
