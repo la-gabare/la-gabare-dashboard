@@ -7,6 +7,7 @@ import { Client, Article, Post, PlanGeneration, MailHebdoRequest } from '@/lib/t
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 import EcheancierPanel from '@/components/EcheancierPanel'
 import DevisPanel from '@/components/DevisPanel'
+import ProjetPanel from '@/components/ProjetPanel'
 import ClientEditModal from '@/components/ClientEditModal'
 import { ClientEditFormInline, ClientProfileDisplay } from '@/components/ClientFormComplet'
 import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
@@ -280,6 +281,12 @@ export default function ClientDetailPage() {
       <DevisPanel client={client} onChange={() => setVersionPaiement((v) => v + 1)} />
 
       <EcheancierPanel key={versionPaiement} client={client} />
+
+      <ProjetPanel key={`projet-${versionPaiement}`} client={client} onChange={async () => {
+        const [c] = await fetchAdminData<Client>('clients', { id })
+        if (c) setClient(c)
+        setVersionPaiement((v) => v + 1)
+      }} />
 
       <PaymentLinkGenerator client={client} />
 
