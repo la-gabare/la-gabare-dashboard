@@ -290,7 +290,8 @@ export async function POST(request: NextRequest) {
       fs.mkdirSync(projectDir, { recursive: true })
     }
 
-    const subDirs = ['site', 'images', 'assets']
+    // Méthode La Gabare : recherche client → direction artistique (Claude Design) → construction selon le pack
+    const subDirs = ['site', 'images', 'assets', 'recherche', 'charte/da', 'legal']
     subDirs.forEach(dir => {
       const dirPath = path.join(projectDir, dir)
       if (!fs.existsSync(dirPath)) {
@@ -309,26 +310,33 @@ export async function POST(request: NextRequest) {
     // Écrire les documents légaux
     if (legalDocs) {
       fs.writeFileSync(
-        path.join(projectDir, 'mentions-legales.txt'),
+        path.join(projectDir, 'legal', 'mentions-legales.txt'),
         legalDocs.mentions_legales || ''
       )
       fs.writeFileSync(
-        path.join(projectDir, 'cgv.txt'),
+        path.join(projectDir, 'legal', 'cgv.txt'),
         legalDocs.cgv || ''
       )
       fs.writeFileSync(
-        path.join(projectDir, 'politique-cookies.txt'),
+        path.join(projectDir, 'legal', 'politique-cookies.txt'),
         legalDocs.politique_cookies || ''
       )
       fs.writeFileSync(
-        path.join(projectDir, 'politique-confidentialite.txt'),
+        path.join(projectDir, 'legal', 'politique-confidentialite.txt'),
         legalDocs.politique_confidentialite || ''
       )
       fs.writeFileSync(
-        path.join(projectDir, 'cgu.txt'),
+        path.join(projectDir, 'legal', 'cgu.txt'),
         legalDocs.cgu || ''
       )
     }
+
+    // Récupérer le domaine depuis les données du client
+    const { data: clientData } = client_id
+      ? await supabaseAdmin.from('clients').select('*').eq('id', client_id).limit(1)
+      : { data: [] as Record<string, any>[] }
+    const fiche = clientData?.[0] || {}
+    const packSite = String(fiche.pack_site || 'essentiel').toLowerCase()
 
     const configFile = {
       client_name,
@@ -336,25 +344,40 @@ export async function POST(request: NextRequest) {
       project_slug,
       created_at: new Date().toISOString(),
       chat_name: `[CLIENT] ${client_name} - Création site`,
+      pack_site: packSite,
+      abonnement: fiche.abonnement || null,
+      domaine: fiche.domaine || null,
+      boutique: packSite === 'pro' || packSite === 'premium',
+      espace_pro: packSite === 'pro' || packSite === 'premium',
+      etapes: [
+        '1. Recherche client → recherche/ (commande /recherche-client)',
+        '2. Direction artistique avec Claude Design → charte/da/',
+        `3. Construction du site selon le pack ${packSite} → site/ (commande /creer-site)`,
+        '4. Mentions légales, CGV, confidentialité → legal/',
+      ],
       files: {
         prompt_vitrine: 'prompt-vitrine.txt',
-        tutoriel: 'TUTORIEL - Mettre en ligne le site.pdf'
+        tutoriel: 'TUTORIEL - Mettre en ligne le site.pdf',
+        recherche: 'recherche/',
+        direction_artistique: 'charte/da/',
+        legal: 'legal/',
       }
     }
+
+    fs.writeFileSync(path.join(projectDir, 'recherche', 'LISEZ-MOI.txt'),
+      'Étape 1 — Résultats de la recherche client (domaine, cuvées, concurrents, photos existantes, ton).\n')
+    fs.writeFileSync(path.join(projectDir, 'charte', 'da', 'LISEZ-MOI.txt'),
+      'Étape 2 — Exports de Claude Design : palette, typographies, maquettes des pages clés.\n')
 
     fs.writeFileSync(
       path.join(projectDir, 'project-config.json'),
       JSON.stringify(configFile, null, 2)
     )
 
-    // Récupérer le domaine depuis les données du client
-    const { data: clientData } = client_id
-      ? await supabaseAdmin.from('clients').select('*').eq('id', client_id).limit(1)
-      : { data: [] as Record<string, any>[] }
 
     const domainName = clientData?.[0]?.site_url || clientData?.[0]?.site || clientData?.[0]?.nom_domaine || client_name
     const profileData = clientData?.[0]?.profil_client_complet as Record<string, any> || {}
-    const detectedDomain = profileData?.site_url || profileData?.domaine || clientData?.[0]?.site || domainName
+    const detectedDomain = fiche.domaine || profileData?.site_url || profileData?.domaine || clientData?.[0]?.site || domainName
 
     // Jeton de publication unique pour ce site, mémorisé sur la fiche client
     const publishToken = makeToken()

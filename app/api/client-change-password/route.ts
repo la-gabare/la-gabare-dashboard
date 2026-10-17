@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       ))
     }
 
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(client.user_id, {
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(result.userId!, {
       password: new_password,
     })
 

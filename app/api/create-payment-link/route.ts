@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   const { data: client, error: clientError } = await supabaseAdmin
     .from('clients')
-    .select('id, nom_domaine, email_contact')
+    .select('id, nom_domaine, email_contact, stripe_customer_id')
     .eq('id', client_id)
     .single()
 
@@ -35,10 +35,23 @@ export async function POST(req: NextRequest) {
     priceData.recurring = { interval: 'month' }
   }
 
+  // Un client Stripe par domaine : toutes ses factures (acompte, soldes, abonnement) apparaissent dans son espace client
+  let customerId: string | null = client.stripe_customer_id
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: client.email_contact || undefined,
+      name: client.nom_domaine,
+      metadata: { client_id: String(client.id) },
+    })
+    customerId = customer.id
+    await supabaseAdmin.from('clients').update({ stripe_customer_id: customerId }).eq('id', client.id)
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: type === 'abonnement' ? 'subscription' : 'payment',
     payment_method_types: ['card'],
-    customer_email: client.email_contact,
+    customer: customerId,
+    ...(type === 'abonnement' ? {} : { invoice_creation: { enabled: true } }),
     line_items: [{ price_data: priceData, quantity: 1 }],
     metadata: { client_id: String(client.id) },
     success_url: 'https://la-gabare.fr/merci-paiement.html',

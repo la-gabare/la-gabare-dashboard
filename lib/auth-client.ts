@@ -25,5 +25,5 @@ export async function getClientFromRequest(req: NextRequest) {
     return { error: 'No client linked to this account', status: 404 as const }
   }
 
-  return { client: clients[0] }
+  return { client: clients[0], userId: userData.user.id }
 }

@@ -28,14 +28,17 @@ export async function POST(req: NextRequest) {
     if (clientId) {
       const { data: client } = await supabaseAdmin
         .from('clients')
-        .update({ statut: 'actif' })
+        .update({
+          statut: 'actif',
+          ...(typeof session.customer === 'string' ? { stripe_customer_id: session.customer } : {}),
+        })
         .eq('id', clientId)
         .select('email_contact')
         .single()
 
       if (client?.email_contact) {
         await supabaseAdmin.auth.admin.inviteUserByEmail(client.email_contact, {
-          redirectTo: 'https://la-gabare.fr/espace-client.html',
+          redirectTo: 'https://la-gabare.fr/bienvenue.html',
         })
       }
     }

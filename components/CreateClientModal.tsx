@@ -5,30 +5,59 @@ import { Lead } from '@/lib/types'
 
 interface Props {
   lead: Lead
+  brief?: Record<string, unknown> | null
   onClose: () => void
   onCreated: () => void
 }
 
-const abonnementFromPack: Record<string, string> = {
-  Village: 'village',
-  Reserve: 'reserve',
-  'Grand Cru': 'grand_cru',
+const sansAccents = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+// Le lead porte le pack SITE demandé (Essentiel / Pro / Premium) ; l'abonnement n'apparaît que dans l'audit
+function packSiteDe(lead: Lead): string {
+  const p = sansAccents(lead.pack_demande || '')
+  return ['essentiel', 'pro', 'premium'].find((k) => p.includes(k)) || ''
 }
 
-export default function CreateClientModal({ lead, onClose, onCreated }: Props) {
+function abonnementDe(lead: Lead): string {
+  const t = sansAccents(`${lead.pack_demande || ''} ${lead.message || ''}`)
+  if (t.includes('grand cru')) return 'grand_cru'
+  if (t.includes('reserve')) return 'reserve'
+  return 'village'
+}
+
+// Nom de domaine web (sans https:// ni www.) à partir de l'URL du site actuel
+function domaineWeb(url: unknown): string {
+  const u = String(url || '').trim()
+  if (!u) return ''
+  try {
+    return new URL(u.startsWith('http') ? u : `https://${u}`).hostname.replace(/^www\./, '')
+  } catch {
+    return ''
+  }
+}
+
+const cibles: [string, string][] = [
+  ['cible_particuliers', 'particuliers'], ['cible_cavistes', 'cavistes'], ['cible_restaurants', 'restaurants'],
+  ['cible_export', 'export'], ['cible_professionnels', 'professionnels'],
+]
+
+export default function CreateClientModal({ lead, brief, onClose, onCreated }: Props) {
   const [loading, setLoading] = useState(false)
+  const b = (k: string) => (brief?.[k] ? String(brief[k]) : '')
   const [form, setForm] = useState({
-    nom_domaine: lead.domaine || '',
-    email_contact: lead.email || '',
-    appellation: lead.appellation || '',
+    nom_domaine: lead.domaine || b('nom_domaine'),
+    email_contact: lead.email || b('email'),
+    appellation: lead.appellation || b('appellation'),
     region: '',
     type_vin: '',
-    abonnement: abonnementFromPack[lead.pack_demande || ''] || 'village',
-    style: lead.style_visuel || '',
-    points_forts: '',
-    histoire: '',
-    public_cible: '',
-    tone_voix: '',
+    pack_site: packSiteDe(lead),
+    domaine: domaineWeb(lead.url || brief?.site_url),
+    abonnement: abonnementDe(lead),
+    style: lead.style_visuel || b('style_visuel'),
+    points_forts: b('positionnement'),
+    histoire: b('presentation'),
+    public_cible: cibles.filter(([k]) => brief?.[k] === true).map(([, l]) => l).join(', '),
+    tone_voix: b('messages_cles'),
   })
 
   const handleSubmit = async () => {
@@ -43,6 +72,9 @@ export default function CreateClientModal({ lead, onClose, onCreated }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          pack_site: form.pack_site || null,
+          domaine: form.domaine || null,
+          site_url: form.domaine ? `https://${form.domaine}` : null,
           statut: 'en_attente_paiement',
         }),
       })
@@ -75,6 +107,7 @@ export default function CreateClientModal({ lead, onClose, onCreated }: Props) {
         <p className="text-sm text-gray-500 mb-4">
           Le client sera créé avec le statut &laquo; en attente de paiement &raquo;. L&apos;accès à son espace personnel
           lui sera envoyé automatiquement une fois le paiement confirmé.
+          {brief && ' Les champs ont été pré-remplis avec son brief détaillé.'}
         </p>
 
         <div className="space-y-3">
@@ -115,6 +148,32 @@ export default function CreateClientModal({ lead, onClose, onCreated }: Props) {
                 type="text"
                 value={form.region}
                 onChange={(e) => setForm({ ...form, region: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500">Pack site</label>
+              <select
+                value={form.pack_site}
+                onChange={(e) => setForm({ ...form, pack_site: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value="">Aucun (abonnement seul)</option>
+                <option value="essentiel">Essentiel</option>
+                <option value="pro">Pro</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500">Nom de domaine du site</label>
+              <input
+                type="text"
+                placeholder="domaine-exemple.fr"
+                value={form.domaine}
+                onChange={(e) => setForm({ ...form, domaine: domaineWeb(e.target.value) || e.target.value.trim() })}
                 className="w-full px-3 py-2 border rounded-lg"
               />
             </div>

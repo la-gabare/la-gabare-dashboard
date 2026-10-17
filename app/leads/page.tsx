@@ -85,7 +85,7 @@ export default function LeadsPage() {
   const [expanded, setExpanded] = useState<number | null>(null)
   const [filter, setFilter] = useState<'tous' | 'site' | 'abonnement'>('tous')
   const [sending, setSending] = useState<number | null>(null)
-  const [clientLead, setClientLead] = useState<Lead | null>(null)
+  const [clientLead, setClientLead] = useState<DisplayLead | null>(null)
   const [briefs, setBriefs] = useState<Brief[]>([])
   const [briefOuvert, setBriefOuvert] = useState<Brief | null>(null)
 
@@ -328,6 +328,7 @@ export default function LeadsPage() {
       {clientLead && (
         <CreateClientModal
           lead={clientLead}
+          brief={briefDe(clientLead) || null}
           onClose={() => setClientLead(null)}
           onCreated={() => alert('Client créé (en attente de paiement) — visible dans /clients')}
         />
