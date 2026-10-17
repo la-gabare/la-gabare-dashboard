@@ -24,6 +24,8 @@ Aujourd'hui : la boutique est en **mode test** ; les abonnements utilisent encor
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` du webhook **abonnements réel** |
 | `STRIPE_BOUTIQUE_SECRET_KEY` | clé réelle `sk_live_…` (boutique) |
 | `STRIPE_CONNECT_WEBHOOK_SECRET` | `whsec_…` du webhook **boutique réel** |
+| `AGENCE_RAISON_SOCIALE`, `AGENCE_ADRESSE`, `AGENCE_SIRET` | identité de l'entreprise, affichée sur les devis |
+| `AGENCE_TVA_TAUX` | `20`, ou `0` en franchise de TVA (micro-entreprise : « TVA non applicable, art. 293 B du CGI ») |
 | `CRON_SECRET` | longue phrase au hasard (relances automatiques des paiements, déjà utilisable avant le lancement) |
 
 ## 3. Nettoyer la démo (Supabase)

@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react'
 import { Client } from '@/lib/types'
 
-const PRIX_PACKS: Record<string, number> = { essentiel: 1990, pro: 4490, premium: 6990 }
-
 const FORMULES = [
   { id: '3x', nom: 'En 3 fois — 40 % commande · 30 % maquette · 30 % mise en ligne' },
   { id: '2x', nom: 'En 2 fois — 50 % commande · 50 % mise en ligne' },
@@ -39,7 +37,7 @@ export default function EcheancierPanel({ client }: { client: Client }) {
   const pack = (client.pack_site || '').toLowerCase()
   const [echeances, setEcheances] = useState<Echeance[]>([])
   const [formule, setFormule] = useState(pack === 'essentiel' ? '2x' : '3x')
-  const [total, setTotal] = useState(String(PRIX_PACKS[pack] || ''))
+  const [total, setTotal] = useState('')
   const [remise, setRemise] = useState('0')
   const [envoyerPremier, setEnvoyerPremier] = useState(true)
   const [occupe, setOccupe] = useState(false)
@@ -83,11 +81,12 @@ export default function EcheancierPanel({ client }: { client: Client }) {
 
       {actives.length === 0 ? (
         <div className="space-y-3">
+          <p className="text-sm text-gray-500">Il se crée tout seul quand le client accepte son devis. À remplir ici seulement sans devis en ligne.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <select value={formule} onChange={(e) => setFormule(e.target.value)} className="md:col-span-2 px-3 py-2 border rounded-lg text-sm">
               {FORMULES.map((f) => <option key={f.id} value={f.id}>{f.nom}</option>)}
             </select>
-            <input type="number" placeholder="Total TTC €" value={total} onChange={(e) => setTotal(e.target.value)}
+            <input type="number" placeholder="Total à encaisser (TTC) €" value={total} onChange={(e) => setTotal(e.target.value)}
               className="px-3 py-2 border rounded-lg text-sm" />
           </div>
           {formule === '1x' && (

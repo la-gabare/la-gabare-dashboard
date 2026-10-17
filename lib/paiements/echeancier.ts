@@ -154,6 +154,15 @@ export async function marquerPayee(echeanceId: number, moyen: string) {
     .eq('id', echeanceId).neq('statut', 'paye').select().single()
   if (!e) return null // déjà payé (webhook reçu deux fois)
   await activerClient(e.client_id)
+  if (e.ordre === 1) {
+    // Mail d'accueil : contenus à fournir (import tardif pour éviter la dépendance circulaire avec devis.ts)
+    try {
+      const { envoyerAccueil } = await import('@/lib/paiements/devis')
+      await envoyerAccueil(e.client_id)
+    } catch (err) {
+      console.error("mail d'accueil", err)
+    }
+  }
   return e as Echeance
 }
 

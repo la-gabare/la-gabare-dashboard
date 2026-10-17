@@ -6,6 +6,7 @@ import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post, PlanGeneration, MailHebdoRequest } from '@/lib/types'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 import EcheancierPanel from '@/components/EcheancierPanel'
+import DevisPanel from '@/components/DevisPanel'
 import ClientEditModal from '@/components/ClientEditModal'
 import { ClientEditFormInline, ClientProfileDisplay } from '@/components/ClientFormComplet'
 import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
@@ -51,6 +52,7 @@ export default function ClientDetailPage() {
   const [articles, setArticles] = useState<Article[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [versionPaiement, setVersionPaiement] = useState(0)
   const [planDate, setPlanDate] = useState('')
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [creatingPlan, setCreatingPlan] = useState(false)
@@ -275,7 +277,9 @@ export default function ClientDetailPage() {
         </div>
       )}
 
-      <EcheancierPanel client={client} />
+      <DevisPanel client={client} onChange={() => setVersionPaiement((v) => v + 1)} />
+
+      <EcheancierPanel key={versionPaiement} client={client} />
 
       <PaymentLinkGenerator client={client} />
 
