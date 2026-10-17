@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post, PlanGeneration, MailHebdoRequest } from '@/lib/types'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
+import EcheancierPanel from '@/components/EcheancierPanel'
 import ClientEditModal from '@/components/ClientEditModal'
 import { ClientEditFormInline, ClientProfileDisplay } from '@/components/ClientFormComplet'
 import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
@@ -273,6 +274,8 @@ export default function ClientDetailPage() {
           </dl>
         </div>
       )}
+
+      <EcheancierPanel client={client} />
 
       <PaymentLinkGenerator client={client} />
 

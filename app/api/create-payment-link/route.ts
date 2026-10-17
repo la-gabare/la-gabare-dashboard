@@ -47,16 +47,27 @@ export async function POST(req: NextRequest) {
     await supabaseAdmin.from('clients').update({ stripe_customer_id: customerId }).eq('id', client.id)
   }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: type === 'abonnement' ? 'subscription' : 'payment',
-    payment_method_types: ['card'],
+  const params = {
+    mode: type === 'abonnement' ? 'subscription' as const : 'payment' as const,
     customer: customerId,
     ...(type === 'abonnement' ? {} : { invoice_creation: { enabled: true } }),
     line_items: [{ price_data: priceData, quantity: 1 }],
     metadata: { client_id: String(client.id) },
     success_url: 'https://la-gabare.fr/merci-paiement.html',
     cancel_url: 'https://la-gabare.fr/abonnement.html',
-  })
+  }
+  // Abonnement : carte ou prélèvement SEPA (si le prélèvement n'est pas activé sur Stripe, carte seule)
+  let session
+  try {
+    session = await stripe.checkout.sessions.create({
+      ...params,
+      payment_method_types: type === 'abonnement' ? ['card', 'sepa_debit'] : ['card'],
+    })
+  } catch (err) {
+    if (type !== 'abonnement') throw err
+    console.error('Prélèvement SEPA indisponible, carte seule :', err instanceof Error ? err.message : err)
+    session = await stripe.checkout.sessions.create({ ...params, payment_method_types: ['card'] })
+  }
 
   if (session.url && client.email_contact) {
     await sendMail(

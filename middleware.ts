@@ -13,6 +13,7 @@ const ROUTES_PUBLIQUES = [
   /^\/api\/pro\//,                    // espace professionnels des domaines (lien d'accès personnel)
   /^\/api\/client-[a-z-]+$/,          // espace client : authentifié par la session Supabase du client
   /^\/api\/stripe-webhook$/,
+  /^\/api\/cron\//,                   // tâches planifiées Vercel : protégées par CRON_SECRET
   /^\/api\/stripe-connect-webhook$/,
   /^\/api\/(google|meta)-oauth-callback$/,
   /^\/api\/publish-(article|post)$/,  // espace client

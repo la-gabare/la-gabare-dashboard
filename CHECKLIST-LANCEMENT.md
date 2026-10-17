@@ -9,7 +9,10 @@ Aujourd'hui : la boutique est en **mode test** ; les abonnements utilisent encor
 - [ ] **Connect** (mode réel) : activer, choisir « Plateforme » → « Vos commerçants collectent directement les paiements »,
       comptes **Standard**, remplir le profil de plateforme, accepter les conditions.
 - [ ] **Webhook abonnements** (mode réel, « Votre compte ») :
-      `https://admin.la-gabare.fr/api/stripe-webhook` — événement `checkout.session.completed`.
+      `https://admin.la-gabare.fr/api/stripe-webhook` — événements `checkout.session.completed`,
+      `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` (virements des sites).
+- [ ] **Moyens de paiement** (Paramètres › Moyens de paiement) : activer **Virement bancaire** (paiement des sites)
+      et **Prélèvement SEPA** (abonnements). Sans eux, les liens proposent la carte seule.
 - [ ] **Webhook boutique** (mode réel, « Comptes connectés ») :
       `https://admin.la-gabare.fr/api/stripe-connect-webhook` — événements `checkout.session.completed`,
       `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `checkout.session.async_payment_failed`.
@@ -21,6 +24,7 @@ Aujourd'hui : la boutique est en **mode test** ; les abonnements utilisent encor
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` du webhook **abonnements réel** |
 | `STRIPE_BOUTIQUE_SECRET_KEY` | clé réelle `sk_live_…` (boutique) |
 | `STRIPE_CONNECT_WEBHOOK_SECRET` | `whsec_…` du webhook **boutique réel** |
+| `CRON_SECRET` | longue phrase au hasard (relances automatiques des paiements, déjà utilisable avant le lancement) |
 
 ## 3. Nettoyer la démo (Supabase)
 - [ ] Supprimer le client n° 17 « Domaine Moreau (démo) » (et ses cuvées / commandes).
@@ -41,6 +45,8 @@ Aujourd'hui : la boutique est en **mode test** ; les abonnements utilisent encor
 4. Il ajoute ses cuvées et clique « Publier la boutique ».
 
 ## Tests restant à faire (mode test, avant le lancement)
+- [ ] Paiement du site : sur une fiche client test, créer un échéancier 40 / 30 / 30, payer le 1er versement
+      par carte `4242 4242 4242 4242` puis le 2e par virement (Stripe test : bouton « simuler un virement »).
 - [ ] Boutique : terminer l'inscription Stripe du domaine de démo, achat avec la carte `4242 4242 4242 4242`,
       vérifier commande, stock, e-mails, expédition.
 - [ ] Espace pro : demande d'accès depuis `professionnels.html`, validation dans Ma boutique › Professionnels,
