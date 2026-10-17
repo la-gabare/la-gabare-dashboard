@@ -213,6 +213,11 @@ export default function LeadsPage() {
                         <span className={`badge ${statutColors[lead.statut || 'reception']}`}>
                           {statutLabels[lead.statut || 'reception']}
                         </span>
+                        {lead.statut === 'rdv_pris' && lead.rdv_at && (
+                          <span className="block text-xs text-gray-500 mt-1">
+                            {new Date(lead.rdv_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {new Date(lead.created_at).toLocaleDateString('fr-FR')}

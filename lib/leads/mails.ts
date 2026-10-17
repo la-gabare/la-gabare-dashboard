@@ -24,6 +24,12 @@ export interface ProspectMail {
 export function mailPriseDeContact(p: ProspectMail): string {
   const pack = p.pack_demande ? ` (formule ${esc(p.pack_demande)})` : ''
   const lienBrief = `https://la-gabare.fr/formulaire-complet.html${p.lead_id ? `?lead_id=${p.lead_id}` : ''}`
+  // Pré-remplit Cal.com et y attache le lead : le webhook retrouve ainsi le prospect
+  const cal = new URLSearchParams()
+  if (p.nom) cal.set('name', p.nom)
+  if (p.email) cal.set('email', p.email)
+  if (p.lead_id) cal.set('metadata[lead_id]', String(p.lead_id))
+  const lienCal = `https://cal.com/la-gabare/appel-decouverte-la-gabare${cal.toString() ? `?${cal}` : ''}`
   const sans = "font-family:Arial,'Geist',sans-serif"
   const serif = "font-family:Georgia,'Cormorant Garamond',serif"
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
@@ -40,7 +46,7 @@ export function mailPriseDeContact(p: ProspectMail): string {
   <p style="margin:0 0 6px 0;${sans};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#B08D57;">Option 1</p>
   <p style="margin:0 0 14px 0;${serif};font-size:19px;color:#1A1310;">Réserver un appel de 20 minutes</p>
   <p style="margin:0 0 18px 0;${sans};font-size:14px;line-height:1.6;color:#4A3E37;">Le moyen le plus rapide pour qu'on comprenne bien votre projet et qu'on vous propose la formule adaptée.</p>
-  <a href="https://cal.com/la-gabare/appel-decouverte-la-gabare" style="display:inline-block;padding:12px 28px;background-color:#5A1226;color:#F5F2EC;${sans};font-size:14px;font-weight:600;text-decoration:none;">Réserver un créneau &rarr;</a>
+  <a href="${esc(lienCal)}" style="display:inline-block;padding:12px 28px;background-color:#5A1226;color:#F5F2EC;${sans};font-size:14px;font-weight:600;text-decoration:none;">Réserver un créneau &rarr;</a>
 </td></tr></table></td></tr>
 <tr><td style="padding:0 40px 36px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(26,19,16,0.14);"><tr><td style="padding:24px;">
   <p style="margin:0 0 6px 0;${sans};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#B08D57;">Option 2</p>
@@ -76,6 +82,20 @@ export async function notifierAgenceLead(l: Record<string, unknown>, mailEnvoye:
       ['Nom', l.nom], ['E-mail', l.email], ['Téléphone', l.tel], ['Domaine', l.domaine], ['Appellation', l.appellation],
       ['Pack', l.pack_demande], ['Budget', l.budget], ['Échéance', l.echeance], ['Besoins', l.besoins], ['Message', l.message],
       ['Mail de prise de contact', mailEnvoye ? 'envoyé automatiquement' : 'NON ENVOYÉ, à relancer depuis le dashboard'],
+    ]), { fromName: 'La Gabare — Leads', replyTo: (l.email as string) || undefined })
+}
+
+// Notification à l'agence : appel découverte réservé, reporté ou annulé sur Cal.com
+export async function notifierAgenceRdv(l: Record<string, unknown>, debut: string | null, quoi: 'nouveau' | 'reporte' | 'annule') {
+  if (!AGENCE) return
+  const quand = debut
+    ? new Date(debut).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', dateStyle: 'full', timeStyle: 'short' })
+    : null
+  const titre = { nouveau: 'RDV pris', reporte: 'RDV reporté', annule: 'RDV annulé' }[quoi]
+  await sendMail(AGENCE, `${titre} — ${l.domaine || l.nom || l.email}${quand ? ` · ${quand}` : ''}`,
+    tableau(titre, [
+      ['Quand', quand], ['Nom', l.nom], ['E-mail', l.email], ['Téléphone', l.tel], ['Domaine', l.domaine],
+      ['Pack', l.pack_demande], ['Besoins', l.besoins], ['Message', l.message],
     ]), { fromName: 'La Gabare — Leads', replyTo: (l.email as string) || undefined })
 }
 

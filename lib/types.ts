@@ -23,6 +23,7 @@ export interface Lead {
   slogan?: string
   type_demande?: string
   statut?: string
+  rdv_at?: string | null
 }
 
 export interface AuditGratuit {
