@@ -36,6 +36,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Webhook signature verification failed: ${message}` }, { status: 400 })
   }
 
+  // Fin d'abonnement (résiliation arrivée à échéance ou arrêt manuel dans Stripe)
+  if (event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object as Stripe.Subscription
+    const customer = typeof sub.customer === 'string' ? sub.customer : sub.customer.id
+    const { data: c } = await supabaseAdmin.from('clients')
+      .update({ statut: 'inactif', date_fin_abonnement: new Date().toISOString().slice(0, 10) })
+      .eq('stripe_customer_id', customer).select('id, nom_domaine').maybeSingle()
+    if (c) await notifierAgence(`Abonnement terminé — ${c.nom_domaine}`, `L'abonnement de ${c.nom_domaine} est arrivé à son terme : la fiche passe en « inactif ».`)
+    return NextResponse.json({ received: true })
+  }
+
   const types = ['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'checkout.session.async_payment_failed']
   if (!types.includes(event.type)) return NextResponse.json({ received: true })
 
@@ -66,6 +77,10 @@ export async function POST(req: NextRequest) {
   // Abonnement ou lien de paiement simple : activer le client une fois le paiement réellement reçu
   if (clientId && paye && event.type !== 'checkout.session.async_payment_failed') {
     await activerClient(clientId)
+    if (session.mode === 'subscription') {
+      await supabaseAdmin.from('clients').update({ date_debut_abonnement: new Date().toISOString().slice(0, 10) })
+        .eq('id', clientId).is('date_debut_abonnement', null)
+    }
   }
 
   return NextResponse.json({ received: true })
