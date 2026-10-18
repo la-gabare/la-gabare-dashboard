@@ -4,7 +4,7 @@ import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post, PlanGeneration, MailHebdoRequest } from '@/lib/types'
-import { CalendarPlus, ChevronDown, ChevronRight, Folder } from 'lucide-react'
+import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
 
 const abonnementLabels: Record<string, string> = {
   village: 'Village',
@@ -58,29 +58,6 @@ export default function ClientsPage() {
     }
     fetchClients()
   }, [])
-
-  const handleCreatePlan = async (client: Client) => {
-    try {
-      const res = await fetch('/api/plans-generation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: client.id,
-          date_debut: new Date().toISOString().slice(0, 10),
-        }),
-      })
-      if (res.ok) {
-        const created = await res.json()
-        setLastPlanCache((prev) => ({ ...prev, [client.id]: created }))
-        alert('Plan mis en file d\'attente pour ' + client.nom_domaine + '.')
-      } else {
-        const err = await res.json()
-        alert('Erreur: ' + err.error)
-      }
-    } catch (err) {
-      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
-    }
-  }
 
   const handleSendWeeklyEmail = async (client: Client, dateDebut: string, dateFin: string) => {
     try {
@@ -188,13 +165,6 @@ export default function ClientsPage() {
                             className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
                           >
                             {expandedClient === client.id ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                          </button>
-                          <button
-                            onClick={() => handleCreatePlan(client)}
-                            title="Créer un plan"
-                            className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
-                          >
-                            <CalendarPlus size={16} />
                           </button>
                         </td>
                       </tr>

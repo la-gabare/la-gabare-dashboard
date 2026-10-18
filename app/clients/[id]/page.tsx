@@ -54,9 +54,7 @@ export default function ClientDetailPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [versionPaiement, setVersionPaiement] = useState(0)
-  const [planDate, setPlanDate] = useState('')
   const [editModalOpen, setEditModalOpen] = useState(false)
-  const [creatingPlan, setCreatingPlan] = useState(false)
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({})
   const [expandedWeeks, setExpandedWeeks] = useState<Record<string, boolean>>({})
   const [lastPlan, setLastPlan] = useState<PlanGeneration | null>(null)
@@ -85,30 +83,6 @@ export default function ClientDetailPage() {
     fetchData()
   }, [id])
 
-  const handleCreatePlan = async () => {
-    setCreatingPlan(true)
-    try {
-      const res = await fetch('/api/plans-generation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: client!.id,
-          date_debut: planDate || new Date().toISOString().slice(0, 10),
-        }),
-      })
-      if (res.ok) {
-        const created = await res.json()
-        setLastPlan(created)
-        alert('Plan mis en file d\'attente : la génération démarrera sous peu (agent n8n toutes les 15 min).')
-      } else {
-        const err = await res.json()
-        alert('Erreur: ' + err.error)
-      }
-    } catch (err) {
-      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
-    }
-    setCreatingPlan(false)
-  }
 
   const handleSendWeeklyEmail = async (dateDebut: string, dateFin: string) => {
     try {
@@ -291,18 +265,10 @@ export default function ClientDetailPage() {
       <PaymentLinkGenerator client={client} />
 
       <div className="card">
-        <h2 className="text-xl font-bold mb-4">Plan éditorial</h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            type="date"
-            value={planDate}
-            onChange={(e) => setPlanDate(e.target.value)}
-            className="px-3 py-2 border rounded-lg"
-          />
-          <button onClick={handleCreatePlan} className="btn-primary" disabled={creatingPlan}>
-            {creatingPlan ? 'Envoi...' : 'Créer un plan'}
-          </button>
-        </div>
+        <h2 className="text-xl font-bold mb-1">Plan éditorial</h2>
+        <p className="text-sm text-gray-500">
+          Automatique : généré dès que l&apos;abonnement est actif (ou que la formule change), puis automatiquement tous les 30 jours.
+        </p>
         <div className="mt-3 text-sm text-gray-600 space-y-1">
           <p>
             Dernier plan généré :{' '}

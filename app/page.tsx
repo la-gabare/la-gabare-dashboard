@@ -28,7 +28,6 @@ export default function Home() {
   const [taches, setTaches] = useState<Tache[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [clientsSansPlan, setClientsSansPlan] = useState<Client[]>([])
-  const [creatingPlanFor, setCreatingPlanFor] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   const fetchTaches = async () => {
@@ -61,26 +60,6 @@ export default function Home() {
     fetchCounts()
     fetchTaches()
   }, [])
-
-  const handleCreatePlan = async (client: Client) => {
-    setCreatingPlanFor(client.id)
-    try {
-      const res = await fetch('/api/plans-generation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_id: client.id, date_debut: new Date().toISOString().slice(0, 10) }),
-      })
-      if (res.ok) {
-        setClientsSansPlan((prev) => prev.filter((c) => c.id !== client.id))
-      } else {
-        const err = await res.json()
-        alert('Erreur: ' + err.error)
-      }
-    } catch (err) {
-      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
-    }
-    setCreatingPlanFor(null)
-  }
 
   const updateStatut = async (id: number, statut: string) => {
     await fetch('/api/taches', {
@@ -134,13 +113,7 @@ export default function Home() {
                   <p className="font-medium">{c.nom_domaine}</p>
                   <p className="text-xs text-gray-500">{c.appellation} · {c.abonnement}</p>
                 </div>
-                <button
-                  onClick={() => handleCreatePlan(c)}
-                  disabled={creatingPlanFor === c.id}
-                  className="btn-primary text-sm"
-                >
-                  {creatingPlanFor === c.id ? 'Envoi...' : 'Créer un plan'}
-                </button>
+                <span className="text-xs text-gray-500">Plan automatique en attente</span>
               </div>
             ))}
           </div>

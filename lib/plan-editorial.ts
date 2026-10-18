@@ -3,12 +3,17 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // Demande un plan éditorial pour un client abonné : crée une ligne plans_generation « en_attente »,
 // que le workflow n8n « La Gabare — Agent de contenu mensuel » traite (vérification toutes les 15 min).
-// Pas de doublon : rien si une demande est déjà en attente ou si un plan a été créé il y a moins de 25 jours.
-export async function lancerPlanEditorial(clientId: number | string, origine: string) {
+// Pas de doublon : rien si une demande est déjà en attente ou si un plan a été créé il y a moins de `joursMin` jours.
+export async function lancerPlanEditorial(clientId: number | string, origine: string, joursMin = 25) {
   const { data: client } = await supabaseAdmin.from('clients').select('id, statut, abonnement').eq('id', clientId).single()
   if (!client || client.statut !== 'actif' || !client.abonnement) return null
+  // Activation depuis l'admin : l'abonnement démarre aujourd'hui (sert au rythme mensuel des plans)
+  if (origine === 'admin') {
+    await supabaseAdmin.from('clients').update({ date_debut_abonnement: new Date().toISOString().slice(0, 10) })
+      .eq('id', client.id).is('date_debut_abonnement', null)
+  }
 
-  const depuis = new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString()
+  const depuis = new Date(Date.now() - joursMin * 24 * 60 * 60 * 1000).toISOString()
   const { data: recents } = await supabaseAdmin.from('plans_generation').select('id, status, created_at')
     .eq('client_id', client.id).or(`status.eq.en_attente,created_at.gte.${depuis}`).limit(1)
   if (recents?.length) return null
