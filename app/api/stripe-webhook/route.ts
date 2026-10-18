@@ -75,6 +75,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
+  // Indemnité de résiliation anticipée payée : arrêt immédiat de l'abonnement (le webhook
+  // customer.subscription.deleted passe ensuite la fiche en « inactif »)
+  if (clientId && paye && session.metadata?.resiliation_anticipee) {
+    try { await stripe.subscriptions.cancel(session.metadata.resiliation_anticipee) } catch (e) { console.error('arrêt abonnement', e) }
+    const { data: c } = await supabaseAdmin.from('clients')
+      .update({ resiliation_demandee_at: new Date().toISOString(), date_fin_abonnement: new Date().toISOString().slice(0, 10), statut: 'inactif' })
+      .eq('id', clientId).select('nom_domaine, email_contact').single()
+    if (c?.email_contact) {
+      try {
+        await sendMail(c.email_contact, `Résiliation de votre abonnement — ${c.nom_domaine}`,
+          `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;"><p>Bonjour,</p>
+           <p>Votre règlement est bien reçu : votre abonnement est résilié à compter d'aujourd'hui et plus aucun prélèvement ne sera effectué.
+           Votre site reste le vôtre. Merci pour ces mois passés ensemble — si vous souhaitez revenir, il suffit de répondre à ce message.</p>
+           <p>L'équipe La Gabare</p></div>`, { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+      } catch (e) { console.error('mail résiliation anticipée', e) }
+    }
+    await notifierAgence(`Résiliation anticipée — ${c?.nom_domaine || clientId}`,
+      `Indemnité de ${euros(session.amount_total || 0)} réglée : abonnement arrêté immédiatement.${session.metadata.motif ? ` Motif : ${session.metadata.motif}` : ''}`)
+    return NextResponse.json({ received: true })
+  }
+
   // Abonnement ou lien de paiement simple : activer le client une fois le paiement réellement reçu
   if (clientId && paye && event.type !== 'checkout.session.async_payment_failed') {
     await activerClient(clientId)

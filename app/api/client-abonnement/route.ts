@@ -40,6 +40,18 @@ function dates(client: Record<string, any>, sub: Stripe.Subscription | null) {
   return { debut, finEngagement, effet }
 }
 
+// Sortie anticipée (CGV) : 50 % des mensualités restant dues jusqu'à la date de fin normale
+const INDEMNITE_PCT = 50
+function sortieAnticipee(sub: Stripe.Subscription | null, effet: Date) {
+  const item = sub?.items.data[0]
+  if (!sub || !item?.price?.unit_amount) return null
+  // Mensualités restantes : prélèvements à venir entre la fin de la période en cours et la date de fin normale
+  let restants = 0
+  for (let d = new Date(item.current_period_end * 1000); d < effet; d = plusMois(d, 1)) restants++
+  if (!restants) return null
+  return { mois_restants: restants, indemnite_cents: Math.round((restants * item.price.unit_amount * INDEMNITE_PCT) / 100) }
+}
+
 // Portail Stripe limité : carte bancaire, coordonnées, factures (la résiliation suit les CGV, pas un clic)
 async function configurationPortail() {
   const { data } = await stripe.billingPortal.configurations.list({ active: true, limit: 20 })
@@ -81,6 +93,8 @@ export async function GET(req: NextRequest) {
     // Mois offerts en cours sans moyen de paiement enregistré : bouton « Enregistrer mon moyen de paiement »
     offert_jusqu_au: !sub ? finMoisOfferts(c)?.toISOString() || null : null,
     a_enregistrer: !sub && Boolean(c.abonnement) && c.statut === 'actif' && !c.resiliation_demandee_at,
+    sortie_anticipee: sortieAnticipee(sub, effet),
+    indemnite_pct: INDEMNITE_PCT,
   })
 }
 
@@ -152,6 +166,31 @@ export async function POST(req: NextRequest) {
           { fromName: 'La Gabare — Abonnements', replyTo: c.email_contact || undefined })
       }
       return json({ ok: true, formule: FORMULES[formule], effet: effet?.toISOString() || null })
+    }
+
+    if (body.action === 'arreter_maintenant') {
+      const sub = await abonnementStripe(c.stripe_customer_id)
+      const { effet } = dates(c, sub)
+      const sortie = sortieAnticipee(sub, effet)
+      if (!sub || !sortie) return json({ error: 'Aucune mensualité restante : utilisez la résiliation simple.' }, 400)
+      // Paiement de l'indemnité ; à réception, le webhook arrête l'abonnement immédiatement
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer: c.stripe_customer_id,
+        payment_method_types: ['card'],
+        line_items: [{
+          quantity: 1,
+          price_data: {
+            currency: 'eur', unit_amount: sortie.indemnite_cents,
+            product_data: { name: `Résiliation anticipée — ${sortie.mois_restants} mensualité(s) à ${INDEMNITE_PCT} % — ${c.nom_domaine}` },
+          },
+        }],
+        invoice_creation: { enabled: true },
+        metadata: { client_id: String(c.id), resiliation_anticipee: sub.id, motif: String(body.motif || '').slice(0, 400) },
+        success_url: 'https://la-gabare.fr/espace-client.html',
+        cancel_url: 'https://la-gabare.fr/espace-client.html',
+      })
+      return json({ url: session.url })
     }
 
     if (body.action === 'resilier') {
