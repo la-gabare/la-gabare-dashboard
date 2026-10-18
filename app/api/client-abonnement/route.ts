@@ -173,6 +173,8 @@ export async function POST(req: NextRequest) {
     return json({ error: 'Action inconnue' }, 400)
   } catch (err) {
     console.error('client-abonnement', err)
-    return json({ error: 'Opération impossible pour le moment. Écrivez-nous : contact@la-gabare.fr' }, 500)
+    // Message Stripe renvoyé pour le diagnostic (pas de donnée sensible dans ces messages)
+    const detail = err instanceof Stripe.errors.StripeError ? err.message : undefined
+    return json({ error: 'Opération impossible pour le moment. Écrivez-nous : contact@la-gabare.fr', detail }, 500)
   }
 }
