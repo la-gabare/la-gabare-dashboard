@@ -109,8 +109,11 @@ export async function POST(req: NextRequest) {
       let effet: Date | null = null
       if (sub) {
         const item = sub.items.data[0]
-        const product = typeof item.price.product === 'string' ? item.price.product : item.price.product.id
-        await stripe.products.update(product, { name: `La Gabare — ${FORMULES[formule]} — ${c.nom_domaine}` })
+        // Les produits créés par Checkout ne peuvent pas être renommés : un produit par formule et par client
+        const { id: product } = await stripe.products.create({
+          name: `La Gabare — ${FORMULES[formule]} — ${c.nom_domaine}`,
+          metadata: { client_id: String(c.id), formule },
+        })
         await stripe.subscriptions.update(sub.id, {
           items: [{ id: item.id, price_data: { currency: 'eur', product, unit_amount: montantCents, recurring: { interval: 'month' } } }],
           proration_behavior: 'none',
