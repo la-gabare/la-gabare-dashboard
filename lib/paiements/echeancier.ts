@@ -53,7 +53,7 @@ export function decouper(totalCents: number, formule: string) {
 export const euros = (cents: number) =>
   (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: cents % 100 ? 2 : 0 })
 
-async function clientStripe(client: { id: number; nom_domaine: string; email_contact: string | null; stripe_customer_id: string | null }) {
+export async function clientStripe(client: { id: number; nom_domaine: string; email_contact: string | null; stripe_customer_id: string | null }) {
   if (client.stripe_customer_id) return client.stripe_customer_id
   const c = await stripe.customers.create({
     email: client.email_contact || undefined,

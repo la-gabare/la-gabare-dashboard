@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { declencherVersement, mailMaquetteSoumise, mailMiseEnLigne } from '@/lib/paiements/projet'
+import { demarrerAccompagnementOffert } from '@/lib/paiements/accompagnement-offert'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +40,10 @@ export async function POST(req: NextRequest) {
       }).eq('id', c.id)
       const v = await declencherVersement(c.id, 'mise_en_ligne')
       await mailMiseEnLigne(c, url)
-      return NextResponse.json({ ok: true, versement_envoye: Boolean(v) })
+      // Mois d'accompagnement inclus dans le pack : démarrage + enregistrement du moyen de paiement
+      let offert = null
+      try { offert = await demarrerAccompagnementOffert(c.id) } catch (e) { console.error('accompagnement offert', e) }
+      return NextResponse.json({ ok: true, versement_envoye: Boolean(v), accompagnement_offert: offert?.fin_offert || null })
     }
 
     return NextResponse.json({ error: 'Action inconnue' }, { status: 400 })

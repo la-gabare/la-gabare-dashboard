@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { stripe } from '@/lib/stripe'
 import { sendMail } from '@/lib/mailer'
+import { finMoisOfferts, sessionAbonnement } from '@/lib/paiements/accompagnement-offert'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,6 +78,9 @@ export async function GET(req: NextRequest) {
     resiliation_possible_au: effet.toISOString(),
     changement_demande: c.changement_formule_demande || null,
     portail: Boolean(c.stripe_customer_id),
+    // Mois offerts en cours sans moyen de paiement enregistré : bouton « Enregistrer mon moyen de paiement »
+    offert_jusqu_au: !sub ? finMoisOfferts(c)?.toISOString() || null : null,
+    a_enregistrer: !sub && Boolean(c.abonnement) && c.statut === 'actif' && !c.resiliation_demandee_at,
   })
 }
 
@@ -96,6 +100,13 @@ export async function POST(req: NextRequest) {
         locale: 'fr',
       })
       return json({ url: s.url })
+    }
+
+    if (body.action === 'enregistrer_paiement') {
+      if (!c.abonnement) return json({ error: 'Aucune formule associée à votre compte.' }, 400)
+      if (await abonnementStripe(c.stripe_customer_id)) return json({ error: 'Votre moyen de paiement est déjà enregistré.' }, 400)
+      const { url } = await sessionAbonnement(c, c.abonnement, finMoisOfferts(c))
+      return json({ url })
     }
 
     if (body.action === 'changer') {
