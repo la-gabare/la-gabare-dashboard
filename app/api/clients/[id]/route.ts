@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { lancerPlanEditorial, abonnementActive } from '@/lib/plan-editorial'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
     const clientId = parseInt(params.id)
+    const { data: avant } = await supabaseAdmin.from('clients').select('statut, abonnement').eq('id', clientId).single()
 
     const { data, error } = await supabaseAdmin
       .from('clients')
@@ -16,6 +18,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
+
+    // Abonnement activé (ou formule changée) depuis l'admin : le plan éditorial se lance tout seul
+    if (avant && abonnementActive(avant, data)) await lancerPlanEditorial(clientId, 'admin')
 
     return NextResponse.json(data)
   } catch (err) {

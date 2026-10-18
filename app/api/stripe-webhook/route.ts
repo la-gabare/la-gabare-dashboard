@@ -3,6 +3,7 @@ import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { marquerPayee, activerClient, euros } from '@/lib/paiements/echeancier'
+import { lancerPlanEditorial } from '@/lib/plan-editorial'
 import Stripe from 'stripe'
 
 const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
@@ -80,6 +81,8 @@ export async function POST(req: NextRequest) {
     if (session.mode === 'subscription') {
       await supabaseAdmin.from('clients').update({ date_debut_abonnement: new Date().toISOString().slice(0, 10) })
         .eq('id', clientId).is('date_debut_abonnement', null)
+      // Premier paiement de l'abonnement : le plan éditorial du mois se lance tout seul
+      await lancerPlanEditorial(clientId, 'abonnement')
     }
   }
 
