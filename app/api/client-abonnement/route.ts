@@ -16,6 +16,8 @@ const json = (data: unknown, status = 200) => withCors(NextResponse.json(data, {
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
 const FORMULES: Record<string, string> = { village: 'Village', reserve: 'Réserve', grand_cru: 'Grand Cru' }
+const PRIX_HT: Record<string, number> = { village: 150, reserve: 350, grand_cru: 550 }
+const TVA_PCT = Number(process.env.AGENCE_TVA_TAUX ?? 20)
 const dateFr = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
 // CGV : 12 mois d'engagement initial, puis mois par mois ; résiliation avec préavis de deux mois
@@ -99,15 +101,43 @@ export async function POST(req: NextRequest) {
     if (body.action === 'changer') {
       const formule = String(body.formule || '')
       if (!FORMULES[formule] || formule === c.abonnement) return json({ error: 'Choisissez une autre formule.' }, 400)
-      await supabaseAdmin.from('clients').update({ changement_formule_demande: formule }).eq('id', c.id)
+      if (c.resiliation_demandee_at) return json({ error: 'Votre abonnement est en cours de résiliation : écrivez-nous pour le modifier.' }, 400)
+
+      // Changement automatique : nouveau tarif appliqué dans Stripe à partir du prochain prélèvement (sans prorata)
+      const montantCents = Math.round(PRIX_HT[formule] * (1 + TVA_PCT / 100) * 100)
+      const sub = await abonnementStripe(c.stripe_customer_id)
+      let effet: Date | null = null
+      if (sub) {
+        const item = sub.items.data[0]
+        const product = typeof item.price.product === 'string' ? item.price.product : item.price.product.id
+        await stripe.products.update(product, { name: `La Gabare — ${FORMULES[formule]} — ${c.nom_domaine}` })
+        await stripe.subscriptions.update(sub.id, {
+          items: [{ id: item.id, price_data: { currency: 'eur', product, unit_amount: montantCents, recurring: { interval: 'month' } } }],
+          proration_behavior: 'none',
+          metadata: { formule },
+        })
+        effet = new Date(item.current_period_end * 1000)
+      }
+      const ancienne = FORMULES[c.abonnement] || c.abonnement || '?'
+      await supabaseAdmin.from('clients').update({ abonnement: formule, changement_formule_demande: null }).eq('id', c.id)
+
+      const quand = effet ? `à partir du prélèvement du ${dateFr(effet)}` : 'dès le démarrage de votre abonnement'
+      if (c.email_contact) {
+        await sendMail(c.email_contact, `Votre nouvelle formule ${FORMULES[formule]} — ${c.nom_domaine}`,
+          `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
+           <p>Bonjour,</p><p>Votre abonnement passe de la formule ${esc(ancienne)} à la formule <strong>${FORMULES[formule]}</strong>
+           (${(montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })} par mois), ${quand}.
+           Votre prochain plan éditorial suivra la nouvelle formule.</p><p>L'équipe La Gabare</p></div>`,
+          { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+      }
       if (AGENCE) {
-        await sendMail(AGENCE, `Changement de formule — ${c.nom_domaine} : ${FORMULES[c.abonnement] || c.abonnement || '?'} → ${FORMULES[formule]}`,
-          `<p style="font-family:Arial,sans-serif;font-size:14px;">${esc(c.nom_domaine)} souhaite passer à la formule <strong>${FORMULES[formule]}</strong>.
-           À mettre à jour dans Stripe et sur la fiche client.</p>
+        await sendMail(AGENCE, `Formule changée — ${c.nom_domaine} : ${ancienne} → ${FORMULES[formule]}`,
+          `<p style="font-family:Arial,sans-serif;font-size:14px;">${esc(c.nom_domaine)} est passé à la formule <strong>${FORMULES[formule]}</strong>
+           depuis son espace client. Fait automatiquement : ${sub ? `tarif Stripe mis à jour (${quand})` : 'aucun abonnement Stripe en cours'}, fiche client à jour.</p>
            <p style="font-family:Arial,sans-serif;font-size:14px;"><a href="https://admin.la-gabare.fr/clients/${c.id}">Ouvrir la fiche client</a></p>`,
           { fromName: 'La Gabare — Abonnements', replyTo: c.email_contact || undefined })
       }
-      return json({ ok: true })
+      return json({ ok: true, formule: FORMULES[formule], effet: effet?.toISOString() || null })
     }
 
     if (body.action === 'resilier') {
