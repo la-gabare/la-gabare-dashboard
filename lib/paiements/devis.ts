@@ -16,9 +16,9 @@ export const AGENCE = {
 export const TVA_PCT = Number(process.env.AGENCE_TVA_TAUX ?? 20)
 
 export const CATALOGUE: Record<string, { libelle: string; detail: string; prix: number }> = {
-  essentiel: { libelle: 'Pack Essentiel', detail: 'Site vitrine 5 pages, textes rédigés, conforme loi Évin, référencement local — 3 mois d'accompagnement Village inclus (valeur 450 €)', prix: 1990 },
-  pro: { libelle: 'Pack Pro', detail: 'Site complet avec boutique en ligne et espace professionnels, textes rédigés — 3 mois d'accompagnement Réserve inclus (valeur 1 050 €)', prix: 4490 },
-  premium: { libelle: 'Pack Premium', detail: 'Pack Pro + sommelier IA, réservation de visites avec acompte, deux langues — 3 mois d'accompagnement Grand Cru inclus (valeur 1 650 €)', prix: 6990 },
+  essentiel: { libelle: 'Pack Essentiel', detail: "Site vitrine 5 pages, textes rédigés, conforme loi Évin, référencement local — 3 mois d'accompagnement Village inclus (valeur 450 €)", prix: 1990 },
+  pro: { libelle: 'Pack Pro', detail: "Site complet avec boutique en ligne et espace professionnels, textes rédigés — 3 mois d'accompagnement Réserve inclus (valeur 1 050 €)", prix: 4490 },
+  premium: { libelle: 'Pack Premium', detail: "Pack Pro + sommelier IA, réservation de visites avec acompte, deux langues — 3 mois d'accompagnement Grand Cru inclus (valeur 1 650 €)", prix: 6990 },
   traduction: { libelle: 'Option traduction', detail: 'Traduction du site dans une langue supplémentaire', prix: 350 },
   audit: { libelle: 'Option audit de réputation', detail: 'Analyse des avis et de la présence en ligne, plan d\'action', prix: 250 },
 }
