@@ -35,9 +35,15 @@ export async function POST(req: NextRequest) {
     if (body.action === 'mise_en_ligne') {
       if (!urlValide) return NextResponse.json({ error: 'Adresse du site invalide (https://…)' }, { status: 400 })
       const domaine = new URL(url).hostname.replace(/^www\./, '')
-      await supabaseAdmin.from('clients').update({
+      const { error: majErreur } = await supabaseAdmin.from('clients').update({
         site_url: url, domaine: c.domaine || domaine, mis_en_ligne_at: new Date().toISOString(),
       }).eq('id', c.id)
+      if (majErreur) {
+        const doublon = majErreur.code === '23505'
+        return NextResponse.json({
+          error: doublon ? `L'adresse ${domaine} est déjà utilisée par un autre client.` : majErreur.message,
+        }, { status: doublon ? 409 : 500 })
+      }
       const v = await declencherVersement(c.id, 'mise_en_ligne')
       await mailMiseEnLigne(c, url)
       // Mois d'accompagnement inclus dans le pack : démarrage + enregistrement du moyen de paiement
