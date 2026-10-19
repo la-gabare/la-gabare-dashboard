@@ -4,7 +4,9 @@ import { Fragment, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Client, Article, Post, PlanGeneration, MailHebdoRequest } from '@/lib/types'
-import { ChevronDown, ChevronRight, Folder } from 'lucide-react'
+import { ChevronDown, ChevronRight, Folder, UserPlus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import CreateClientModal from '@/components/CreateClientModal'
 
 const abonnementLabels: Record<string, string> = {
   village: 'Village',
@@ -40,6 +42,8 @@ const weekRange = (mois: string, w: number) => {
 }
 
 export default function ClientsPage() {
+  const router = useRouter()
+  const [nouveauClient, setNouveauClient] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedClient, setExpandedClient] = useState<number | null>(null)
@@ -113,7 +117,18 @@ export default function ClientsPage() {
 
   return (
     <div className="container-dashboard">
-      <h1 className="text-3xl font-bold mb-8">Clients</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">Clients</h1>
+        <button onClick={() => setNouveauClient(true)} className="btn-primary flex items-center gap-2">
+          <UserPlus size={16} /> Nouveau client
+        </button>
+      </div>
+      {nouveauClient && (
+        <CreateClientModal
+          onClose={() => setNouveauClient(false)}
+          onCreated={(c) => router.push(`/clients/${c.id}`)}
+        />
+      )}
 
       <div className="card">
         {loading ? (

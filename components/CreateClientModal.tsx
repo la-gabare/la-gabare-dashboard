@@ -1,24 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { Lead } from '@/lib/types'
+import { Client, Lead } from '@/lib/types'
 
 interface Props {
-  lead: Lead
+  lead?: Lead // absent : création directe depuis la page Clients
   brief?: Record<string, unknown> | null
   onClose: () => void
-  onCreated: () => void
+  onCreated: (client: Client) => void
 }
 
 const sansAccents = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 // Le lead porte le pack SITE demandé (Essentiel / Pro / Premium) ; l'abonnement n'apparaît que dans l'audit
-function packSiteDe(lead: Lead): string {
+function packSiteDe(lead: Partial<Lead>): string {
   const p = sansAccents(lead.pack_demande || '')
   return ['essentiel', 'pro', 'premium'].find((k) => p.includes(k)) || ''
 }
 
-function abonnementDe(lead: Lead): string {
+function abonnementDe(lead: Partial<Lead>): string {
   const t = sansAccents(`${lead.pack_demande || ''} ${lead.message || ''}`)
   if (t.includes('grand cru')) return 'grand_cru'
   if (t.includes('reserve')) return 'reserve'
@@ -41,7 +41,8 @@ const cibles: [string, string][] = [
   ['cible_export', 'export'], ['cible_professionnels', 'professionnels'],
 ]
 
-export default function CreateClientModal({ lead, brief, onClose, onCreated }: Props) {
+export default function CreateClientModal({ lead: leadSource, brief, onClose, onCreated }: Props) {
+  const lead: Partial<Lead> = leadSource || {}
   const [loading, setLoading] = useState(false)
   const b = (k: string) => (brief?.[k] ? String(brief[k]) : '')
   const [form, setForm] = useState({
@@ -83,7 +84,7 @@ export default function CreateClientModal({ lead, brief, onClose, onCreated }: P
         alert('Erreur: ' + err.error)
         return
       }
-      onCreated()
+      onCreated(await res.json())
       onClose()
     } finally {
       setLoading(false)
@@ -103,7 +104,7 @@ export default function CreateClientModal({ lead, brief, onClose, onCreated }: P
         style={{ maxWidth: 600, width: '90%', maxHeight: '85vh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold mb-4">Créer le client — {lead.nom}</h2>
+        <h2 className="text-xl font-bold mb-4">{leadSource ? `Créer le client — ${leadSource.nom}` : 'Nouveau client'}</h2>
         <p className="text-sm text-gray-500 mb-4">
           Le client sera créé avec le statut &laquo; en attente de paiement &raquo;. L&apos;accès à son espace personnel
           lui sera envoyé automatiquement une fois le paiement confirmé.
