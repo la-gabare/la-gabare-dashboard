@@ -125,6 +125,8 @@ export interface Client {
   domaine?: string
   site_url?: string
   pack_site?: string
+  boutique_active?: boolean
+  stripe_account_id?: string | null
   profil_client_complet?: Record<string, unknown>
 }
 

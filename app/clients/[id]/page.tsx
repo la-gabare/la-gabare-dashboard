@@ -59,6 +59,7 @@ export default function ClientDetailPage() {
   const [lastPlan, setLastPlan] = useState<PlanGeneration | null>(null)
   const [lastMail, setLastMail] = useState<MailHebdoRequest | null>(null)
   const [checkingSite, setCheckingSite] = useState(false)
+  const [savingBoutique, setSavingBoutique] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,6 +119,25 @@ export default function ClientDetailPage() {
       alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
     }
     setCheckingSite(false)
+  }
+
+  // Ouvre ou ferme la boutique (et l'espace pro) du client : clients.boutique_active
+  const toggleBoutique = async (active: boolean) => {
+    if (!client) return
+    setSavingBoutique(true)
+    try {
+      const res = await fetch(`/api/clients/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boutique_active: active }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Enregistrement impossible')
+      setClient(data)
+    } catch (err) {
+      alert('Erreur: ' + (err instanceof Error ? err.message : 'inconnue'))
+    }
+    setSavingBoutique(false)
   }
 
   const toggleMonth = (m: string) => setExpandedMonths((prev) => ({ ...prev, [m]: !prev[m] }))
@@ -190,6 +210,28 @@ export default function ClientDetailPage() {
               </dd>
             </div>
             <div className="flex justify-between"><dt className="text-gray-600">Pack site</dt><dd>{client.pack_site ? <span className="badge badge-info">{client.pack_site}</span> : '-'}</dd></div>
+            <div className="flex justify-between items-center">
+              <dt className="text-gray-600">Boutique en ligne</dt>
+              <dd>
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(client.boutique_active)}
+                    disabled={savingBoutique}
+                    onChange={(e) => toggleBoutique(e.target.checked)}
+                    className="h-4 w-4 accent-wine"
+                  />
+                  <span>{savingBoutique ? '...' : client.boutique_active ? 'Active' : 'Inactive'}</span>
+                </label>
+              </dd>
+            </div>
+            {client.boutique_active && (
+              <p className="text-xs text-gray-500 text-right">
+                {client.stripe_account_id
+                  ? 'Stripe connecté : la boutique encaisse les commandes.'
+                  : 'Stripe pas encore connecté par le client (Espace client › Ma boutique) : les paiements sont bloqués.'}
+              </p>
+            )}
           </dl>
         </div>
 
