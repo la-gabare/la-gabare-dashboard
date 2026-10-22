@@ -92,7 +92,8 @@ export async function GET(req: NextRequest) {
     portail: Boolean(c.stripe_customer_id),
     // Mois offerts en cours sans moyen de paiement enregistré : bouton « Enregistrer mon moyen de paiement »
     offert_jusqu_au: !sub ? finMoisOfferts(c)?.toISOString() || null : null,
-    a_enregistrer: !sub && Boolean(c.abonnement) && c.statut === 'actif' && !c.resiliation_demandee_at,
+    // Aussi après la mise en pause de fin des mois offerts (fiche « inactif ») : l'abonnement la réactive
+    a_enregistrer: !sub && Boolean(c.abonnement) && (c.statut === 'actif' || c.rappel_offert === 'fin') && !c.resiliation_demandee_at,
     sortie_anticipee: sortieAnticipee(sub, effet),
     indemnite_pct: INDEMNITE_PCT,
   })

@@ -14,6 +14,7 @@ interface Devis {
   accepte_at: string | null
   accepte_nom: string | null
   created_at: string
+  relances?: number
   lien: string
 }
 type Catalogue = Record<string, { libelle: string; detail: string; prix: number }>
@@ -148,6 +149,7 @@ export default function DevisPanel({ client, onChange }: { client: Client; onCha
                   <div className="text-xs text-gray-500">
                     Émis le {new Date(d.created_at).toLocaleDateString('fr-FR')}
                     {d.statut === 'accepte' && d.accepte_at ? ` · accepté le ${new Date(d.accepte_at).toLocaleDateString('fr-FR')} par ${d.accepte_nom}` : ` · valable jusqu'au ${new Date(d.validite).toLocaleDateString('fr-FR')}`}
+                    {d.statut === 'envoye' && d.relances ? (d.relances >= 9 ? ' · expiré sans réponse' : ` · ${d.relances} relance(s) automatique(s)`) : ''}
                   </div>
                 </div>
                 <span className={`badge ${couleur}`}>{label}</span>

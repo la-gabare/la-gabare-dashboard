@@ -134,9 +134,24 @@ function mailGabarit(surtitre: string, titre: string, corps: string, bouton?: { 
 </table></td></tr></table>`
 }
 
-export async function envoyerDevis(d: Devis) {
+// Relances : 1 = quelques jours après l'envoi, 2 = une semaine après, 3 = juste avant l'expiration
+const RELANCES_DEVIS: Record<number, (d: Devis) => string> = {
+  1: () => 'Avez-vous pu consulter notre proposition ? Nous restons disponibles pour en parler ou l\'ajuster à votre projet.',
+  2: () => 'Votre projet nous tient à cœur : si un point vous fait hésiter (budget, calendrier, contenu des pages), répondez simplement à ce message et nous trouverons la bonne formule ensemble.',
+  3: (d) => `Votre devis arrive à échéance le ${dateFr(d.validite)}. Pour conserver ces conditions, il suffit de l'accepter en ligne avant cette date.`,
+}
+
+export async function envoyerDevis(d: Devis, relance = 0) {
   const { data: client } = await supabaseAdmin.from('clients').select('nom_domaine, email_contact').eq('id', d.client_id).single()
   if (!client?.email_contact) throw new Error('Ce client n\'a pas d\'adresse e-mail')
+  if (relance && RELANCES_DEVIS[relance]) {
+    await sendMail(client.email_contact, `${relance === 3 ? 'Dernier rappel' : 'Rappel'} — votre devis ${d.numero} · ${client.nom_domaine}`, mailGabarit(
+      'Votre devis', `${esc(client.nom_domaine)}, un petit mot.`,
+      `<p style="margin:0 0 16px 0;">${RELANCES_DEVIS[relance](d)}</p>
+       <p style="margin:0 0 24px 0;">Rappel : ${euros(d.total_ttc_cents)}, ${esc(FORMULES[d.formule].nom.toLowerCase())}, valable jusqu'au ${dateFr(d.validite)}.</p>`,
+      { texte: 'Revoir le devis', lien: lienDevis(d.token) }), { fromName: 'La Gabare', replyTo: AGENCE.email })
+    return
+  }
   await sendMail(client.email_contact, `Votre devis ${d.numero} — ${client.nom_domaine}`, mailGabarit(
     'Votre devis', `${esc(client.nom_domaine)}, voici notre proposition.`,
     `<p style="margin:0 0 16px 0;">Merci pour notre échange. Vous trouverez votre devis en ligne : montant <strong style="color:#1A1310;">${euros(d.total_ttc_cents)}</strong>,

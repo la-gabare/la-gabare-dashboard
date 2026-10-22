@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { envoyerEcheance, euros, Echeance } from '@/lib/paiements/echeancier'
+import { relancerDevis, suivreMoisOfferts } from '@/lib/relances-auto'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,5 +48,8 @@ export async function GET(req: NextRequest) {
       bilan.erreurs++
     }
   }
-  return NextResponse.json(bilan)
+  // Devis non acceptés et fin des mois d'accompagnement offerts
+  const devis = await relancerDevis()
+  const moisOfferts = await suivreMoisOfferts()
+  return NextResponse.json({ versements: bilan, devis, mois_offerts: moisOfferts })
 }
