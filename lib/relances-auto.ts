@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe'
 import { sendMail } from '@/lib/mailer'
 import { envoyerDevis, Devis } from '@/lib/paiements/devis'
 import { finMoisOfferts, ACCOMPAGNEMENT_INCLUS } from '@/lib/paiements/accompagnement-offert'
+import { bilanActivite, bilanVide, htmlBilan } from '@/lib/rapport-mensuel'
 
 const JOUR = 24 * 60 * 60 * 1000
 const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
@@ -60,7 +61,7 @@ async function aUnAbonnement(customer: string | null) {
   return data.some((s) => ['active', 'trialing', 'past_due', 'unpaid'].includes(s.status))
 }
 
-function mailFinOffert(nom: string, formule: string, fin: Date, etape: 'j15' | 'j7' | 'fin') {
+function mailFinOffert(nom: string, formule: string, fin: Date, etape: 'j15' | 'j7' | 'fin', recap = '') {
   const titre = etape === 'fin' ? `${esc(nom)}, votre accompagnement est en pause.` : `${esc(nom)}, vos mois offerts se terminent bientôt.`
   const corps = etape === 'fin'
     ? `Vos mois d'accompagnement ${esc(formule)} offerts avec votre site sont arrivés à leur terme le ${dateFr(fin)}. Faute de moyen de paiement enregistré,
@@ -68,9 +69,22 @@ function mailFinOffert(nom: string, formule: string, fin: Date, etape: 'j15' | '
     : `Vos mois d'accompagnement ${esc(formule)} offerts se terminent le <strong>${dateFr(fin)}</strong>. Pour que vos articles et publications continuent
        sans interruption, enregistrez dès maintenant votre carte ou votre IBAN. Aucun prélèvement n'aura lieu avant cette date.`
   return `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
-    <p style="font-family:Georgia,serif;font-size:22px;color:#1A1310;">${titre}</p><p>${corps}</p>
+    <p style="font-family:Georgia,serif;font-size:22px;color:#1A1310;">${titre}</p>
+    ${recap ? `<p style="margin:0 0 4px 0;font-weight:700;color:#1A1310;">Ce que nous avons fait pour vous depuis le début</p>${recap}` : ''}<p>${corps}</p>
     <p><a href="https://la-gabare.fr/espace-client.html" style="display:inline-block;padding:14px 28px;background:#5A1226;color:#F5F2EC;text-decoration:none;font-weight:600;">Enregistrer mon moyen de paiement &rarr;</a></p>
     <p style="font-size:13px;">Dans votre espace client : Paramètres › Abonnement.</p><p>L'équipe La Gabare</p></div>`
+}
+
+// Premier rappel avant la fin des mois offerts : récapitulatif de tout ce qui a été publié depuis le démarrage
+async function recapitulatif(c: { id: number; date_debut_abonnement: string | null; rappel_offert: string | null }, etape: string) {
+  if (etape === 'fin' || c.rappel_offert || !c.date_debut_abonnement) return ''
+  try {
+    const b = await bilanActivite(c.id, new Date(c.date_debut_abonnement), new Date())
+    return bilanVide(b) ? '' : htmlBilan(b)
+  } catch (e) {
+    console.error('récapitulatif mois offerts', c.id, e)
+    return ''
+  }
 }
 
 export async function suivreMoisOfferts() {
@@ -94,7 +108,7 @@ export async function suivreMoisOfferts() {
       if (c.email_contact) {
         await sendMail(c.email_contact,
           etape === 'fin' ? `Votre accompagnement est en pause — ${c.nom_domaine}` : `Vos mois offerts se terminent le ${dateFr(fin)} — ${c.nom_domaine}`,
-          mailFinOffert(c.nom_domaine, nomFormule, fin, etape), { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+          mailFinOffert(c.nom_domaine, nomFormule, fin, etape, await recapitulatif(c, etape)), { fromName: 'La Gabare', replyTo: AGENCE || undefined })
       }
       if (etape === 'fin') {
         // Plus de plan éditorial tant qu'aucun moyen de paiement n'est enregistré (l'abonnement le réactivera)
