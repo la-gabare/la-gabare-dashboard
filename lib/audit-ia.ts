@@ -145,7 +145,7 @@ export async function redigerRapport(lead: Record<string, any>, releve: Releve |
     releve_site: releve || 'Aucun site indiqué par le vigneron.',
   }
   const reponse = await claude().beta.messages.create({
-    model: 'claude-opus-5-5',
+    model: 'claude-sonnet-5-5', // choix de l'agence : très bon rapport qualité/coût (≈ 2 centimes par audit)
     max_tokens: 8000,
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default', // en cas de refus d'un classifieur, l'API bascule seule sur un autre modèle
