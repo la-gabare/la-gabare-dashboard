@@ -6,6 +6,7 @@ import { withCors, corsPreflight } from '@/lib/cors'
 import { stripe } from '@/lib/stripe'
 import { sendMail } from '@/lib/mailer'
 import { finMoisOfferts, sessionAbonnement } from '@/lib/paiements/accompagnement-offert'
+import { dates, sortieAnticipee, INDEMNITE_PCT } from '@/lib/abonnement-cgv'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,35 +22,10 @@ const PRIX_HT: Record<string, number> = { village: 150, reserve: 350, grand_cru:
 const TVA_PCT = Number(process.env.AGENCE_TVA_TAUX ?? 20)
 const dateFr = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
-// CGV : 12 mois d'engagement initial, puis mois par mois ; résiliation avec préavis de deux mois
-const ENGAGEMENT_MOIS = 12
-const PREAVIS_MOIS = 2
-const plusMois = (d: Date, n: number) => { const r = new Date(d); r.setMonth(r.getMonth() + n); return r }
-
 async function abonnementStripe(customer: string | null) {
   if (!customer) return null
   const { data } = await stripe.subscriptions.list({ customer, status: 'all', limit: 5 })
   return data.find((s) => ['active', 'trialing', 'past_due', 'unpaid'].includes(s.status)) || null
-}
-
-function dates(client: Record<string, any>, sub: Stripe.Subscription | null) {
-  const debut = sub ? new Date(sub.start_date * 1000) : client.date_debut_abonnement ? new Date(client.date_debut_abonnement) : null
-  const finEngagement = debut ? plusMois(debut, ENGAGEMENT_MOIS) : null
-  const auPlusTot = plusMois(new Date(), PREAVIS_MOIS)
-  const effet = finEngagement && finEngagement > auPlusTot ? finEngagement : auPlusTot
-  return { debut, finEngagement, effet }
-}
-
-// Sortie anticipée (CGV) : 50 % des mensualités restant dues jusqu'à la date de fin normale
-const INDEMNITE_PCT = 50
-function sortieAnticipee(sub: Stripe.Subscription | null, effet: Date) {
-  const item = sub?.items.data[0]
-  if (!sub || !item?.price?.unit_amount) return null
-  // Mensualités restantes : prélèvements à venir entre la fin de la période en cours et la date de fin normale
-  let restants = 0
-  for (let d = new Date(item.current_period_end * 1000); d < effet; d = plusMois(d, 1)) restants++
-  if (!restants) return null
-  return { mois_restants: restants, indemnite_cents: Math.round((restants * item.price.unit_amount * INDEMNITE_PCT) / 100) }
 }
 
 // Portail Stripe limité : carte bancaire, coordonnées, factures (la résiliation suit les CGV, pas un clic)

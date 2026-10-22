@@ -7,7 +7,7 @@ Ce harness est la source unique : le mettre à jour quand une décision change.
 
 ## Rappels essentiels pour ce dépôt
 - Français partout (interface, mails, commits). Utilisateur non développeur : expliquer simplement.
-- Avant tout commit : `rm -rf .next/types && npx tsc --noEmit` — ne jamais committer si ça échoue (pas de `tsc | head && git commit`).
+- Avant tout commit : `rm -rf .next/types && npx tsc --noEmit` puis `npm test` (règles métier) — ne jamais committer si ça échoue (le garde-fou du harness refuse le commit).
 - Changement de base → fichier `sql/*.sql` exécuté **par l'utilisateur**, et publication du code **après** si le code en dépend.
 - Jamais de secret écrit, affiché ou collé ; jamais remplacer la clé Stripe `sk_live` sans accord (admin en mode test pour l'instant).
 - Routes `app/api/**/route.ts` : seulement les méthodes HTTP et `dynamic` / `maxDuration` ; le reste dans `lib/`.
