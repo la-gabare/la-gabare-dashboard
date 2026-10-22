@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { texte, emailValide, tropDeRequetes, ipDe } from '@/lib/leads/public'
 import crypto from 'crypto'
+import { envoyerPriseDeContact, notifierAgenceLead } from '@/lib/leads/mails'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,6 +66,22 @@ export async function POST(req: NextRequest) {
   if (error || !cree) {
     console.error('public/audit insert', error)
     return json({ error: 'Enregistrement impossible pour le moment.' }, 500)
+  }
+
+  // Sans clé Anthropic configurée : comportement classique (mail de prise de contact + alerte agence)
+  if (!process.env.ANTHROPIC_API_KEY) {
+    let mailEnvoye = false
+    try {
+      await envoyerPriseDeContact({ ...cree, lead_id: cree.id })
+      mailEnvoye = true
+      await supabaseAdmin.from('leads').update({
+        statut: 'mail_envoye', mail_envoye_at: new Date().toISOString(), rapport_envoye_at: new Date().toISOString(),
+      }).eq('id', cree.id)
+    } catch (e) {
+      console.error('public/audit mail', e)
+    }
+    try { await notifierAgenceLead(cree, mailEnvoye) } catch (e) { console.error('public/audit notif', e) }
+    return json({ ok: true, id: cree.id })
   }
 
   // Le prospect reçoit son rapport d'audit (IA) à la place du mail de prise de contact :
