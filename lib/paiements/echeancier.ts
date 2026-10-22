@@ -162,6 +162,12 @@ export async function marquerPayee(echeanceId: number, moyen: string) {
     } catch (err) {
       console.error("mail d'accueil", err)
     }
+    try {
+      const { recompenserParrain } = await import('@/lib/parrainage')
+      await recompenserParrain(e.client_id)
+    } catch (err) {
+      console.error('récompense parrainage', err)
+    }
   }
   return e as Echeance
 }

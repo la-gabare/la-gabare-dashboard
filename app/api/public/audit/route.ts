@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
     nom, email,
     domaine: texte(body.domaine, 150),
     url: texte(body.url, 300),
+    parrain_code: texte(body.parrain, 20),
     type_demande: 'audit',
     rapport_token: crypto.randomBytes(24).toString('base64url'),
     pack_demande: packSite,

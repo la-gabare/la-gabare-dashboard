@@ -74,6 +74,7 @@ export default function CreateClientModal({ lead: leadSource, brief, onClose, on
         body: JSON.stringify({
           ...form,
           pack_site: form.pack_site || null,
+          ...(lead.parrain_code ? { parrain_code: lead.parrain_code } : {}),
           domaine: form.domaine || null,
           site_url: form.domaine ? `https://${form.domaine}` : null,
           statut: 'en_attente_paiement',

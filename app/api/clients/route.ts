@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { parrainParCode, PARRAINAGE } from '@/lib/parrainage'
 import { lancerPlanEditorial, abonnementActive } from '@/lib/plan-editorial'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
+  // Lead venu par parrainage : lien avec le parrain et mois offert en plus
+  const { parrain_code, ...champs } = body
+  const parrain = parrain_code ? await parrainParCode(parrain_code) : null
+  if (parrain) Object.assign(champs, { parrain_id: parrain.id, mois_offerts_bonus: PARRAINAGE.moisOffertsFilleul })
 
   const { data, error } = await supabaseAdmin
     .from('clients')
-    .insert([body])
+    .insert([champs])
     .select()
     .single()
 

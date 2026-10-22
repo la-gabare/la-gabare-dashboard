@@ -90,7 +90,7 @@ async function recapitulatif(c: { id: number; date_debut_abonnement: string | nu
 export async function suivreMoisOfferts() {
   const bilan = { rappels: 0, pauses: 0, erreurs: 0 }
   const { data } = await supabaseAdmin.from('clients')
-    .select('id, nom_domaine, email_contact, pack_site, abonnement, statut, date_debut_abonnement, stripe_customer_id, rappel_offert, resiliation_demandee_at')
+    .select('id, nom_domaine, email_contact, pack_site, abonnement, statut, date_debut_abonnement, stripe_customer_id, rappel_offert, resiliation_demandee_at, mois_offerts_bonus')
     .eq('statut', 'actif').not('date_debut_abonnement', 'is', null).is('resiliation_demandee_at', null)
   for (const c of data || []) {
     try {

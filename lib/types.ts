@@ -24,6 +24,7 @@ export interface Lead {
   type_demande?: string
   statut?: string
   rdv_at?: string | null
+  parrain_code?: string | null
 }
 
 export interface AuditGratuit {

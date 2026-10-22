@@ -20,13 +20,14 @@ const dateFr = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', mont
 // son moyen de paiement (carte ou SEPA). Aucun prélèvement avant la fin des mois offerts (période d'essai Stripe).
 export async function demarrerAccompagnementOffert(clientId: number) {
   const { data: c } = await supabaseAdmin.from('clients')
-    .select('id, nom_domaine, email_contact, stripe_customer_id, pack_site, abonnement, date_debut_abonnement, statut')
+    .select('id, nom_domaine, email_contact, stripe_customer_id, pack_site, abonnement, date_debut_abonnement, statut, mois_offerts_bonus')
     .eq('id', clientId).single()
   const inclus = ACCOMPAGNEMENT_INCLUS[String(c?.pack_site || '').toLowerCase()]
   if (!c || !inclus || c.date_debut_abonnement) return null // déjà abonné : rien à offrir de plus
 
+  const moisOfferts = inclus.mois + (c.mois_offerts_bonus || 0) // + mois offert par le parrainage
   const finOffert = new Date()
-  finOffert.setMonth(finOffert.getMonth() + inclus.mois)
+  finOffert.setMonth(finOffert.getMonth() + moisOfferts)
   // Le client garde sa formule si elle est supérieure à celle incluse ; sinon formule du pack
   const formule = c.abonnement && PRIX_HT[c.abonnement] > PRIX_HT[inclus.formule] ? c.abonnement : inclus.formule
   await supabaseAdmin.from('clients').update({
@@ -42,7 +43,7 @@ export async function demarrerAccompagnementOffert(clientId: number) {
     await sendMail(c.email_contact, `Votre accompagnement ${nomFormule} offert démarre — ${c.nom_domaine}`,
       `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
        <p>Bonjour,</p>
-       <p>Votre site est en ligne et, comme prévu dans votre pack, vos <strong>${inclus.mois} mois d'accompagnement ${esc(inclus.nom)}</strong> commencent aujourd'hui :
+       <p>Votre site est en ligne et, comme prévu dans votre pack, vos <strong>${moisOfferts} mois d'accompagnement ${esc(inclus.nom)}</strong> commencent aujourd'hui :
        articles, publications et suivi de votre présence en ligne. Votre premier plan éditorial est en préparation.</p>
        <p>Pour que l'accompagnement continue sans interruption après le ${dateFr(finOffert)}, enregistrez dès maintenant votre moyen de paiement
        (carte ou prélèvement SEPA). <strong>Aucun prélèvement avant le ${dateFr(finOffert)}</strong> ; ensuite ${prix} par mois (formule ${esc(nomFormule)}).</p>
@@ -55,11 +56,11 @@ export async function demarrerAccompagnementOffert(clientId: number) {
 }
 
 // Fin des mois offerts d'un client (date de début d'abonnement + mois inclus dans son pack), ou null
-export function finMoisOfferts(c: { pack_site?: string | null; date_debut_abonnement?: string | null }) {
+export function finMoisOfferts(c: { pack_site?: string | null; date_debut_abonnement?: string | null; mois_offerts_bonus?: number | null }) {
   const inclus = ACCOMPAGNEMENT_INCLUS[String(c.pack_site || '').toLowerCase()]
   if (!inclus || !c.date_debut_abonnement) return null
   const fin = new Date(c.date_debut_abonnement)
-  fin.setMonth(fin.getMonth() + inclus.mois)
+  fin.setMonth(fin.getMonth() + inclus.mois + (c.mois_offerts_bonus || 0))
   return fin
 }
 

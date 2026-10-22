@@ -4,7 +4,7 @@ import 'server-only'
 export const CHAMPS_LEAD = [
   'domaine', 'appellation', 'surface', 'directe', 'site', 'url', 'reseaux', 'besoins', 'budget', 'echeance',
   'nom', 'email', 'tel', 'message', 'pack_demande', 'style_visuel', 'couleurs_souhaitees', 'liste_cuvees',
-  'slogan', 'type_demande',
+  'slogan', 'type_demande', 'parrain_code',
 ] as const
 
 export const CHAMPS_BRIEF_TEXTE = [
