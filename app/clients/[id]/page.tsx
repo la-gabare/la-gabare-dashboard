@@ -242,6 +242,17 @@ export default function ClientDetailPage() {
           <h2 className="text-xl font-bold mb-4">Abonnement</h2>
           <p className="badge badge-info mb-3">{client.abonnement}</p>
           <p className="text-sm text-gray-600">{abonnementQuotas[client.abonnement] || 'Quota non défini'}</p>
+          <label className="flex items-center gap-2 text-sm mt-3">
+            <input type="checkbox" checked={!(client as Client & { offres_desactivees?: boolean }).offres_desactivees}
+              onChange={async (e) => {
+                const res = await fetch(`/api/clients/${client.id}`, {
+                  method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ offres_desactivees: !e.target.checked }),
+                })
+                if (res.ok) setClient(await res.json())
+              }} />
+            Propositions d&apos;options automatiques (boutique, traduction, formule supérieure)
+          </label>
           {client.histoire && (
             <>
               <h3 className="font-semibold mt-4 mb-1 text-sm">Histoire</h3>

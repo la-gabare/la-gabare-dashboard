@@ -6,6 +6,7 @@ import { relancerDevis, suivreMoisOfferts } from '@/lib/relances-auto'
 import { rattraperRapports } from '@/lib/audit-ia'
 import { relancerContenus } from '@/lib/contenus'
 import { envoyerRapportsMensuels } from '@/lib/rapport-mensuel'
+import { proposerOffres } from '@/lib/offres'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60 // inclut un éventuel rapport d'audit en rattrapage
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
   const moisOfferts = await suivreMoisOfferts()
   const contenus = await relancerContenus()
   const rapports = await envoyerRapportsMensuels()
+  const offres = await proposerOffres()
   const audits = await rattraperRapports()
-  return NextResponse.json({ versements: bilan, devis, mois_offerts: moisOfferts, contenus, rapports, audits })
+  return NextResponse.json({ versements: bilan, devis, mois_offerts: moisOfferts, contenus, rapports, offres, audits })
 }
