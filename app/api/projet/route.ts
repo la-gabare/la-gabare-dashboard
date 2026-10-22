@@ -25,6 +25,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
+    if (body.action === 'contenu_valider') {
+      // L'agence valide (ou remet « à fournir ») un élément de la checklist
+      const etats = { ...(c.contenus || {}) }
+      const cle = String(body.cle || '')
+      if (body.valide) etats[cle] = { ...(etats[cle] || {}), statut: 'valide', valide_at: new Date().toISOString() }
+      else delete etats[cle]
+      await supabaseAdmin.from('clients').update({ contenus: etats }).eq('id', c.id)
+      return NextResponse.json({ ok: true })
+    }
+
     if (body.action === 'valider_maquette') {
       // Validation reçue par téléphone ou par mail
       await supabaseAdmin.from('clients').update({ maquette_statut: 'validee', maquette_validee_at: new Date().toISOString() }).eq('id', c.id)

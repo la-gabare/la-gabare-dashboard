@@ -4,6 +4,7 @@ import { sendMail } from '@/lib/mailer'
 import { envoyerEcheance, euros, Echeance } from '@/lib/paiements/echeancier'
 import { relancerDevis, suivreMoisOfferts } from '@/lib/relances-auto'
 import { rattraperRapports } from '@/lib/audit-ia'
+import { relancerContenus } from '@/lib/contenus'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60 // inclut un éventuel rapport d'audit en rattrapage
@@ -53,6 +54,7 @@ export async function GET(req: NextRequest) {
   // Devis non acceptés et fin des mois d'accompagnement offerts
   const devis = await relancerDevis()
   const moisOfferts = await suivreMoisOfferts()
+  const contenus = await relancerContenus()
   const audits = await rattraperRapports()
-  return NextResponse.json({ versements: bilan, devis, mois_offerts: moisOfferts, audits })
+  return NextResponse.json({ versements: bilan, devis, mois_offerts: moisOfferts, contenus, audits })
 }

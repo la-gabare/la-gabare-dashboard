@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { lienPaiement } from '@/lib/paiements/echeancier'
 import { declencherVersement, notifierAgence } from '@/lib/paiements/projet'
+import { listeContenus, contenusDuPack, manquants, EtatContenu } from '@/lib/contenus'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,6 +39,11 @@ export async function GET(req: NextRequest) {
     } : null,
     site_url: c.mis_en_ligne_at ? c.site_url : null,
     mis_en_ligne_at: c.mis_en_ligne_at || null,
+    // Checklist des contenus : affichée dès le mail d'accueil (premier paiement) et jusqu'à la mise en ligne
+    contenus: c.accueil_envoye_at && !c.mis_en_ligne_at
+      ? listeContenus(c).map(({ cle, libelle, aide, mode, etat }) => ({ cle, libelle, aide, mode, statut: etat?.statut || null, texte: etat?.texte || '' }))
+      : null,
+    contenus_limite: c.contenus_limite || null,
   })
 }
 
@@ -46,6 +52,26 @@ export async function POST(req: NextRequest) {
   if (r.error || !r.client) return json({ error: r.error }, r.status || 401)
   const c = r.client
   const body = await req.json().catch(() => ({}))
+
+  // Un élément de la checklist fourni par le vigneron (texte saisi, ou « c'est envoyé »)
+  if (body.action === 'contenu') {
+    const def = contenusDuPack(c.pack_site).find((d) => d.cle === body.cle)
+    if (!def) return json({ error: 'Élément inconnu.' }, 400)
+    const texte = String(body.texte || '').trim().slice(0, 5000)
+    if (def.mode === 'texte' && !texte) return json({ error: "Écrivez votre réponse avant de l'envoyer." }, 400)
+    const etats: Record<string, EtatContenu> = { ...(c.contenus || {}) }
+    if (etats[def.cle]?.statut === 'valide') return json({ error: 'Cet élément est déjà validé par notre équipe.' }, 400)
+    etats[def.cle] = { statut: 'fourni', ...(texte ? { texte } : {}), fourni_at: new Date().toISOString() }
+    await supabaseAdmin.from('clients').update({ contenus: etats }).eq('id', c.id)
+    const reste = manquants({ pack_site: c.pack_site, contenus: etats })
+    if (!reste.length) {
+      await notifierAgence(`Contenus complets — ${c.nom_domaine}`,
+        `<p>${esc(c.nom_domaine)} a fourni tous ses contenus : vous pouvez lancer la maquette.</p>
+         <p><a href="https://admin.la-gabare.fr/clients/${c.id}">Ouvrir la fiche client</a></p>`)
+    }
+    return json({ ok: true, restants: reste.length })
+  }
+
   if (c.maquette_statut !== 'a_valider') return json({ error: 'Aucune maquette en attente de validation.' }, 400)
 
   if (body.action === 'valider') {

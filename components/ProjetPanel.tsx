@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Client } from '@/lib/types'
+import { listeContenus, EtatContenu } from '@/lib/contenus-defs'
 
 type ClientProjet = Client & {
   maquette_url?: string | null
@@ -10,6 +11,10 @@ type ClientProjet = Client & {
   maquette_soumise_at?: string | null
   maquette_validee_at?: string | null
   mis_en_ligne_at?: string | null
+  accueil_envoye_at?: string | null
+  contenus?: Record<string, EtatContenu> | null
+  contenus_limite?: string | null
+  contenus_relances?: number
 }
 
 const date = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '')
@@ -44,6 +49,41 @@ export default function ProjetPanel({ client, onChange }: { client: ClientProjet
       </p>
 
       <div className="space-y-4">
+        {client.accueil_envoye_at && !client.mis_en_ligne_at && (() => {
+          const items = listeContenus(client)
+          const faits = items.filter((i) => i.etat).length
+          return (
+            <div>
+              <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+                Contenus du vigneron
+                <span className={`badge ${faits === items.length ? 'badge-success' : 'badge-warning'}`}>{faits}/{items.length} fournis</span>
+                {client.contenus_limite && faits < items.length && (
+                  <span className="text-xs text-gray-500">souhaités avant le {date(client.contenus_limite)}{client.contenus_relances ? ` · ${client.contenus_relances} relance(s)` : ''}</span>
+                )}
+              </div>
+              <div className="space-y-1">
+                {items.map((i) => (
+                  <div key={i.cle} className="border rounded-lg px-3 py-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="flex-1 font-medium">{i.libelle}</span>
+                      <span className={`badge ${i.etat?.statut === 'valide' ? 'badge-success' : i.etat ? 'badge-info' : ''}`}>
+                        {i.etat?.statut === 'valide' ? 'Validé' : i.etat ? `Fourni le ${date(i.etat.fourni_at)}` : 'À fournir'}
+                      </span>
+                      <label className="flex items-center gap-1 text-xs">
+                        <input type="checkbox" checked={i.etat?.statut === 'valide'} disabled={occupe}
+                          onChange={(e) => action({ action: 'contenu_valider', cle: i.cle, valide: e.target.checked },
+                            e.target.checked ? `Valider « ${i.libelle} » ?` : `Remettre « ${i.libelle} » en « à fournir » ?`)} />
+                        Validé
+                      </label>
+                    </div>
+                    {i.etat?.texte && <p className="mt-1 text-gray-600 whitespace-pre-wrap">{i.etat.texte}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
         <div>
           <div className="flex items-center gap-2 mb-2 text-sm font-medium">
             Maquette
