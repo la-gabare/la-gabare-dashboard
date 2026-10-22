@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Lead, CahierDesCharges } from '@/lib/types'
 import { ChevronDown, ChevronUp, Send, UserPlus, Trash2, FileText } from 'lucide-react'
@@ -67,6 +68,7 @@ const statutLabels: Record<string, string> = {
   relance: 'Relancé',
   rdv_pris: 'RDV pris',
   formulaire_complete: 'Formulaire complété',
+  client: 'Devenu client',
   archive: 'Archivé',
 }
 
@@ -76,10 +78,12 @@ const statutColors: Record<string, string> = {
   relance: 'badge-warning',
   rdv_pris: 'badge-success',
   formulaire_complete: 'badge-success',
+  client: 'badge-success',
   archive: 'badge-danger',
 }
 
 export default function LeadsPage() {
+  const router = useRouter()
   const [leads, setLeads] = useState<DisplayLead[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<number | null>(null)
@@ -245,12 +249,12 @@ export default function LeadsPage() {
                           )}
                           <button
                             onClick={() => setClientLead(lead)}
-                            title="Créer le client (après le RDV)"
+                            title="Créer le client et préparer son devis (après le RDV)"
                             className="flex items-center space-x-1 text-xs px-2 py-1 rounded text-white hover:opacity-90"
                             style={{ backgroundColor: '#B08D57' }}
                           >
                             <UserPlus size={14} />
-                            <span>Client</span>
+                            <span>Client + devis</span>
                           </button>
                           <button
                             onClick={() => handleDelete(lead)}
@@ -335,7 +339,16 @@ export default function LeadsPage() {
           lead={clientLead}
           brief={briefDe(clientLead) || null}
           onClose={() => setClientLead(null)}
-          onCreated={() => alert('Client créé (en attente de paiement) — visible dans /clients')}
+          onCreated={async (c) => {
+            // Le lead devient client, puis on ouvre sa fiche avec le devis prérempli
+            if (clientLead._source === 'leads') {
+              await fetch('/api/leads', {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: clientLead.id, statut: 'client' }),
+              }).catch(() => {})
+            }
+            router.push(`/clients/${c.id}?devis=1`)
+          }}
         />
       )}
     </div>

@@ -261,7 +261,7 @@ export default function CreateClientModal({ lead: leadSource, brief, onClose, on
             Annuler
           </button>
           <button onClick={handleSubmit} disabled={loading} className="btn-primary disabled:opacity-50">
-            {loading ? 'Création...' : 'Créer le client'}
+            {loading ? 'Création...' : leadSource ? 'Créer le client et préparer le devis' : 'Créer le client'}
           </button>
         </div>
       </div>

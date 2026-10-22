@@ -46,6 +46,9 @@ const weekRange = (mois: string, w: number) => {
 
 export default function ClientDetailPage() {
   const params = useParams()
+  // Arrivée depuis un lead (« Client + devis ») : le devis s'ouvre prérempli
+  const [ouvrirDevis, setOuvrirDevis] = useState(false)
+  useEffect(() => { setOuvrirDevis(new URLSearchParams(window.location.search).get('devis') === '1') }, [])
   const id = params.id as string
 
   const [client, setClient] = useState<Client | null>(null)
@@ -272,7 +275,7 @@ export default function ClientDetailPage() {
         </div>
       )}
 
-      <DevisPanel client={client} onChange={() => setVersionPaiement((v) => v + 1)} />
+      <DevisPanel client={client} ouvrir={ouvrirDevis} onChange={() => setVersionPaiement((v) => v + 1)} />
 
       <EcheancierPanel key={versionPaiement} client={client} />
 

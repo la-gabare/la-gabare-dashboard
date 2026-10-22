@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Client } from '@/lib/types'
 
 interface Ligne { libelle: string; detail: string; montant_ht: string }
@@ -32,7 +32,7 @@ const statuts: Record<string, [string, string]> = {
 }
 const euros = (c: number) => (c / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
 
-export default function DevisPanel({ client, onChange }: { client: Client; onChange?: () => void }) {
+export default function DevisPanel({ client, onChange, ouvrir = false }: { client: Client; onChange?: () => void; ouvrir?: boolean }) {
   const pack = (client.pack_site || '').toLowerCase()
   const [devis, setDevis] = useState<Devis[]>([])
   const [catalogue, setCatalogue] = useState<Catalogue>({})
@@ -40,7 +40,10 @@ export default function DevisPanel({ client, onChange }: { client: Client; onCha
   const [lignes, setLignes] = useState<Ligne[]>([])
   const [formule, setFormule] = useState(pack === 'essentiel' ? '2x' : '3x')
   const [remise, setRemise] = useState('0')
-  const [ouvert, setOuvert] = useState(false)
+  const [ouvert, setOuvert] = useState(ouvrir)
+  const bloc = useRef<HTMLDivElement>(null)
+  // Ouvert depuis un lead : on amène directement l'écran sur le devis
+  useEffect(() => { if (ouvrir) bloc.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, [ouvrir])
   const [occupe, setOccupe] = useState(false)
 
   const charger = async () => {
@@ -82,7 +85,7 @@ export default function DevisPanel({ client, onChange }: { client: Client; onCha
   const enCours = devis.find((d) => d.statut === 'envoye' || d.statut === 'accepte')
 
   return (
-    <div className="card">
+    <div className="card" ref={bloc}>
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-xl font-bold">Devis</h2>
         {!ouvert && <button onClick={() => setOuvert(true)} className="btn-primary text-sm">Nouveau devis</button>}
