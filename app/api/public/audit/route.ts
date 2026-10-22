@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { texte, emailValide, tropDeRequetes, ipDe } from '@/lib/leads/public'
-import { envoyerPriseDeContact, notifierAgenceLead } from '@/lib/leads/mails'
+import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +48,9 @@ export async function POST(req: NextRequest) {
   const lead = {
     nom, email,
     domaine: texte(body.domaine, 150),
+    url: texte(body.url, 300),
     type_demande: 'audit',
+    rapport_token: crypto.randomBytes(24).toString('base64url'),
     pack_demande: packSite,
     besoins: `Audit gratuit — ${reponses.join(' · ')}`.slice(0, 3000),
     message: [
@@ -65,15 +67,9 @@ export async function POST(req: NextRequest) {
     return json({ error: 'Enregistrement impossible pour le moment.' }, 500)
   }
 
-  let mailEnvoye = false
-  try {
-    await envoyerPriseDeContact({ ...cree, lead_id: cree.id })
-    mailEnvoye = true
-    await supabaseAdmin.from('leads').update({ statut: 'mail_envoye', mail_envoye_at: new Date().toISOString() }).eq('id', cree.id)
-  } catch (e) {
-    console.error('public/audit mail', e)
-  }
-  try { await notifierAgenceLead(cree, mailEnvoye) } catch (e) { console.error('public/audit notif', e) }
+  // Le prospect reçoit son rapport d'audit (IA) à la place du mail de prise de contact :
+  // la page appelle /api/public/audit/rapport juste après ; la tâche quotidienne rattrape les oublis.
+  // L'agence reçoit une copie du rapport (ou une alerte si la rédaction échoue).
 
-  return json({ ok: true, id: cree.id })
+  return json({ ok: true, id: cree.id, token: cree.rapport_token })
 }

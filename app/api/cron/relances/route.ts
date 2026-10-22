@@ -3,8 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { envoyerEcheance, euros, Echeance } from '@/lib/paiements/echeancier'
 import { relancerDevis, suivreMoisOfferts } from '@/lib/relances-auto'
+import { rattraperRapports } from '@/lib/audit-ia'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // inclut un éventuel rapport d'audit en rattrapage
 
 const JOUR = 24 * 60 * 60 * 1000
 const DELAI_JOURS = 5        // première relance 5 jours après l'envoi, puis tous les 5 jours
@@ -51,5 +53,6 @@ export async function GET(req: NextRequest) {
   // Devis non acceptés et fin des mois d'accompagnement offerts
   const devis = await relancerDevis()
   const moisOfferts = await suivreMoisOfferts()
-  return NextResponse.json({ versements: bilan, devis, mois_offerts: moisOfferts })
+  const audits = await rattraperRapports()
+  return NextResponse.json({ versements: bilan, devis, mois_offerts: moisOfferts, audits })
 }
