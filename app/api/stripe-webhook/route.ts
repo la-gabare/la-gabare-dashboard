@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
+import { notifier, enTexte } from '@/lib/notifier'
 import { marquerPayee, activerClient, euros } from '@/lib/paiements/echeancier'
 import { lancerPlanEditorial } from '@/lib/plan-editorial'
 import Stripe from 'stripe'
@@ -9,6 +10,10 @@ import Stripe from 'stripe'
 const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
 
 async function notifierAgence(sujet: string, texte: string) {
+  await notifier({
+    titre: sujet, corps: enTexte(texte), url: 'https://admin.la-gabare.fr/clients',
+    niveau: /échou|impay/i.test(sujet) ? 'warning' : 'success',
+  })
   if (!AGENCE) return
   try {
     await sendMail(AGENCE, sujet, `<p style="font-family:Arial,sans-serif;font-size:14px;">${texte}</p>

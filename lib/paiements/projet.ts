@@ -1,6 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
+import { notifier, enTexte } from '@/lib/notifier'
 import { envoyerEcheance, Echeance } from '@/lib/paiements/echeancier'
 
 const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
@@ -59,6 +60,7 @@ export async function mailMiseEnLigne(client: { nom_domaine: string; email_conta
 }
 
 export async function notifierAgence(sujet: string, html: string) {
+  await notifier({ titre: sujet, corps: enTexte(html), niveau: 'info' })
   if (!AGENCE) return
   try {
     await sendMail(AGENCE, sujet, `<div style="font-family:Arial,sans-serif;font-size:14px;">${html}</div>`, { fromName: 'La Gabare — Projets' })

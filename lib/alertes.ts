@@ -40,6 +40,8 @@ async function signaler(message: string) {
   })
   if (!alerter) return
   dernieresAlertes.set(signature, Date.now())
+  const { notifier } = await import('@/lib/notifier')
+  await notifier({ titre: `Erreur admin : ${premiereLigne.slice(0, 120)}`, corps: message.slice(0, 600), niveau: 'error', id: `erreur-${signature}-${Math.floor(Date.now() / DELAI_REALERTE_MS)}` })
 
   const agence = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER
   if (!agence) return

@@ -7,6 +7,7 @@ import { rattraperRapports } from '@/lib/audit-ia'
 import { relancerContenus } from '@/lib/contenus'
 import { envoyerRapportsMensuels } from '@/lib/rapport-mensuel'
 import { proposerOffres } from '@/lib/offres'
+import { notifier } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60 // inclut un éventuel rapport d'audit en rattrapage
@@ -61,5 +62,12 @@ export async function GET(req: NextRequest) {
   const rapports = await envoyerRapportsMensuels()
   const offres = await proposerOffres()
   const audits = await rattraperRapports()
+  if (bilan.relances || bilan.alertes) {
+    await notifier({
+      titre: `Versements : ${bilan.relances} relance(s), ${bilan.alertes} impayé(s) à reprendre`,
+      niveau: bilan.alertes ? 'warning' : 'info', url: 'https://admin.la-gabare.fr/clients',
+      id: `relances-${new Date().toISOString().slice(0, 10)}`,
+    })
+  }
   return NextResponse.json({ versements: bilan, devis, leads, mois_offerts: moisOfferts, contenus, rapports, offres, audits })
 }

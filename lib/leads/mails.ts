@@ -1,5 +1,6 @@
 import 'server-only'
 import { sendMail } from '@/lib/mailer'
+import { notifier } from '@/lib/notifier'
 
 // Mails des prospects, envoyés directement par le dashboard (remplace le workflow n8n « Nouveau Lead »)
 
@@ -76,6 +77,11 @@ function tableau(titre: string, lignes: [string, unknown][]) {
 
 // Notification à l'agence : nouveau lead
 export async function notifierAgenceLead(l: Record<string, unknown>, mailEnvoye: boolean) {
+  await notifier({
+    titre: `Nouveau lead — ${l.domaine || l.nom || 'sans nom'}${l.pack_demande ? ` (${l.pack_demande})` : ''}`,
+    corps: [l.email, l.tel, l.besoins].filter(Boolean).join(' · '), niveau: mailEnvoye ? 'info' : 'warning',
+    url: `${ADMIN_URL}`, id: `lead-${l.id}`,
+  })
   if (!AGENCE) return
   await sendMail(AGENCE, `Nouveau lead — ${l.domaine || l.nom || 'sans nom'}${l.pack_demande ? ` (${l.pack_demande})` : ''}`,
     tableau('Nouveau lead', [
@@ -87,11 +93,15 @@ export async function notifierAgenceLead(l: Record<string, unknown>, mailEnvoye:
 
 // Notification à l'agence : appel découverte réservé, reporté ou annulé sur Cal.com
 export async function notifierAgenceRdv(l: Record<string, unknown>, debut: string | null, quoi: 'nouveau' | 'reporte' | 'annule') {
-  if (!AGENCE) return
   const quand = debut
     ? new Date(debut).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', dateStyle: 'full', timeStyle: 'short' })
     : null
   const titre = { nouveau: 'RDV pris', reporte: 'RDV reporté', annule: 'RDV annulé' }[quoi]
+  await notifier({
+    titre: `${titre} — ${l.domaine || l.nom || l.email}`, corps: quand || undefined,
+    niveau: quoi === 'annule' ? 'warning' : 'success', url: ADMIN_URL, id: `rdv-${l.id}-${quoi}-${debut || ''}`,
+  })
+  if (!AGENCE) return
   await sendMail(AGENCE, `${titre} — ${l.domaine || l.nom || l.email}${quand ? ` · ${quand}` : ''}`,
     tableau(titre, [
       ['Quand', quand], ['Nom', l.nom], ['E-mail', l.email], ['Téléphone', l.tel], ['Domaine', l.domaine],
@@ -101,6 +111,11 @@ export async function notifierAgenceRdv(l: Record<string, unknown>, debut: strin
 
 // Notification à l'agence : brief détaillé reçu
 export async function notifierAgenceBrief(b: Record<string, unknown>, leadTrouve: boolean) {
+  await notifier({
+    titre: `Brief reçu — ${b.nom_domaine || b.nom_contact || 'sans nom'}`,
+    corps: [b.nom_contact, b.email, b.type_site].filter(Boolean).join(' · '), niveau: 'success',
+    url: ADMIN_URL, id: `brief-${b.id}`,
+  })
   if (!AGENCE) return
   await sendMail(AGENCE, `Brief reçu — ${b.nom_domaine || b.nom_contact || 'sans nom'}`,
     tableau('Brief détaillé reçu', [

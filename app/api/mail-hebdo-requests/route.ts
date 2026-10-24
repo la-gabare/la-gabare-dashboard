@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+// Seuls ces champs sont acceptés (le corps brut n'est plus écrit tel quel en base)
+const CHAMPS = ['client_id', 'date_debut', 'date_fin', 'status', 'error_message'] as const
+function filtrer(body: Record<string, unknown>) {
+  return Object.fromEntries(CHAMPS.filter((c) => c in body).map((c) => [c, body[c]]))
+}
+
 export async function POST(req: NextRequest) {
-  const body = await req.json()
+  const body = filtrer(await req.json().catch(() => ({})))
+  if (!body.client_id) return NextResponse.json({ error: 'client_id is required' }, { status: 400 })
 
   const { data, error } = await supabaseAdmin
     .from('mail_hebdo_requests')
@@ -18,8 +25,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const body = await req.json()
-  const { id, ...fields } = body
+  const { id, ...reste } = await req.json().catch(() => ({}))
+  const fields = filtrer(reste)
 
   if (!id) {
     return NextResponse.json({ error: 'id is required' }, { status: 400 })
