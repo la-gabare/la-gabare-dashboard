@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { parrainParCode, PARRAINAGE } from '@/lib/parrainage'
 import { lancerPlanEditorial, abonnementActive } from '@/lib/plan-editorial'
+import { notifier } from '@/lib/notifier'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -20,6 +21,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
+  await notifier({
+    titre: `Nouveau client — ${data.nom_domaine}`,
+    corps: [data.appellation, data.abonnement && `abonnement ${data.abonnement}`, data.pack_site && `pack ${data.pack_site}`, data.email_contact].filter(Boolean).join(' · '),
+    niveau: 'success', url: `https://admin.la-gabare.fr/clients/${data.id}`, id: `client-${data.id}`,
+  })
   return NextResponse.json(data)
 }
 
@@ -43,7 +49,10 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  if (avant && abonnementActive(avant, data)) await lancerPlanEditorial(id, 'admin')
+  if (avant && abonnementActive(avant, data)) {
+    await lancerPlanEditorial(id, 'admin')
+    await notifier({ titre: `Abonnement activé — ${data.nom_domaine}`, corps: `Formule ${data.abonnement}`, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${id}`, id: `abo-${id}-${data.abonnement}` })
+  }
 
   return NextResponse.json(data)
 }

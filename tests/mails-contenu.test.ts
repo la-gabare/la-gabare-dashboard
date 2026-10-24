@@ -20,3 +20,15 @@ test('mail de contenu : un titre malveillant est échappé', () => {
   assert.ok(!html.includes('<script>'))
   assert.equal(esc('a&b"c'), 'a&amp;b&quot;c')
 })
+
+import { resumePlan } from '@/lib/plan-resume'
+
+test('résumé du plan : articles puis publications, triés par date, avec l\'article relayé', () => {
+  const t = resumePlan(
+    [{ id: 2, titre: 'Le tuffeau', angle: 'Terroir', date_publication_prevue: '2026-11-05' }, { id: 1, titre: 'Après les vendanges', angle: 'Saisonnalite', date_publication_prevue: '2026-11-03' }],
+    [{ article_id: 1, reseau: 'instagram', format: 'photo', date_publication_prevue: '2026-11-05' }])
+  assert.match(t, /ARTICLES \(2\)/)
+  assert.ok(t.indexOf('Après les vendanges') < t.indexOf('Le tuffeau'))
+  assert.match(t, /PUBLICATIONS \(1\)/)
+  assert.match(t, /Instagram photo \(relaie « Après les vendanges »\)/)
+})

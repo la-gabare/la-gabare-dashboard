@@ -2,6 +2,8 @@ import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { mailContenu, esc, type Ligne } from '@/lib/mails-contenu-html'
+import { notifier } from '@/lib/notifier'
+import { resumePlan } from '@/lib/plan-resume'
 
 // Trois mails au vigneron abonné, repris du workflow n8n « Agent de contenu mensuel » :
 //  - aperçu du mois à valider (dès que le plan et les contenus du mois sont prêts),
@@ -61,6 +63,21 @@ async function envoyerProgramme(client: Cible, lignes: Ligne[], mois: string, pr
     { fromName: 'La Gabare', replyTo: AGENCE || undefined })
 }
 
+// Plan complet vers le feed Harness (Telegram) : articles et publications des 45 prochains jours
+async function notifierPlan(client: Cible, id: string, mois: string, prefixe = '') {
+  const debut = new Date().toISOString().slice(0, 10)
+  const fin = new Date(Date.now() + 45 * JOUR).toISOString().slice(0, 10)
+  const [a, p] = await Promise.all([
+    supabaseAdmin.from('articles').select('id, titre, angle, date_publication_prevue').eq('client_id', client.id).gte('date_publication_prevue', debut).lte('date_publication_prevue', fin),
+    supabaseAdmin.from('posts').select('article_id, reseau, format, contenu, date_publication_prevue').eq('client_id', client.id).gte('date_publication_prevue', debut).lte('date_publication_prevue', fin),
+  ])
+  await notifier({
+    titre: `${prefixe}Plan éditorial prêt — ${client.nom_domaine} · ${mois}`,
+    corps: `${resumePlan(a.data || [], p.data || [])}\n\nL'aperçu part au vigneron au prochain passage (demain 10 h).`,
+    niveau: 'info', url: `https://admin.la-gabare.fr/clients/${client.id}`, id,
+  })
+}
+
 // Essai : envoie les deux mails du mois au contact d'un client, sans toucher au plan ni aux dates d'envoi
 export async function envoyerMailsDuMoisEnEssai(clientId: number) {
   const client = await cibleDe(clientId)
@@ -68,6 +85,7 @@ export async function envoyerMailsDuMoisEnEssai(clientId: number) {
   const lignes = await contenusEntre(client.id, new Date().toISOString().slice(0, 10), new Date(Date.now() + 45 * JOUR).toISOString().slice(0, 10))
   if (!lignes.length) return { ok: false, erreur: 'Aucun contenu prévu dans les 45 prochains jours' }
   const mois = moisFr(new Date(lignes[0].date))
+  await notifierPlan(client, `plan-essai-${client.id}-${Date.now()}`, mois, '[ESSAI] ')
   await envoyerApercu(client, lignes, mois, '[ESSAI] ')
   await envoyerProgramme(client, lignes, mois, '[ESSAI] ')
   return { ok: true, destinataire: client.email_contact, contenus: lignes.length }
@@ -75,11 +93,18 @@ export async function envoyerMailsDuMoisEnEssai(clientId: number) {
 
 // Aperçu mensuel puis programme du mois : à appeler chaque jour (cron)
 export async function envoyerMailsDuMois() {
-  const bilan = { apercus: 0, programmes: 0, erreurs: 0 }
+  const bilan = { plans_notifies: 0, apercus: 0, programmes: 0, erreurs: 0 }
   const depuis = new Date(Date.now() - 45 * JOUR).toISOString()
-  const { data: plans, error } = await supabaseAdmin.from('plans_generation')
-    .select('id, client_id, created_at, apercu_envoye_at, programme_envoye_at')
+  const filtre = (colonnes: string) => supabaseAdmin.from('plans_generation').select(colonnes)
     .eq('status', 'termine').gte('created_at', depuis).or('apercu_envoye_at.is.null,programme_envoye_at.is.null')
+  type Plan = { id: number; client_id: number; created_at: string; apercu_envoye_at: string | null; programme_envoye_at: string | null; plan_notifie_at?: string | null }
+  let { data: plans, error } = await filtre('id, client_id, created_at, apercu_envoye_at, programme_envoye_at, plan_notifie_at') as unknown as { data: Plan[] | null; error: unknown }
+  let notifPlan = true
+  if (error) {
+    // sql/plan_notifie.sql pas encore exécuté : on envoie sans notification préalable (comportement précédent)
+    notifPlan = false
+    ;({ data: plans, error } = await filtre('id, client_id, created_at, apercu_envoye_at, programme_envoye_at') as unknown as { data: Plan[] | null; error: unknown })
+  }
   if (error) return { ...bilan, ignore: 'colonnes absentes : exécuter sql/mails_contenu.sql' }
 
   const aujourdhui = new Date().toISOString().slice(0, 10)
@@ -92,6 +117,16 @@ export async function envoyerMailsDuMois() {
       if (!lignes.length) continue
       const mois = moisFr(new Date(lignes[0].date))
 
+      if (!plan.apercu_envoye_at && notifPlan) {
+        // Étape 1 : le plan complet arrive d'abord sur Telegram ; l'aperçu au vigneron part au passage suivant (≥ 20 h après)
+        if (!plan.plan_notifie_at) {
+          await notifierPlan(client, `plan-${plan.id}`, mois)
+          await supabaseAdmin.from('plans_generation').update({ plan_notifie_at: new Date().toISOString() }).eq('id', plan.id)
+          bilan.plans_notifies++
+          continue
+        }
+        if (Date.now() - new Date(plan.plan_notifie_at).getTime() < 20 * 60 * 60 * 1000) continue
+      }
       if (!plan.apercu_envoye_at) {
         await envoyerApercu(client, lignes, mois)
         await supabaseAdmin.from('plans_generation').update({ apercu_envoye_at: new Date().toISOString() }).eq('id', plan.id)

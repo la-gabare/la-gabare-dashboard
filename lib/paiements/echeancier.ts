@@ -177,6 +177,8 @@ export async function activerClient(clientId: number | string) {
     .select('id, statut, email_contact').eq('id', clientId).single()
   if (!client || client.statut === 'actif') return
   await supabaseAdmin.from('clients').update({ statut: 'actif' }).eq('id', client.id)
+  const { notifier } = await import('@/lib/notifier')
+  await notifier({ titre: `Client activé — premier paiement reçu`, corps: client.email_contact || undefined, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${client.id}`, id: `client-actif-${client.id}` })
   if (client.email_contact) {
     await supabaseAdmin.auth.admin.inviteUserByEmail(client.email_contact, {
       redirectTo: 'https://la-gabare.fr/bienvenue.html',

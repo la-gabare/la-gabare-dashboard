@@ -24,7 +24,7 @@ export async function notifier(n: Notif): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: n.titre.slice(0, 200),
-        body: n.corps?.slice(0, 1000),
+        body: n.corps?.slice(0, 3500),
         level: n.niveau || 'info',
         url: n.url,
         id: n.id,
