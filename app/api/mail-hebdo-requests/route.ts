@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { envoyerMailHebdo } from '@/lib/mails-contenu'
 
 // Seuls ces champs sont acceptés (le corps brut n'est plus écrit tel quel en base)
 const CHAMPS = ['client_id', 'date_debut', 'date_fin', 'status', 'error_message'] as const
@@ -21,7 +22,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  return NextResponse.json(data)
+  // Envoi immédiat (avant : traité par n8n toutes les 15 minutes)
+  await envoyerMailHebdo(data.id)
+  const { data: apres } = await supabaseAdmin.from('mail_hebdo_requests').select('*').eq('id', data.id).single()
+  return NextResponse.json(apres || data)
 }
 
 export async function PATCH(req: NextRequest) {

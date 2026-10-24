@@ -7,6 +7,7 @@ import { rattraperRapports } from '@/lib/audit-ia'
 import { relancerContenus } from '@/lib/contenus'
 import { envoyerRapportsMensuels } from '@/lib/rapport-mensuel'
 import { proposerOffres } from '@/lib/offres'
+import { envoyerMailsDuMois, envoyerMailsHebdoEnAttente } from '@/lib/mails-contenu'
 import { notifier } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
@@ -62,6 +63,8 @@ export async function GET(req: NextRequest) {
   const rapports = await envoyerRapportsMensuels()
   const offres = await proposerOffres()
   const audits = await rattraperRapports()
+  const mailsContenu = await envoyerMailsDuMois()
+  const mailsHebdo = await envoyerMailsHebdoEnAttente()
   if (bilan.relances || bilan.alertes) {
     await notifier({
       titre: `Versements : ${bilan.relances} relance(s), ${bilan.alertes} impayé(s) à reprendre`,
@@ -69,5 +72,5 @@ export async function GET(req: NextRequest) {
       id: `relances-${new Date().toISOString().slice(0, 10)}`,
     })
   }
-  return NextResponse.json({ versements: bilan, devis, leads, mois_offerts: moisOfferts, contenus, rapports, offres, audits })
+  return NextResponse.json({ versements: bilan, devis, leads, mois_offerts: moisOfferts, contenus, rapports, offres, audits, mails_contenu: mailsContenu, mails_hebdo: mailsHebdo })
 }

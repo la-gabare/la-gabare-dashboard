@@ -2,7 +2,7 @@ import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // Demande un plan éditorial pour un client abonné : crée une ligne plans_generation « en_attente »,
-// que le workflow n8n « La Gabare — Agent de contenu mensuel » traite (vérification toutes les 15 min).
+// qui sert de liste « à faire » aux agents du pôle Contenu (n8n n'intervient plus).
 // Pas de doublon : rien si une demande est déjà en attente ou si un plan a été créé il y a moins de `joursMin` jours.
 export async function lancerPlanEditorial(clientId: number | string, origine: string, joursMin = 25) {
   const { data: client } = await supabaseAdmin.from('clients').select('id, statut, abonnement').eq('id', clientId).single()
