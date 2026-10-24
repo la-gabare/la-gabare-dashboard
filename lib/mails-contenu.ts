@@ -1,6 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
+import { mailContenu, esc, type Ligne } from '@/lib/mails-contenu-html'
 
 // Trois mails au vigneron abonné, repris du workflow n8n « Agent de contenu mensuel » :
 //  - aperçu du mois à valider (dès que le plan et les contenus du mois sont prêts),
@@ -14,21 +15,10 @@ const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
 const ESPACE = 'https://la-gabare.fr/espace-client.html'
 const JOUR = 24 * 60 * 60 * 1000
 
-const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
-const dateFr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' })
+const dateFr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'long' }).replace(/^1 /, '1er ')
 const moisFr = (d: Date) => d.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', month: 'long', year: 'numeric' })
 
-type Ligne = { date: string; type: 'Article' | 'Publication'; titre: string; valide?: boolean }
 type Cible = { id: number; nom_domaine: string; email_contact: string | null; statut: string | null }
-
-function gabarit(intro: string, lignes: Ligne[], pied: string, bouton: string) {
-  const items = lignes.map((l) =>
-    `<li style="margin-bottom:6px;"><strong>${esc(dateFr(l.date))}</strong> — ${l.type} : ${esc(l.titre)}${l.valide ? ' ✓' : ''}</li>`).join('')
-  return `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
-    <p>Bonjour,</p><p>${intro}</p><ul style="padding-left:20px;">${items}</ul><p>${pied}</p>
-    <p><a href="${ESPACE}" style="display:inline-block;padding:14px 28px;background:#5A1226;color:#F5F2EC;text-decoration:none;font-weight:600;">${bouton}</a></p>
-    <p>L'équipe La Gabare</p></div>`
-}
 
 async function contenusEntre(clientId: number, debut: string, fin: string): Promise<Ligne[]> {
   const [a, p] = await Promise.all([
@@ -41,7 +31,7 @@ async function contenusEntre(clientId: number, debut: string, fin: string): Prom
     ...(a.data || []).map((x) => ({ date: x.date_publication_prevue, type: 'Article' as const, titre: x.titre, valide: x.plan_editorial_valide === true })),
     ...(p.data || []).map((x) => ({
       date: x.date_publication_prevue, type: 'Publication' as const,
-      titre: `${x.reseau || 'réseau'}${x.format ? ` (${x.format})` : ''}`,
+      titre: `${x.reseau ? x.reseau.charAt(0).toUpperCase() + x.reseau.slice(1) : 'Réseau social'}${x.format ? ` · ${x.format}` : ''}`,
     })),
   ]
   return lignes.sort((x, y) => x.date.localeCompare(y.date))
@@ -73,8 +63,10 @@ export async function envoyerMailsDuMois() {
 
       if (!plan.apercu_envoye_at) {
         await sendMail(client.email_contact!, `Votre programme éditorial de ${mois} est prêt à valider · ${client.nom_domaine}`,
-          gabarit(`Votre programme de contenus de ${esc(mois)} est prêt. Voici ce qui est prévu pour ${esc(client.nom_domaine)} :`, lignes,
-            'Merci de relire chaque article et de le valider (ou de demander une modification) depuis votre espace client.', 'Relire et valider'),
+          mailContenu({ surtitre: `Programme éditorial · ${esc(mois)}`, titre: 'Votre programme du mois est prêt à valider',
+            intro: `Voici les contenus prévus pour ${esc(client.nom_domaine)} en ${esc(mois)}.`, lignes,
+            pied: 'Merci de relire chaque article et de le valider (ou de demander une modification) depuis votre espace client.',
+            bouton: 'Relire et valider', lien: ESPACE }),
           { fromName: 'La Gabare', replyTo: AGENCE || undefined })
         await supabaseAdmin.from('plans_generation').update({ apercu_envoye_at: new Date().toISOString() }).eq('id', plan.id)
         bilan.apercus++
@@ -84,8 +76,10 @@ export async function envoyerMailsDuMois() {
         const delaiPasse = Date.now() - new Date(plan.apercu_envoye_at).getTime() > 7 * JOUR
         if (!tousValides && !delaiPasse) continue
         await sendMail(client.email_contact!, `Votre programme du mois · ${client.nom_domaine}`,
-          gabarit(`Voici le programme de publication de ${esc(mois)} pour ${esc(client.nom_domaine)} :`, lignes,
-            'Rien à faire de votre côté : tout est publié aux dates indiquées. Les contenus restent modifiables depuis votre espace client.', 'Ouvrir mon espace client'),
+          mailContenu({ surtitre: `Programme de publication · ${esc(mois)}`, titre: `Votre programme de ${esc(mois)}`,
+            intro: `Voici le calendrier de publication de ${esc(client.nom_domaine)}.`, lignes,
+            pied: 'Rien à faire de votre côté : tout est publié aux dates indiquées. Les contenus restent modifiables depuis votre espace client.',
+            bouton: 'Ouvrir mon espace client', lien: ESPACE }),
           { fromName: 'La Gabare', replyTo: AGENCE || undefined })
         await supabaseAdmin.from('plans_generation').update({ programme_envoye_at: new Date().toISOString() }).eq('id', plan.id)
         bilan.programmes++
@@ -113,8 +107,9 @@ export async function envoyerMailHebdo(demandeId: number) {
     const lignes = await contenusEntre(client.id, d.date_debut, d.date_fin)
     if (!lignes.length) return fin('erreur', 'Aucun contenu prévu sur cette période')
     await sendMail(client.email_contact!, `Votre programme de la semaine · ${client.nom_domaine}`,
-      gabarit(`Voici ce qui est prévu du ${esc(dateFr(d.date_debut))} au ${esc(dateFr(d.date_fin))} pour ${esc(client.nom_domaine)} :`, lignes,
-        'Un changement à faire ? Répondez simplement à ce message.', 'Ouvrir mon espace client'),
+      mailContenu({ surtitre: 'Programme de la semaine', titre: `Du ${esc(dateFr(d.date_debut))} au ${esc(dateFr(d.date_fin))}`,
+        intro: `Voici ce qui est prévu cette semaine pour ${esc(client.nom_domaine)}.`, lignes,
+        pied: 'Un changement à faire ? Répondez simplement à ce message.', bouton: 'Ouvrir mon espace client', lien: ESPACE }),
       { fromName: 'La Gabare', replyTo: AGENCE || undefined })
     return fin('envoye', null)
   } catch (e) {
