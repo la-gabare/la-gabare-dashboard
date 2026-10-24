@@ -42,6 +42,37 @@ async function cibleDe(clientId: number): Promise<Cible | null> {
   return data && data.email_contact && data.statut === 'actif' ? data : null
 }
 
+
+async function envoyerApercu(client: Cible, lignes: Ligne[], mois: string, prefixe = '') {
+  await sendMail(client.email_contact!, `${prefixe}Votre programme éditorial de ${mois} est prêt à valider · ${client.nom_domaine}`,
+    mailContenu({ surtitre: `Programme éditorial · ${esc(mois)}`, titre: 'Votre programme du mois est prêt à valider',
+      intro: `Voici les contenus prévus pour ${esc(client.nom_domaine)} en ${esc(mois)}.`, lignes,
+      pied: 'Merci de relire chaque article et de le valider (ou de demander une modification) depuis votre espace client.',
+      bouton: 'Relire et valider', lien: ESPACE }),
+    { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+}
+
+async function envoyerProgramme(client: Cible, lignes: Ligne[], mois: string, prefixe = '') {
+  await sendMail(client.email_contact!, `${prefixe}Votre programme du mois · ${client.nom_domaine}`,
+    mailContenu({ surtitre: `Programme de publication · ${esc(mois)}`, titre: `Votre programme de ${esc(mois)}`,
+      intro: `Voici le calendrier de publication de ${esc(client.nom_domaine)}.`, lignes,
+      pied: 'Rien à faire de votre côté : tout est publié aux dates indiquées. Les contenus restent modifiables depuis votre espace client.',
+      bouton: 'Ouvrir mon espace client', lien: ESPACE }),
+    { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+}
+
+// Essai : envoie les deux mails du mois au contact d'un client, sans toucher au plan ni aux dates d'envoi
+export async function envoyerMailsDuMoisEnEssai(clientId: number) {
+  const client = await cibleDe(clientId)
+  if (!client) return { ok: false, erreur: 'Client inactif ou sans adresse e-mail' }
+  const lignes = await contenusEntre(client.id, new Date().toISOString().slice(0, 10), new Date(Date.now() + 45 * JOUR).toISOString().slice(0, 10))
+  if (!lignes.length) return { ok: false, erreur: 'Aucun contenu prévu dans les 45 prochains jours' }
+  const mois = moisFr(new Date(lignes[0].date))
+  await envoyerApercu(client, lignes, mois, '[ESSAI] ')
+  await envoyerProgramme(client, lignes, mois, '[ESSAI] ')
+  return { ok: true, destinataire: client.email_contact, contenus: lignes.length }
+}
+
 // Aperçu mensuel puis programme du mois : à appeler chaque jour (cron)
 export async function envoyerMailsDuMois() {
   const bilan = { apercus: 0, programmes: 0, erreurs: 0 }
@@ -62,12 +93,7 @@ export async function envoyerMailsDuMois() {
       const mois = moisFr(new Date(lignes[0].date))
 
       if (!plan.apercu_envoye_at) {
-        await sendMail(client.email_contact!, `Votre programme éditorial de ${mois} est prêt à valider · ${client.nom_domaine}`,
-          mailContenu({ surtitre: `Programme éditorial · ${esc(mois)}`, titre: 'Votre programme du mois est prêt à valider',
-            intro: `Voici les contenus prévus pour ${esc(client.nom_domaine)} en ${esc(mois)}.`, lignes,
-            pied: 'Merci de relire chaque article et de le valider (ou de demander une modification) depuis votre espace client.',
-            bouton: 'Relire et valider', lien: ESPACE }),
-          { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+        await envoyerApercu(client, lignes, mois)
         await supabaseAdmin.from('plans_generation').update({ apercu_envoye_at: new Date().toISOString() }).eq('id', plan.id)
         bilan.apercus++
       } else if (!plan.programme_envoye_at) {
@@ -75,12 +101,7 @@ export async function envoyerMailsDuMois() {
         const tousValides = articles.length > 0 && articles.every((l) => l.valide)
         const delaiPasse = Date.now() - new Date(plan.apercu_envoye_at).getTime() > 7 * JOUR
         if (!tousValides && !delaiPasse) continue
-        await sendMail(client.email_contact!, `Votre programme du mois · ${client.nom_domaine}`,
-          mailContenu({ surtitre: `Programme de publication · ${esc(mois)}`, titre: `Votre programme de ${esc(mois)}`,
-            intro: `Voici le calendrier de publication de ${esc(client.nom_domaine)}.`, lignes,
-            pied: 'Rien à faire de votre côté : tout est publié aux dates indiquées. Les contenus restent modifiables depuis votre espace client.',
-            bouton: 'Ouvrir mon espace client', lien: ESPACE }),
-          { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+        await envoyerProgramme(client, lignes, mois)
         await supabaseAdmin.from('plans_generation').update({ programme_envoye_at: new Date().toISOString() }).eq('id', plan.id)
         bilan.programmes++
       }
