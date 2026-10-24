@@ -45,8 +45,11 @@ async function cibleDe(clientId: number): Promise<Cible | null> {
 }
 
 
+// « de mars » mais « d'octobre » (voyelle)
+const deMois = (mois: string) => (/^[aeiouhéèàâ]/i.test(mois) ? `d'${mois}` : `de ${mois}`)
+
 async function envoyerApercu(client: Cible, lignes: Ligne[], mois: string, prefixe = '') {
-  await sendMail(client.email_contact!, `${prefixe}Votre programme éditorial de ${mois} est prêt à valider · ${client.nom_domaine}`,
+  await sendMail(client.email_contact!, `${prefixe}Votre programme éditorial ${deMois(mois)} est prêt à valider · ${client.nom_domaine}`,
     mailContenu({ surtitre: `Programme éditorial · ${esc(mois)}`, titre: 'Votre programme du mois est prêt à valider',
       intro: `Voici les contenus prévus pour ${esc(client.nom_domaine)} en ${esc(mois)}.`, lignes,
       pied: 'Merci de relire chaque article et de le valider (ou de demander une modification) depuis votre espace client.',
@@ -56,7 +59,7 @@ async function envoyerApercu(client: Cible, lignes: Ligne[], mois: string, prefi
 
 async function envoyerProgramme(client: Cible, lignes: Ligne[], mois: string, prefixe = '') {
   await sendMail(client.email_contact!, `${prefixe}Votre programme du mois · ${client.nom_domaine}`,
-    mailContenu({ surtitre: `Programme de publication · ${esc(mois)}`, titre: `Votre programme de ${esc(mois)}`,
+    mailContenu({ surtitre: `Programme de publication · ${esc(mois)}`, titre: `Votre programme ${esc(deMois(mois))}`,
       intro: `Voici le calendrier de publication de ${esc(client.nom_domaine)}.`, lignes,
       pied: 'Rien à faire de votre côté : tout est publié aux dates indiquées. Les contenus restent modifiables depuis votre espace client.',
       bouton: 'Ouvrir mon espace client', lien: ESPACE }),
