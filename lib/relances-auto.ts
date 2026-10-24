@@ -128,3 +128,36 @@ export async function suivreMoisOfferts() {
   }
   return bilan
 }
+
+// ── Leads sans réponse : une relance 5 jours après le premier mail (remplace le workflow n8n « 06 Relance leads ») ──
+export async function relancerLeads() {
+  const bilan = { relances: 0, erreurs: 0 }
+  const limite = new Date(Date.now() - 5 * JOUR).toISOString()
+  const { data } = await supabaseAdmin.from('leads')
+    .select('id, nom, email, domaine').eq('statut', 'mail_envoye').lt('mail_envoye_at', limite)
+  for (const l of (data || []) as { id: string; nom: string | null; email: string | null; domaine: string | null }[]) {
+    if (!l.email) continue
+    try {
+      const domaine = esc(l.domaine || 'votre domaine')
+      const bouton = (href: string, texte: string, plein: boolean) =>
+        `<a href="${href}" style="display:inline-block;padding:12px 28px;${plein ? 'background-color:#5A1226;color:#F5F2EC;' : 'border:1px solid #1A1310;color:#1A1310;'}font-family:Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;">${texte}</a>`
+      const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
+<tr><td style="background-color:#1A1310;padding:32px 40px;text-align:center;"><span style="font-family:Georgia,serif;font-size:24px;letter-spacing:0.04em;color:#F5F2EC;">La Gabare</span></td></tr>
+<tr><td style="height:3px;background:linear-gradient(90deg,#5A1226,#B08D57);font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr><td style="padding:44px 40px 24px 40px;"><p style="margin:0 0 6px 0;font-family:Arial,sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">Petite relance</p>
+<h1 style="margin:0 0 20px 0;font-family:Georgia,serif;font-weight:400;font-size:26px;line-height:1.25;color:#1A1310;">Bonjour ${esc(l.nom || '')},</h1>
+<p style="margin:0 0 16px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">Nous n'avons pas eu de retour concernant votre demande pour <strong style="color:#1A1310;">${domaine}</strong>. Est-ce toujours d'actualité ?</p>
+<p style="margin:0 0 32px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">Si oui, choisissez l'option qui vous convient :</p></td></tr>
+<tr><td style="padding:0 40px 20px 40px;">${bouton('https://cal.com/la-gabare/appel-decouverte-la-gabare', 'Réserver un appel &rarr;', true)}</td></tr>
+<tr><td style="padding:0 40px 36px 40px;">${bouton(`https://la-gabare.fr/formulaire-complet.html?lead_id=${encodeURIComponent(l.id)}`, 'Compléter le formulaire &rarr;', false)}</td></tr>
+<tr><td style="background-color:#1A1310;padding:24px 40px;text-align:center;"><p style="margin:0;font-family:Arial,sans-serif;font-size:11px;letter-spacing:0.05em;color:rgba(245,242,236,0.5);">La Gabare — Agence pour les domaines viticoles de la Loire</p></td></tr></table></td></tr></table>`
+      await sendMail(l.email, `Toujours intéressé par ${l.domaine || 'votre projet'} ?`, html)
+      await supabaseAdmin.from('leads').update({ statut: 'relance' }).eq('id', l.id)
+      bilan.relances++
+    } catch (err) {
+      bilan.erreurs++
+      console.error('relance lead', l.id, err)
+    }
+  }
+  return bilan
+}
