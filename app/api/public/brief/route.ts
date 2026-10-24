@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
 
   if (!brief.nom_domaine || !brief.nom_contact) return json({ error: 'Le nom du domaine et votre nom sont obligatoires.' }, 400)
   if (!emailValide(brief.email as string)) return json({ error: 'Adresse e-mail invalide.' }, 400)
+  if (!brief.telephone) return json({ error: 'Votre numéro de téléphone est obligatoire.' }, 400)
 
   // Lead d'origine : celui du lien reçu par e-mail, sinon le plus récent avec la même adresse
   let leadId: number | null = null
