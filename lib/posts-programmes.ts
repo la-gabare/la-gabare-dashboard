@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { publishPostToMeta } from '@/lib/meta-publish'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 // Publie les posts « programme » dont la date prévue est arrivée (remplace le workflow n8n « 02-Social Media »).
 export async function publierPostsProgrammes() {
@@ -22,6 +23,7 @@ export async function publierPostsProgrammes() {
     }
     await supabaseAdmin.from('posts').update({ status: 'publie', date_publication_reelle: new Date().toISOString() }).eq('id', post.id)
     publies++
+    await notifier({ titre: `Publication programmée diffusée — ${await nomClient(post.client_id)}`, corps: `${post.reseau || ''} ${post.format || ''}`.trim(), niveau: 'success', id: `post-publie-${post.id}` })
   }
   return { dus: posts?.length || 0, publies, ignores }
 }

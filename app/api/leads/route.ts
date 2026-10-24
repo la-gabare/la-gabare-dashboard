@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json()
@@ -20,6 +21,9 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
+  if (fields.statut) {
+    await notifier({ titre: `Lead — ${data.domaine || data.nom || `n° ${id}`} : ${String(fields.statut).replace(/_/g, ' ')}`, niveau: 'info', url: 'https://admin.la-gabare.fr/leads' })
+  }
   return NextResponse.json(data)
 }
 
@@ -37,5 +41,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
+  await notifier({ titre: `Lead n° ${id} supprimé`, niveau: 'warning', url: 'https://admin.la-gabare.fr/leads' })
   return NextResponse.json({ success: true })
 }

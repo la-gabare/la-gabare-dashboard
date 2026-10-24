@@ -6,6 +6,7 @@ import { clientParDomaine, BoutiqueConfig } from '@/lib/boutique/core'
 import { texte, emailValide, tropDeRequetes, ipDe } from '@/lib/leads/public'
 import { ACTIVITES } from '@/lib/pro/core'
 import { mailDemandeAccesDomaine, mailAccuseDemandePro } from '@/lib/pro/emails'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,5 +64,6 @@ export async function POST(req: NextRequest) {
   }
   ;(await Promise.allSettled(envois)).forEach((r) => { if (r.status === 'rejected') console.error('pro/inscription mail', r.reason) })
 
+  await notifier({ titre: `Demande d'accès pro — ${client.nom_domaine}`, corps: String(entreprise), niveau: 'info' })
   return json({ ok: true })
 }

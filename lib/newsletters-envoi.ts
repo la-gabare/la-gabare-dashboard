@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
+import { notifier } from '@/lib/notifier'
 
 function gabarit(domaine: string, titre: string, contenu: string) {
   return `<div style="font-family:Georgia,serif;max-width:640px;margin:auto;color:#1a1a1a;line-height:1.6"><p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a7355">${domaine}</p><h1 style="font-size:24px;margin:6px 0 20px;font-weight:normal;color:#1a1a1a">${titre}</h1>${contenu}<hr style="border:none;border-top:1px solid #e5ded3;margin:30px 0"><p style="font-size:11px;color:#999;text-align:center">L’abus d’alcool est dangereux pour la santé. À consommer avec modération.</p></div>`
@@ -33,7 +34,12 @@ export async function envoyerNewslettersEnAttente() {
     await supabaseAdmin.from('newsletters').update(
       tousEchoues ? { status: 'a_envoyer' } : { status: 'envoye', sent_at: new Date().toISOString() },
     ).eq('id', nl.id)
-    if (!tousEchoues) envoyees++
+    if (!tousEchoues) {
+      envoyees++
+      await notifier({ titre: `Newsletter envoyée — ${client?.nom_domaine || ''}`, corps: `${titre} · ${(abonnes || []).length - echecs} destinataire(s)`, niveau: 'success', id: `newsletter-${nl.id}` })
+    } else {
+      await notifier({ titre: `Newsletter non envoyée — ${client?.nom_domaine || ''}`, corps: `${titre} : tous les envois ont échoué, nouvel essai demain`, niveau: 'error', id: `newsletter-echec-${nl.id}-${new Date().toISOString().slice(0, 10)}` })
+    }
   }
   return { newsletters: lettres?.length || 0, envoyees, emails }
 }

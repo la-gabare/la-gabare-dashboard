@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { publishPostToMeta } from '@/lib/meta-publish'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 // Publishing polls Instagram's media processing status before calling
 // media_publish, which can take longer than the platform's default timeout.
@@ -76,5 +77,6 @@ export async function POST(req: NextRequest) {
     return withCors(NextResponse.json({ error: updateError.message }, { status: 400 }))
   }
 
+  await notifier({ titre: `Publication diffusée — ${await nomClient(updated.client_id)}`, corps: `${updated.reseau || ''} ${updated.format || ''}`.trim(), niveau: 'success', url: `https://admin.la-gabare.fr/clients/${updated.client_id}` })
   return withCors(NextResponse.json({ success: true, post: updated }))
 }

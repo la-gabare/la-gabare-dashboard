@@ -4,6 +4,7 @@ import { FORMULES } from '@/lib/paiements/echeancier'
 import {
   calculer, prochainNumero, nouveauToken, envoyerDevis, lienDevis, TVA_PCT, CATALOGUE, LigneDevis, Devis,
 } from '@/lib/paiements/devis'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
       }).select().single()
       if (error || !d) throw new Error(error?.message || 'Création impossible')
       await envoyerDevis(d as Devis)
+      await notifier({ titre: `Devis envoyé — ${await nomClient(clientId)}`, corps: `${d.numero} · ${eurosCourt(d.total_ttc_cents)} TTC · ${formule}`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${clientId}`, id: `devis-${d.id}` })
       return NextResponse.json({ ok: true, lien: lienDevis(d.token) })
     }
 
@@ -58,11 +60,13 @@ export async function POST(req: NextRequest) {
     if (action === 'renvoyer') {
       if (d.statut !== 'envoye') return NextResponse.json({ error: 'Ce devis n\'est plus en attente' }, { status: 400 })
       await envoyerDevis(d as Devis)
+      await notifier({ titre: `Devis renvoyé — ${await nomClient(d.client_id)}`, corps: d.numero, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${d.client_id}` })
       return NextResponse.json({ ok: true })
     }
     if (action === 'annuler') {
       if (d.statut === 'accepte') return NextResponse.json({ error: 'Un devis accepté ne peut pas être annulé' }, { status: 400 })
       await supabaseAdmin.from('devis').update({ statut: 'annule' }).eq('id', id)
+      await notifier({ titre: `Devis annulé — ${await nomClient(d.client_id)}`, corps: d.numero, niveau: 'warning', url: `https://admin.la-gabare.fr/clients/${d.client_id}` })
       return NextResponse.json({ ok: true })
     }
     return NextResponse.json({ error: 'Action inconnue' }, { status: 400 })

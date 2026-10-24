@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export async function OPTIONS() {
   return corsPreflight()
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   const { data: article } = await supabaseAdmin
     .from('articles')
-    .select('id, client_id')
+    .select('id, client_id, titre')
     .eq('id', article_id)
     .single()
 
@@ -40,5 +41,6 @@ export async function POST(req: NextRequest) {
     return withCors(NextResponse.json({ error: error.message }, { status: 400 }))
   }
 
+  await notifier({ titre: `Article validé par le vigneron — ${client.nom_domaine}`, corps: article.titre, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${client.id}`, id: `valide-${article_id}` })
   return withCors(NextResponse.json(data))
 }

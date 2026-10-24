@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { clientParDomaine } from '@/lib/boutique/core'
 import { texte, emailValide, tropDeRequetes, ipDe } from '@/lib/leads/public'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
 
   if (body.action === 'desinscription') {
     await supabaseAdmin.from('newsletter_abonnes').delete().eq('client_id', client.id).ilike('email', email)
+    await notifier({ titre: `Désinscription newsletter — ${client.nom_domaine || client.id}`, niveau: 'info' })
     return json({ ok: true })
   }
 
@@ -41,5 +43,6 @@ export async function POST(req: NextRequest) {
       return json({ error: 'Inscription impossible pour le moment.' }, 500)
     }
   }
+  await notifier({ titre: `Nouvel abonné newsletter — ${client.nom_domaine || client.id}`, niveau: 'info', url: 'https://admin.la-gabare.fr/newsletters' })
   return json({ ok: true })
 }

@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { BoutiqueConfig } from '@/lib/boutique/core'
 import { mailConfirmationAcheteur, mailNouvelleCommandeDomaine } from '@/lib/boutique/emails'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 // Webhook "Connect" : reçoit les événements des comptes Stripe des domaines.
 // Stripe > Développeurs > Webhooks > Ajouter un endpoint > "Événements sur les comptes connectés"
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest) {
     }
 
     const domaine = client.nom_domaine
+    await notifier({ titre: `Commande boutique — ${domaine}`, corps: `n° ${payee.numero} · ${eurosCourt(payee.total_cents)}`, niveau: 'success', id: `commande-${commandeId}` })
     const notif = client.boutique_config?.email_notif || client.email_contact
     const envois: Promise<unknown>[] = []
     if (payee.email) {

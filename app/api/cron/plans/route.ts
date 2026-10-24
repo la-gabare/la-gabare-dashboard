@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { lancerPlanEditorial } from '@/lib/plan-editorial'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,5 +18,6 @@ export async function GET(req: NextRequest) {
   for (const c of clients || []) {
     if (await lancerPlanEditorial(c.id, 'mensuel', 30)) lances++
   }
+  if (lances) await notifier({ titre: `${lances} plan(s) éditorial(aux) lancé(s)`, corps: 'Les agents du pôle Contenu peuvent les rédiger.', niveau: 'info', id: `plans-lances-${new Date().toISOString().slice(0, 10)}` })
   return NextResponse.json({ abonnes: clients?.length || 0, plans_lances: lances })
 }

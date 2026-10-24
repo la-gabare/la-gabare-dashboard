@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export async function OPTIONS() {
   return corsPreflight()
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
         NextResponse.json({ error: error.message }, { status: 400 })
       )
     }
+    await notifier({ titre: `Article supprimé${clientId !== null ? ` — ${await nomClient(clientId)}` : ''}`, niveau: 'warning', url: clientId !== null ? `https://admin.la-gabare.fr/clients/${clientId}` : undefined })
 
     return withCors(
       NextResponse.json({ success: true })

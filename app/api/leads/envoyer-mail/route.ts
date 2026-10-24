@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { envoyerPriseDeContact } from '@/lib/leads/mails'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
       if (!c) return NextResponse.json({ error: 'Demande introuvable' }, { status: 404 })
       await envoyerPriseDeContact({ nom: c.nom_contact, email: c.email, domaine: c.nom_domaine, pack_demande: c.pack_choisi })
       await supabaseAdmin.from('cahier_des_charges').update({ traite: true }).eq('id', id)
+      await notifier({ titre: `Mail de prise de contact envoyé — ${c.nom_domaine || c.nom_contact}`, niveau: 'info', url: 'https://admin.la-gabare.fr/leads' })
       return NextResponse.json({ ok: true, email: c.email })
     }
 
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
     // On ne fait pas reculer un lead déjà plus avancé (RDV pris, formulaire complété…)
     const statut = ['reception', 'mail_envoye', 'relance'].includes(l.statut || 'reception') ? 'mail_envoye' : l.statut
     await supabaseAdmin.from('leads').update({ statut, mail_envoye_at: new Date().toISOString() }).eq('id', id)
+    await notifier({ titre: `Mail de prise de contact envoyé — ${l.domaine || l.nom}`, niveau: 'info', url: 'https://admin.la-gabare.fr/leads' })
     return NextResponse.json({ ok: true, email: l.email })
   } catch (e) {
     console.error('envoyer-mail', e)

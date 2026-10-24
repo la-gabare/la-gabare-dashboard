@@ -38,3 +38,14 @@ export async function notifier(n: Notif): Promise<void> {
 export function enTexte(html: string): string {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 }
+
+/** Nom du domaine d'un client (pour titrer une notification) ; jamais d'erreur */
+export async function nomClient(id: number | string): Promise<string> {
+  try {
+    const { supabaseAdmin } = await import('@/lib/supabase-admin')
+    const { data } = await supabaseAdmin.from('clients').select('nom_domaine').eq('id', id).single()
+    return data?.nom_domaine || `client n° ${id}`
+  } catch { return `client n° ${id}` }
+}
+
+export const eurosCourt = (cents: number) => `${(cents / 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} €`

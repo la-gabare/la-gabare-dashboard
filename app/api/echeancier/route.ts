@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { decouper, envoyerEcheance, marquerPayee, lienPaiement, FORMULES, Echeance } from '@/lib/paiements/echeancier'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
         await envoyerEcheance(data[0] as Echeance)
         await supabaseAdmin.from('echeances').update({ statut: 'envoye', envoye_at: new Date().toISOString() }).eq('id', data[0].id)
       }
+      await notifier({ titre: `Échéancier créé — ${await nomClient(clientId)}`, corps: `${eurosCourt(totalCents)} · formule ${formule}${body.envoyer_premier ? ' · premier versement envoyé' : ''}`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${clientId}` })
       return NextResponse.json({ ok: true })
     }
 
@@ -52,18 +54,21 @@ export async function POST(req: NextRequest) {
       await supabaseAdmin.from('echeances').update(dejaEnvoye
         ? { relances: e.relances + 1, derniere_relance_at: new Date().toISOString() }
         : { statut: 'envoye', envoye_at: new Date().toISOString() }).eq('id', id)
+      await notifier({ titre: `Versement ${dejaEnvoye ? 'relancé' : 'envoyé'} — ${await nomClient(e.client_id)}`, corps: `${e.libelle} · ${eurosCourt(e.montant_cents)}`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${e.client_id}` })
       return NextResponse.json({ ok: true })
     }
 
     if (action === 'marquer_paye') {
       // Virement reçu directement sur le compte bancaire, chèque…
       await marquerPayee(id, 'manuel')
+      await notifier({ titre: `Versement marqué payé — ${await nomClient(e.client_id)}`, corps: `${e.libelle} · ${eurosCourt(e.montant_cents)}`, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${e.client_id}` })
       return NextResponse.json({ ok: true })
     }
 
     if (action === 'annuler') {
       if (e.statut === 'paye') return NextResponse.json({ error: 'Un versement payé ne peut pas être annulé' }, { status: 400 })
       await supabaseAdmin.from('echeances').update({ statut: 'annule' }).eq('id', id)
+      await notifier({ titre: `Versement annulé — ${await nomClient(e.client_id)}`, corps: e.libelle, niveau: 'warning', url: `https://admin.la-gabare.fr/clients/${e.client_id}` })
       return NextResponse.json({ ok: true })
     }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { declencherVersement, mailMaquetteSoumise, mailMiseEnLigne } from '@/lib/paiements/projet'
 import { demarrerAccompagnementOffert } from '@/lib/paiements/accompagnement-offert'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest) {
         maquette_url: url, maquette_statut: 'a_valider', maquette_soumise_at: new Date().toISOString(),
       }).eq('id', c.id)
       await mailMaquetteSoumise(c, url)
+      await notifier({ titre: `Maquette envoyée au client — ${await nomClient(c.id)}`, corps: url, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${c.id}` })
       return NextResponse.json({ ok: true })
     }
 
@@ -39,6 +41,7 @@ export async function POST(req: NextRequest) {
       // Validation reçue par téléphone ou par mail
       await supabaseAdmin.from('clients').update({ maquette_statut: 'validee', maquette_validee_at: new Date().toISOString() }).eq('id', c.id)
       const v = await declencherVersement(c.id, 'maquette')
+      await notifier({ titre: `Maquette validée (côté admin) — ${await nomClient(c.id)}`, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${c.id}` })
       return NextResponse.json({ ok: true, versement_envoye: Boolean(v) })
     }
 
@@ -56,6 +59,7 @@ export async function POST(req: NextRequest) {
       }
       const v = await declencherVersement(c.id, 'mise_en_ligne')
       await mailMiseEnLigne(c, url)
+      await notifier({ titre: `Site mis en ligne — ${await nomClient(c.id)}`, corps: url, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${c.id}`, id: `en-ligne-${c.id}` })
       // Mois d'accompagnement inclus dans le pack : démarrage + enregistrement du moyen de paiement
       let offert = null
       try { offert = await demarrerAccompagnementOffert(c.id) } catch (e) { console.error('accompagnement offert', e) }

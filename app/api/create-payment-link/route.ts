@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail, paymentLinkEmail } from '@/lib/mailer'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export async function POST(req: NextRequest) {
   const { client_id, type, montant, description } = await req.json()
@@ -77,5 +78,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  await notifier({ titre: `Lien de paiement envoyé — ${client.nom_domaine}`, corps: `${type} · ${montant} €`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${client.id}` })
   return NextResponse.json({ url: session.url })
 }

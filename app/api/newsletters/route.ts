@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -14,6 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
+  await notifier({ titre: `Newsletter créée — ${await nomClient(data.client_id)}`, corps: data.titre || undefined, niveau: 'info' })
   return NextResponse.json(data)
 }
 
@@ -36,6 +38,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
+  if (fields.status === 'a_envoyer') await notifier({ titre: `Newsletter validée pour envoi — ${await nomClient(data.client_id)}`, corps: data.titre || undefined, niveau: 'info' })
   return NextResponse.json(data)
 }
 

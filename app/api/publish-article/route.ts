@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export async function OPTIONS() {
   return corsPreflight()
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest) {
       console.error('publish-article (site)', error)
       return json({ error: error.message }, 400)
     }
+    await notifier({ titre: `Article publié — ${cree.titre || ''}`, niveau: 'success', url: 'https://admin.la-gabare.fr/contenu' })
     return json({ success: true, article: cree })
   } catch (err) {
     console.error('Publish article exception:', err)

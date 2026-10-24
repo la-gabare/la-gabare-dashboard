@@ -3,6 +3,7 @@ import sharp from 'sharp'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export async function OPTIONS() {
   return corsPreflight()
@@ -77,5 +78,6 @@ export async function POST(req: NextRequest) {
     return withCors(NextResponse.json({ error: updateError.message }, { status: 400 }))
   }
 
+  await notifier({ titre: `Média reçu du vigneron — ${await nomClient(updated.client_id)}`, corps: updated.reseau ? `Publication ${updated.reseau}` : undefined, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${updated.client_id}` })
   return withCors(NextResponse.json(updated))
 }

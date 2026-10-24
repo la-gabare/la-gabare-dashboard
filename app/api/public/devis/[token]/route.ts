@@ -4,6 +4,7 @@ import { sendMail } from '@/lib/mailer'
 import { decouper, envoyerEcheance, lienPaiement, euros, Echeance } from '@/lib/paiements/echeancier'
 import { htmlDevis, STYLE_DEVIS, AGENCE, Devis } from '@/lib/paiements/devis'
 import { ipDe } from '@/lib/leads/public'
+import { notifier, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     const lignes = decouper(d.total_ttc_cents, d.formule).map((l) => ({ ...l, client_id: d.client_id }))
     await supabaseAdmin.from('echeances').insert(lignes)
   }
+  await notifier({ titre: `Devis accepté — ${client.nom_domaine}`, corps: `${d.numero} · ${eurosCourt(d.total_ttc_cents)} TTC · accepté par ${nom}`, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${d.client_id}`, id: `devis-accepte-${d.id}` })
   const { data: e1 } = await supabaseAdmin.from('echeances').select('*')
     .eq('client_id', d.client_id).eq('ordre', 1).neq('statut', 'annule').single()
 

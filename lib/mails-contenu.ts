@@ -130,6 +130,7 @@ export async function envoyerMailsDuMois() {
       if (!plan.apercu_envoye_at) {
         await envoyerApercu(client, lignes, mois)
         await supabaseAdmin.from('plans_generation').update({ apercu_envoye_at: new Date().toISOString() }).eq('id', plan.id)
+        await notifier({ titre: `Aperçu du mois envoyé au vigneron — ${client.nom_domaine}`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${client.id}` })
         bilan.apercus++
       } else if (!plan.programme_envoye_at) {
         const articles = lignes.filter((l) => l.type === 'Article')
@@ -138,6 +139,7 @@ export async function envoyerMailsDuMois() {
         if (!tousValides && !delaiPasse) continue
         await envoyerProgramme(client, lignes, mois)
         await supabaseAdmin.from('plans_generation').update({ programme_envoye_at: new Date().toISOString() }).eq('id', plan.id)
+        await notifier({ titre: `Programme du mois envoyé au vigneron — ${client.nom_domaine}`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${client.id}` })
         bilan.programmes++
       }
     } catch (e) {
@@ -167,6 +169,7 @@ export async function envoyerMailHebdo(demandeId: number) {
         intro: `Voici ce qui est prévu cette semaine pour ${esc(client.nom_domaine)}.`, lignes,
         pied: 'Un changement à faire ? Répondez simplement à ce message.', bouton: 'Ouvrir mon espace client', lien: ESPACE }),
       { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+    await notifier({ titre: `Programme de la semaine envoyé — ${client.nom_domaine}`, corps: `${d.date_debut} → ${d.date_fin}`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${client.id}` })
     return fin('envoye', null)
   } catch (e) {
     console.error('mail hebdo', demandeId, e)

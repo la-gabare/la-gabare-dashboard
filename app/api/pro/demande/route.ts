@@ -6,6 +6,7 @@ import { BoutiqueConfig } from '@/lib/boutique/core'
 import { texte, tropDeRequetes, ipDe } from '@/lib/leads/public'
 import { proDepuisRequete } from '@/lib/pro/core'
 import { mailDemandePro } from '@/lib/pro/emails'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,5 +66,6 @@ export async function POST(req: NextRequest) {
         { fromName: 'La Gabare — Espace pro', replyTo: a.pro.email })
     } catch (e) { console.error('pro/demande mail', e) }
   }
+  await notifier({ titre: `${type === 'commande' ? 'Commande pro' : 'Demande d\'échantillons'} — ${client?.nom_domaine || ''}`, corps: `${a.pro.entreprise} · ${eurosCourt(total)} HT`, niveau: 'success', id: `pro-demande-${demande.id}` })
   return json({ ok: true, id: demande.id })
 }

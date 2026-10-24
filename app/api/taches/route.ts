@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { notifier, nomClient, eurosCourt } from '@/lib/notifier'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -14,6 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
+  await notifier({ titre: `Nouvelle tâche — ${data.titre || data.title || data.nom || `n° ${data.id}`}`, niveau: 'info', url: 'https://admin.la-gabare.fr/taches' })
   return NextResponse.json(data)
 }
 
