@@ -40,7 +40,8 @@ async function charger(token: string) {
 
 const expire = (d: Devis) => new Date(`${d.validite}T23:59:59`) < new Date()
 
-export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
+  const params = await paramsP
   const r = await charger(String(params.token || ''))
   if (!r) return page('Devis introuvable', '<p>Ce lien de devis n\'est pas valide.</p>', 404)
   const { d, client } = r
@@ -69,19 +70,20 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
 }
 
 // Acceptation : enregistre l'accord (nom, date, IP), crée l'échéancier et envoie vers le paiement de l'acompte
-export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
+export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
+  const params = await paramsP
   const r = await charger(String(params.token || ''))
   if (!r) return page('Devis introuvable', '<p>Ce lien de devis n\'est pas valide.</p>', 404)
   const { d, client } = r
   const form = await req.formData().catch(() => null)
   const nom = String(form?.get('nom') || '').trim().slice(0, 120)
-  if (d.statut !== 'envoye' || expire(d)) return GET(req, { params })
+  if (d.statut !== 'envoye' || expire(d)) return GET(req, { params: paramsP })
   if (!nom || form?.get('cgv') !== 'on') return page('Devis', '<p>Merci d\'indiquer votre nom et d\'accepter les conditions générales de vente.</p><p><a href="">Retour au devis</a></p>', 400)
 
   const { data: accepte } = await supabaseAdmin.from('devis')
     .update({ statut: 'accepte', accepte_at: new Date().toISOString(), accepte_nom: nom, accepte_ip: ipDe(req) })
     .eq('id', d.id).eq('statut', 'envoye').select().single()
-  if (!accepte) return GET(req, { params }) // double clic : déjà accepté
+  if (!accepte) return GET(req, { params: paramsP }) // double clic : déjà accepté
 
   // Le pack de la fiche suit le devis accepté (il décide des mois offerts, du mail d'accueil et des contenus à fournir)
   const packVendu = packDuDevis(d.lignes)
@@ -130,5 +132,5 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     console.error('devis acceptation mails', err)
   }
 
-  return e1Payable ? NextResponse.redirect(lienPaiement(e1Payable), 303) : GET(req, { params })
+  return e1Payable ? NextResponse.redirect(lienPaiement(e1Payable), 303) : GET(req, { params: paramsP })
 }

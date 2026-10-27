@@ -5,7 +5,8 @@ import { runPsi } from '@/lib/prospection/audit'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-export async function POST(req: NextRequest, { params }: { params: { siren: string; action: string } }) {
+export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ siren: string; action: string }> }) {
+  const params = await paramsP
   const { siren, action } = params
   if (!/^\d{9}$/.test(siren)) return NextResponse.json({ error: 'SIREN invalide' }, { status: 400 })
   try {

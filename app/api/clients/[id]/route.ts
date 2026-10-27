@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { lancerPlanEditorial, abonnementActive } from '@/lib/plan-editorial'
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   try {
     const body = await req.json()
     const clientId = parseInt(params.id)
