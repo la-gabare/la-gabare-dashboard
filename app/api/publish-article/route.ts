@@ -38,12 +38,17 @@ export async function POST(req: NextRequest) {
       const id = Number(body.article_id)
       const { data: article } = await supabaseAdmin
         .from('articles')
-        .select('id, angle, client_id, image_url')
+        .select('id, angle, client_id, image_url, contenu')
         .eq('id', id)
         .single()
 
       // Un client ne peut publier que ses propres articles
       if (!article || article.client_id !== auth.client.id) return json({ error: 'Article not found' }, 404)
+
+      // Un article sans texte ne doit jamais être publié (page vide sur le site du vigneron)
+      if (!article.contenu || !String(article.contenu).trim()) {
+        return json({ error: "Cet article n'a pas encore de texte : il ne peut pas être publié." }, 400)
+      }
 
       const fields: { status: string; image_url?: string } = { status: 'publie' }
 
