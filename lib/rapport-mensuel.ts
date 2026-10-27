@@ -103,7 +103,7 @@ export async function envoyerRapportsMensuels() {
   }
   if (bilan.vides && AGENCE) {
     await sendMail(AGENCE, `Bilans de ${nomMois} : ${bilan.vides} abonné(s) sans publication`,
-      `<p style="font-family:Arial,sans-serif;font-size:14px;">${bilan.vides} abonné(s) actif(s) n'ont eu aucun article, post ni avis en ${nomMois} : aucun bilan ne leur a été envoyé. À vérifier dans l'admin (plans éditoriaux, n8n).</p>`,
+      `<p style="font-family:Arial,sans-serif;font-size:14px;">${bilan.vides} abonné(s) actif(s) n'ont eu aucun article, post ni avis en ${nomMois} : aucun bilan ne leur a été envoyé. À vérifier dans l'admin (plans éditoriaux).</p>`,
       { fromName: 'La Gabare — Bilans' })
   }
   return bilan

@@ -95,7 +95,7 @@ export default function ClientDetailPage() {
       if (res.ok) {
         const created = await res.json()
         setLastMail(created)
-        alert('Mail hebdomadaire mis en file d\'attente : il partira sous peu (agent n8n toutes les 15 min).')
+        alert('Mail hebdomadaire mis en file d\'attente : il part tout de suite.')
       } else {
         const err = await res.json()
         alert('Erreur: ' + err.error)
