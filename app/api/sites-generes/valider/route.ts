@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   // Les identifiants ne sont generes qu'une fois : une revalidation ne doit pas
   // invalider un mot de passe deja transmis au client.
-  const existant = (site.site_complet || {}) as { admin?: { file: string; password: string } }
+  const existant = (site.site_complet || {}) as { admin?: { file: string; password?: string; password_hash?: string } }
   const admin =
     existant.admin ||
     (() => {
@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
     ok: true,
     pack: site.pack,
     admin_file: admin.file,
-    admin_password: admin.password,
+    // null si les identifiants avaient déjà été générés puis remis : le mot de passe n'est plus conservé en clair
+    admin_password: admin.password ?? null,
   })
 }

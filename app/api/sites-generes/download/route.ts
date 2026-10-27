@@ -12,7 +12,8 @@ const slug = (s: string) =>
     .replace(/^-|-$/g, '')
     .toLowerCase() || 'site'
 
-type Admin = { file: string; password: string; password_hash: string }
+// `password` n'existe que jusqu'au premier téléchargement de l'archive complète : ensuite seul le hash est conservé.
+type Admin = { file: string; password?: string; password_hash: string }
 type SiteComplet = { admin?: Admin; pages?: Record<string, string> }
 
 // Le generateur produit un HTML autonome : on en ressort les styles et scripts
@@ -163,7 +164,9 @@ export async function GET(req: NextRequest) {
       '',
       '--- Acces au tableau de bord ---',
       `Adresse    : votre-domaine.fr/login.php`,
-      `Mot de passe : ${complet.admin!.password}`,
+      complet.admin!.password
+        ? `Mot de passe : ${complet.admin!.password}`
+        : 'Mot de passe : communique lors de la validation du site (il n est plus conserve).',
       '',
       'Ce mot de passe est propre a ce site. Communiquez-le au client et',
       'invitez-le a le changer depuis change-password.php.',
@@ -181,6 +184,14 @@ export async function GET(req: NextRequest) {
   zip.file('LISEZMOI.txt', lignes.join('\n'))
 
   const content = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
+  // Le mot de passe en clair a été remis dans l'archive : on ne garde plus que son hash en base.
+  if (estComplet && complet.admin?.password) {
+    const { password: _remis, ...adminSansMotDePasse } = complet.admin
+    await supabaseAdmin
+      .from('sites_generes')
+      .update({ site_complet: { ...complet, admin: adminSansMotDePasse } })
+      .eq('id', site.id)
+  }
   const suffixe = estComplet ? 'complet' : 'apercu'
   const filename = `${slug(client?.nom_domaine || '')}-${suffixe}-${site.id}.zip`
 

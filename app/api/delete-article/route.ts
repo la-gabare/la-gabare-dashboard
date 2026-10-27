@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getClientFromRequest } from '@/lib/auth-client'
 import { withCors, corsPreflight } from '@/lib/cors'
+import { egal } from '@/lib/egal'
 
 export async function OPTIONS() {
   return corsPreflight()
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
       }
 
       const token = authHeader.replace('Bearer admin_', '')
-      if (token !== foundClient.api_key) {
+      if (!foundClient.api_key || !egal(token, String(foundClient.api_key))) {
         return withCors(
           NextResponse.json({ error: 'Invalid token' }, { status: 401 })
         )
