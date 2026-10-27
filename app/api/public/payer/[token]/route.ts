@@ -18,7 +18,8 @@ function page(titre: string, texte: string, status = 200) {
 
 // Lien de paiement permanent d'un versement : crée une session Stripe neuve à chaque clic
 // (les sessions Stripe expirent après 24 h, ce lien-ci reste valable dans les mails et relances).
-export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
+  const params = await paramsP
   const token = String(params.token || '')
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) return page('Lien invalide', 'Ce lien de paiement n\'est pas valide.', 404)
 

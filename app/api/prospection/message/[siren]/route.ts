@@ -3,7 +3,8 @@ import { messageFor } from '@/lib/prospection/db'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_req: Request, { params }: { params: { siren: string } }) {
+export async function GET(_req: Request, { params: paramsP }: { params: Promise<{ siren: string }> }) {
+  const params = await paramsP
   try {
     const m = await messageFor(params.siren)
     return m ? NextResponse.json(m) : NextResponse.json({ error: 'introuvable' }, { status: 404 })

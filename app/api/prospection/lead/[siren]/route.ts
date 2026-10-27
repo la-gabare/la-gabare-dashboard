@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic'
 
 const valid = (s: string) => /^\d{9}$/.test(s)
 
-export async function GET(_req: NextRequest, { params }: { params: { siren: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ siren: string }> }) {
+  const params = await paramsP
   if (!valid(params.siren)) return NextResponse.json({ error: 'SIREN invalide' }, { status: 400 })
   try {
     const d = await getProspect(params.siren)
@@ -15,7 +16,8 @@ export async function GET(_req: NextRequest, { params }: { params: { siren: stri
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { siren: string } }) {
+export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ siren: string }> }) {
+  const params = await paramsP
   if (!valid(params.siren)) return NextResponse.json({ error: 'SIREN invalide' }, { status: 400 })
   try {
     const d = await updateProspect(params.siren, await req.json())
