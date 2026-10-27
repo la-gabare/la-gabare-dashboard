@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { decouper, envoyerEcheance, lienPaiement, euros, Echeance } from '@/lib/paiements/echeancier'
-import { htmlDevis, STYLE_DEVIS, AGENCE, Devis } from '@/lib/paiements/devis'
+import { htmlDevis, STYLE_DEVIS, AGENCE, Devis, packDuDevis } from '@/lib/paiements/devis'
 import { ipDe } from '@/lib/leads/public'
 import { notifier, eurosCourt } from '@/lib/notifier'
 
@@ -83,6 +83,16 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     .eq('id', d.id).eq('statut', 'envoye').select().single()
   if (!accepte) return GET(req, { params }) // double clic : déjà accepté
 
+  // Le pack de la fiche suit le devis accepté (il décide des mois offerts, du mail d'accueil et des contenus à fournir)
+  const packVendu = packDuDevis(d.lignes)
+  if (packVendu) {
+    const { data: fiche } = await supabaseAdmin.from('clients').select('pack_site').eq('id', d.client_id).single()
+    if (String(fiche?.pack_site || '').toLowerCase() !== packVendu) {
+      await supabaseAdmin.from('clients').update({ pack_site: packVendu }).eq('id', d.client_id)
+      await notifier({ titre: `Pack de la fiche aligné sur le devis — ${client.nom_domaine}`, corps: `${fiche?.pack_site || 'aucun'} → ${packVendu} (devis ${d.numero})`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${d.client_id}` })
+    }
+  }
+
   // Échéancier du devis (on remplace un éventuel échéancier non commencé)
   const { data: actives } = await supabaseAdmin.from('echeances').select('id, statut').eq('client_id', d.client_id).neq('statut', 'annule')
   if (actives?.some((e) => e.statut === 'paye')) {
@@ -90,17 +100,28 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   } else {
     if (actives?.length) await supabaseAdmin.from('echeances').update({ statut: 'annule' }).in('id', actives.map((e) => e.id))
     const lignes = decouper(d.total_ttc_cents, d.formule).map((l) => ({ ...l, client_id: d.client_id }))
-    await supabaseAdmin.from('echeances').insert(lignes)
+    const { error: errEch } = await supabaseAdmin.from('echeances').insert(lignes)
+    if (errEch) console.error('devis acceptation: échéancier non créé', d.id, errEch.message)
   }
   await notifier({ titre: `Devis accepté — ${client.nom_domaine}`, corps: `${d.numero} · ${eurosCourt(d.total_ttc_cents)} TTC · accepté par ${nom}`, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${d.client_id}`, id: `devis-accepte-${d.id}` })
   const { data: e1 } = await supabaseAdmin.from('echeances').select('*')
     .eq('client_id', d.client_id).eq('ordre', 1).neq('statut', 'annule').single()
 
-  try {
-    if (e1 && e1.statut === 'a_venir') {
+  // Le lien de paiement doit marcher même si le mail échoue : on passe en « envoye » d'abord
+  let e1Payable = e1
+  if (e1 && e1.statut === 'a_venir') {
+    const { error: errStatut } = await supabaseAdmin.from('echeances').update({ statut: 'envoye', envoye_at: new Date().toISOString() }).eq('id', e1.id)
+    if (errStatut) console.error('devis acceptation: échéance non passée en envoye', d.id, errStatut.message)
+    else e1Payable = { ...e1, statut: 'envoye' }
+    try {
       await envoyerEcheance(e1 as Echeance)
-      await supabaseAdmin.from('echeances').update({ statut: 'envoye', envoye_at: new Date().toISOString() }).eq('id', e1.id)
+    } catch (err) {
+      console.error('devis acceptation: mail de l\'acompte non envoyé', d.id, err)
     }
+  } else if (!e1) {
+    console.error('devis accepté mais aucun acompte trouvé', d.id)
+  }
+  try {
     await sendMail(AGENCE.email, `Devis accepté — ${client.nom_domaine} · ${euros(d.total_ttc_cents)}`,
       `<p style="font-family:Arial,sans-serif;font-size:14px;">Le devis ${esc(d.numero)} a été accepté par ${esc(nom)} le ${new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}.
        Le lien de l'acompte lui a été envoyé.</p><p style="font-family:Arial,sans-serif;font-size:14px;"><a href="https://admin.la-gabare.fr/clients/${d.client_id}">Ouvrir la fiche client</a></p>`,
@@ -109,5 +130,5 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     console.error('devis acceptation mails', err)
   }
 
-  return e1 ? NextResponse.redirect(lienPaiement(e1), 303) : GET(req, { params })
+  return e1Payable ? NextResponse.redirect(lienPaiement(e1Payable), 303) : GET(req, { params })
 }

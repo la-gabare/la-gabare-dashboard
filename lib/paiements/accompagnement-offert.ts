@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { clientStripe } from '@/lib/paiements/echeancier'
 import { lancerPlanEditorial } from '@/lib/plan-editorial'
+import { notifier } from '@/lib/notifier'
 
 // Mois d'accompagnement inclus avec chaque pack (offres de la-gabare.fr)
 export const ACCOMPAGNEMENT_INCLUS: Record<string, { formule: string; nom: string; mois: number }> = {
@@ -30,27 +31,56 @@ export async function demarrerAccompagnementOffert(clientId: number) {
   finOffert.setMonth(finOffert.getMonth() + moisOfferts)
   // Le client garde sa formule si elle est supérieure à celle incluse ; sinon formule du pack
   const formule = c.abonnement && PRIX_HT[c.abonnement] > PRIX_HT[inclus.formule] ? c.abonnement : inclus.formule
-  await supabaseAdmin.from('clients').update({
+  const lienClient = `https://admin.la-gabare.fr/clients/${c.id}`
+  // Mise en ligne avant l'acompte réglé : on prévient l'agence, sans bloquer
+  const { data: versements } = await supabaseAdmin.from('echeances').select('statut').eq('client_id', c.id).neq('statut', 'annule')
+  if (versements?.length && !versements.some((v) => v.statut === 'paye')) {
+    await notifier({ titre: `Mise en ligne sans aucun versement reçu — ${c.nom_domaine}`, corps: 'Les mois offerts démarrent quand même : vérifiez le paiement.', niveau: 'warning', url: lienClient })
+  }
+  const { error: errMaj } = await supabaseAdmin.from('clients').update({
     abonnement: formule, statut: 'actif', date_debut_abonnement: new Date().toISOString().slice(0, 10),
   }).eq('id', c.id)
+  if (errMaj) throw new Error(`mois offerts : fiche non mise à jour (${errMaj.message})`)
   await lancerPlanEditorial(c.id, 'accompagnement-offert')
 
-  const { url, montantCents, nomFormule } = await sessionAbonnement(c, formule, finOffert)
-  const session = { url }
+  // Les mois offerts ont démarré : si le lien de paiement ou le mail échoue, l'agence est prévenue
+  // (le client peut aussi enregistrer sa carte depuis son espace client, Paramètres › Abonnement).
+  const prevenirEchec = async (raison: string) => {
+    console.error('mois offerts: moyen de paiement non envoyé', c.id, raison)
+    await notifier({ titre: `Mois offerts démarrés, lien de paiement non envoyé — ${c.nom_domaine}`, corps: `${raison}. À renvoyer depuis la fiche client, ou le vigneron le fait dans son espace client.`, niveau: 'warning', url: lienClient })
+  }
+  let session: { url: string | null } = { url: null }
+  let montantCents = 0
+  let nomFormule = formule
+  try {
+    const r = await sessionAbonnement(c, formule, finOffert)
+    session = { url: r.url }; montantCents = r.montantCents; nomFormule = r.nomFormule
+  } catch (e) {
+    await prevenirEchec(`Stripe a refusé la création du lien (${e instanceof Error ? e.message : 'erreur'})`)
+    return { formule, fin_offert: finOffert.toISOString(), lien: null }
+  }
+  if (!c.email_contact) {
+    await prevenirEchec("Le client n'a pas d'adresse e-mail")
+    return { formule, fin_offert: finOffert.toISOString(), lien: session.url }
+  }
 
-  if (c.email_contact && session.url) {
-    const prix = (montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
-    await sendMail(c.email_contact, `Votre accompagnement ${nomFormule} offert démarre — ${c.nom_domaine}`,
-      `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
-       <p>Bonjour,</p>
-       <p>Votre site est en ligne et, comme prévu dans votre pack, vos <strong>${moisOfferts} mois d'accompagnement ${esc(inclus.nom)}</strong> commencent aujourd'hui :
-       articles, publications et suivi de votre présence en ligne. Votre premier plan éditorial est en préparation.</p>
-       <p>Pour que l'accompagnement continue sans interruption après le ${dateFr(finOffert)}, enregistrez dès maintenant votre moyen de paiement
-       (carte ou prélèvement SEPA). <strong>Aucun prélèvement avant le ${dateFr(finOffert)}</strong> ; ensuite ${prix} par mois (formule ${esc(nomFormule)}).</p>
-       <p><a href="${session.url}" style="display:inline-block;padding:14px 28px;background:#5A1226;color:#F5F2EC;text-decoration:none;font-weight:600;">Enregistrer mon moyen de paiement &rarr;</a></p>
-       <p style="font-size:13px;">Ce lien est valable 24 heures ; vous pourrez aussi le faire depuis votre espace client (Paramètres › Abonnement).</p>
-       <p>L'équipe La Gabare</p></div>`,
-      { fromName: 'La Gabare' })
+  if (session.url) {
+    try {
+      const prix = (montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
+      await sendMail(c.email_contact, `Votre accompagnement ${nomFormule} offert démarre — ${c.nom_domaine}`,
+        `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
+         <p>Bonjour,</p>
+         <p>Votre site est en ligne et, comme prévu dans votre pack, vos <strong>${moisOfferts} mois d'accompagnement ${esc(inclus.nom)}</strong> commencent aujourd'hui :
+         articles, publications et suivi de votre présence en ligne. Votre premier plan éditorial est en préparation.</p>
+         <p>Pour que l'accompagnement continue sans interruption après le ${dateFr(finOffert)}, enregistrez dès maintenant votre moyen de paiement
+         (carte ou prélèvement SEPA). <strong>Aucun prélèvement avant le ${dateFr(finOffert)}</strong> ; ensuite ${prix} par mois (formule ${esc(nomFormule)}).</p>
+         <p><a href="${session.url}" style="display:inline-block;padding:14px 28px;background:#5A1226;color:#F5F2EC;text-decoration:none;font-weight:600;">Enregistrer mon moyen de paiement &rarr;</a></p>
+         <p style="font-size:13px;">Ce lien est valable 24 heures ; vous pourrez aussi le faire depuis votre espace client (Paramètres › Abonnement).</p>
+         <p>L'équipe La Gabare</p></div>`,
+        { fromName: 'La Gabare' })
+    } catch (e) {
+      await prevenirEchec(`Le mail n'est pas parti (${e instanceof Error ? e.message : 'erreur'})`)
+    }
   }
   return { formule, fin_offert: finOffert.toISOString(), lien: session.url }
 }

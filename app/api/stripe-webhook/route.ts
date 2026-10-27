@@ -53,6 +53,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
+  // Prélèvement d'abonnement refusé : personne ne le saurait autrement
+  if (event.type === 'invoice.payment_failed') {
+    const inv = event.data.object as Stripe.Invoice
+    const customer = typeof inv.customer === 'string' ? inv.customer : inv.customer?.id
+    const { data: c } = customer
+      ? await supabaseAdmin.from('clients').select('id, nom_domaine').eq('stripe_customer_id', customer).maybeSingle()
+      : { data: null }
+    await notifierAgence(`Prélèvement échoué — ${c?.nom_domaine || customer || 'client inconnu'}`,
+      `Le prélèvement de l'abonnement (${euros(inv.amount_due || 0)}) a échoué. Stripe réessaie automatiquement ; sans solution, contactez le vigneron.`)
+    return NextResponse.json({ received: true })
+  }
+
   const types = ['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'checkout.session.async_payment_failed']
   if (!types.includes(event.type)) return NextResponse.json({ received: true })
 
@@ -71,7 +83,14 @@ export async function POST(req: NextRequest) {
       await supabaseAdmin.from('echeances').update({ statut: 'envoye' }).eq('id', echeanceId).neq('statut', 'paye')
       await notifierAgence('Virement échoué', `Le virement du versement n° ${echeanceId} a échoué (client ${clientId}). Le lien de paiement reste valable.`)
     } else if (paye) {
-      const e = await marquerPayee(echeanceId, event.type === 'checkout.session.async_payment_succeeded' ? 'virement' : 'carte')
+      let e
+      try {
+        e = await marquerPayee(echeanceId, event.type === 'checkout.session.async_payment_succeeded' ? 'virement' : 'carte')
+      } catch (err) {
+        // Versement enregistré mais activation du client échouée : 500 pour que Stripe rejoue l'événement
+        console.error('stripe-webhook: activation du client échouée, Stripe va rejouer', echeanceId, err)
+        return NextResponse.json({ error: 'activation échouée' }, { status: 500 })
+      }
       if (e) await notifierAgence(`Paiement reçu — ${euros(e.montant_cents)}`, `« ${e.libelle} » réglé (client ${clientId}).`)
     } else {
       // Virement choisi : le client a reçu l'IBAN, l'argent n'est pas encore arrivé

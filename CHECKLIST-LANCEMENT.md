@@ -11,7 +11,7 @@ Aujourd'hui : la boutique est en **mode test** ; les abonnements utilisent encor
 - [ ] **Webhook abonnements** (mode réel, « Votre compte ») :
       `https://admin.la-gabare.fr/api/stripe-webhook` — événements `checkout.session.completed`,
       `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` (virements des sites),
-      `customer.subscription.deleted` (fin d'abonnement).
+      `customer.subscription.deleted` (fin d'abonnement), `invoice.payment_failed` (prélèvement d'abonnement refusé).
 - [ ] **Moyens de paiement** (Paramètres › Moyens de paiement) : activer **Virement bancaire** (paiement des sites)
       et **Prélèvement SEPA** (abonnements). Sans eux, les liens proposent la carte seule.
 - [ ] **Webhook boutique** (mode réel, « Comptes connectés ») :

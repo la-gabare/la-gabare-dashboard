@@ -147,13 +147,21 @@ export async function envoyerEcheance(e: Echeance, relance = false) {
     `${relance ? 'Rappel — ' : ''}${e.libelle} — ${client.nom_domaine}`, html, { fromName: 'La Gabare' })
 }
 
-// Versement réglé : marque payé, active le client au premier paiement et envoie l'accès à son espace
+// Versement réglé : marque payé, active le client au premier paiement et envoie l'accès à son espace.
+// Rejouable : si l'activation échoue après le passage en « payé », le webhook répond 500, Stripe le rejoue
+// et on reprend ici l'activation (sans refaire ce qui avait réussi).
 export async function marquerPayee(echeanceId: number, moyen: string) {
-  const { data: e } = await supabaseAdmin.from('echeances')
+  let { data: e } = await supabaseAdmin.from('echeances')
     .update({ statut: 'paye', paye_at: new Date().toISOString(), moyen })
     .eq('id', echeanceId).neq('statut', 'paye').select().single()
-  if (!e) return null // déjà payé (webhook reçu deux fois)
-  await activerClient(e.client_id)
+  const rejeu = !e
+  if (!e) {
+    const { data: dejaPaye } = await supabaseAdmin.from('echeances').select('*').eq('id', echeanceId).eq('statut', 'paye').single()
+    if (!dejaPaye) return null
+    e = dejaPaye
+  }
+  const vientDEtreActive = await activerClient(e.client_id) // lève une erreur si l'invitation échoue
+  if (rejeu && !vientDEtreActive) return null // webhook reçu deux fois, tout était déjà fait
   if (e.ordre === 1) {
     // Mail d'accueil : contenus à fournir (import tardif pour éviter la dépendance circulaire avec devis.ts)
     try {
@@ -172,16 +180,21 @@ export async function marquerPayee(echeanceId: number, moyen: string) {
   return e as Echeance
 }
 
-export async function activerClient(clientId: number | string) {
+// Renvoie true si le client vient de passer « actif ». Le statut est écrit en dernier :
+// tant que l'invitation n'est pas partie, un rejeu du webhook recommence l'activation.
+export async function activerClient(clientId: number | string): Promise<boolean> {
   const { data: client } = await supabaseAdmin.from('clients')
     .select('id, statut, email_contact').eq('id', clientId).single()
-  if (!client || client.statut === 'actif') return
+  if (!client || client.statut === 'actif') return false
+  if (client.email_contact) {
+    const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(client.email_contact, {
+      redirectTo: 'https://la-gabare.fr/bienvenue.html',
+    })
+    // Compte déjà créé (invitation précédente) : pas une erreur
+    if (error && !/already|registered|exists/i.test(error.message)) throw new Error(`invitation espace client : ${error.message}`)
+  }
   await supabaseAdmin.from('clients').update({ statut: 'actif' }).eq('id', client.id)
   const { notifier } = await import('@/lib/notifier')
   await notifier({ titre: `Client activé — premier paiement reçu`, corps: client.email_contact || undefined, niveau: 'success', url: `https://admin.la-gabare.fr/clients/${client.id}`, id: `client-actif-${client.id}` })
-  if (client.email_contact) {
-    await supabaseAdmin.auth.admin.inviteUserByEmail(client.email_contact, {
-      redirectTo: 'https://la-gabare.fr/bienvenue.html',
-    })
-  }
+  return true
 }
