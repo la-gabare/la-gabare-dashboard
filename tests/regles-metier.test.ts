@@ -88,3 +88,9 @@ test('sortie anticipée : 50 % des mensualités restantes (Village, 9 mois resta
   assert.equal(sortieAnticipee(sub, new Date('2026-04-15T12:00:00Z')), null)
   assert.equal(sortieAnticipee(null, new Date()), null)
 })
+
+test('engagement : les 12 mois partent du début de l\'accompagnement, pas de l\'enregistrement de la carte', () => {
+  const sub = { start_date: Math.floor(new Date('2026-03-15T12:00:00Z').getTime() / 1000) } as any
+  const { finEngagement } = dates({ date_debut_abonnement: '2026-01-15T12:00:00Z' }, sub, new Date('2026-04-01T12:00:00Z'))
+  assert.equal(finEngagement?.toISOString().slice(0, 10), '2027-01-15')
+})

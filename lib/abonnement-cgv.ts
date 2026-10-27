@@ -9,7 +9,8 @@ export const INDEMNITE_PCT = 50
 export const plusMois = (d: Date, n: number) => { const r = new Date(d); r.setMonth(r.getMonth() + n); return r }
 
 export function dates(client: Record<string, any>, sub: Stripe.Subscription | null, maintenant = new Date()) {
-  const debut = sub ? new Date(sub.start_date * 1000) : client.date_debut_abonnement ? new Date(client.date_debut_abonnement) : null
+  // Les 12 mois comptent « mois offerts compris » : départ = début de l'accompagnement (mise en ligne), pas l'enregistrement de la carte
+  const debut = client.date_debut_abonnement ? new Date(client.date_debut_abonnement) : sub ? new Date(sub.start_date * 1000) : null
   const finEngagement = debut ? plusMois(debut, ENGAGEMENT_MOIS) : null
   const auPlusTot = plusMois(maintenant, PREAVIS_MOIS)
   const effet = finEngagement && finEngagement > auPlusTot ? finEngagement : auPlusTot

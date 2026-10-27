@@ -50,13 +50,22 @@ export async function recompenserParrain(filleulId: number) {
   const montantCents = Math.round((PRIX_HT[p.abonnement] || 0) * (1 + TVA_PCT / 100) * 100)
   let credite = false
   if (p.stripe_customer_id && montantCents > 0) {
-    // Crédit sur le compte Stripe du parrain : déduit automatiquement de sa prochaine facture d'abonnement
-    const { stripe } = await import('@/lib/stripe')
-    await stripe.customers.createBalanceTransaction(p.stripe_customer_id, {
-      amount: -montantCents, currency: 'eur', description: `Parrainage — ${f.nom_domaine} (1 mois offert)`,
-      metadata: { filleul_id: String(f.id) },
-    })
-    credite = true
+    try {
+      // Crédit sur le compte Stripe du parrain : déduit automatiquement de sa prochaine facture d'abonnement
+      const { stripe } = await import('@/lib/stripe')
+      await stripe.customers.createBalanceTransaction(p.stripe_customer_id, {
+        amount: -montantCents, currency: 'eur', description: `Parrainage — ${f.nom_domaine} (1 mois offert)`,
+        metadata: { filleul_id: String(f.id) },
+      })
+      credite = true
+    } catch (err) {
+      // Le drapeau reste posé (pas de double crédit) : l'agence applique le mois à la main
+      console.error('parrainage: crédit Stripe échoué', p.id, err)
+    }
+  }
+  if (!credite) {
+    const { notifier } = await import('@/lib/notifier')
+    await notifier({ titre: `Parrainage : mois offert à appliquer à la main — ${p.nom_domaine}`, corps: `${f.nom_domaine} a payé son acompte, mais le crédit Stripe du parrain n'a pas pu être posé (pas d'abonnement Stripe ou erreur).`, niveau: 'warning', url: `https://admin.la-gabare.fr/clients/${p.id}` })
   }
   const montant = (montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
   if (p.email_contact) {
