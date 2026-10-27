@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { ouvrirPaiement, Echeance } from '@/lib/paiements/echeancier'
+import { tropDeRequetes, ipDe } from '@/lib/leads/public'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,8 @@ function page(titre: string, texte: string, status = 200) {
 
 // Lien de paiement permanent d'un versement : crée une session Stripe neuve à chaque clic
 // (les sessions Stripe expirent après 24 h, ce lien-ci reste valable dans les mails et relances).
-export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
+export async function GET(req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
+  if (await tropDeRequetes(ipDe(req), 20, 10 * 60 * 1000, 'payer')) return page('Trop de demandes', 'Merci de réessayer dans quelques minutes.', 429)
   const params = await paramsP
   const token = String(params.token || '')
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(token)) return page('Lien invalide', 'Ce lien de paiement n\'est pas valide.', 404)

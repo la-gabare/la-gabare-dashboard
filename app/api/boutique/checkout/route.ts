@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripeBoutique as stripe } from '@/lib/boutique/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
+import { tropDeRequetes, ipDe } from '@/lib/leads/public'
 import { clientParDomaine, fraisPort, siteBase, BoutiqueConfig, LigneCommande, Produit } from '@/lib/boutique/core'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,7 @@ function erreur(message: string, status = 400) {
 // Crée une session Stripe Checkout sur le compte Stripe du domaine (Stripe Connect, paiement direct).
 // Le stock est réservé immédiatement et rendu si la session expire (voir stripe-connect-webhook).
 export async function POST(req: NextRequest) {
+  if (await tropDeRequetes(ipDe(req), 20, 10 * 60 * 1000, 'checkout')) return erreur('Trop de demandes, réessayez dans quelques minutes.', 429)
   let body: { domain?: string; items?: { id: number; quantite: number }[]; majeur?: boolean; mode?: string }
   try {
     body = await req.json()

@@ -20,7 +20,7 @@ function json(data: unknown, status = 200) {
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({} as Record<string, unknown>))
   if (body.site_web) return json({ ok: true })
-  if (tropDeRequetes(ipDe(req), 20)) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
+  if (await tropDeRequetes(ipDe(req), 20)) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const email = (texte(body.email, 200) || '').toLowerCase()
   if (!emailValide(email)) return json({ error: 'Adresse e-mail invalide.' }, 400)

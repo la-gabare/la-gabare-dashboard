@@ -1,4 +1,5 @@
 import 'server-only'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // Champs acceptés depuis les formulaires publics du site (tout le reste est ignoré)
 export const CHAMPS_LEAD = [
@@ -33,17 +34,30 @@ export function emailValide(e: string | null): boolean {
   return Boolean(e && e.length <= 200 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))
 }
 
-// Limite simple anti-abus par adresse IP (par instance serveur) : N envois par fenêtre
+// Limite anti-abus par adresse IP : N envois par fenêtre.
+// Le compteur est dans Supabase (fonction limite_requetes, sql/limite_requetes.sql) : il vaut pour tous les
+// serveurs Vercel. Tant que le SQL n'est pas lancé (ou si Supabase répond mal), repli sur un compteur en mémoire.
 const compteurs = new Map<string, { n: number; debut: number }>()
-export function tropDeRequetes(ip: string, max = 5, fenetreMs = 10 * 60 * 1000): boolean {
+function tropDeRequetesMemoire(cle: string, max: number, fenetreMs: number): boolean {
   const now = Date.now()
-  const c = compteurs.get(ip)
+  const c = compteurs.get(cle)
   if (!c || now - c.debut > fenetreMs) {
-    compteurs.set(ip, { n: 1, debut: now })
+    compteurs.set(cle, { n: 1, debut: now })
     return false
   }
   c.n += 1
   return c.n > max
+}
+
+export async function tropDeRequetes(ip: string, max = 5, fenetreMs = 10 * 60 * 1000, portee = 'form'): Promise<boolean> {
+  const cle = `${portee}:${ip}`
+  try {
+    const { data, error } = await supabaseAdmin.rpc('limite_requetes', {
+      p_cle: cle, p_max: max, p_fenetre_s: Math.round(fenetreMs / 1000),
+    })
+    if (!error && typeof data === 'boolean') return data
+  } catch {}
+  return tropDeRequetesMemoire(cle, max, fenetreMs)
 }
 
 export function ipDe(req: Request): string {

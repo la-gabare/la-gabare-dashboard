@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { decouper, envoyerEcheance, lienPaiement, euros, Echeance } from '@/lib/paiements/echeancier'
 import { htmlDevis, STYLE_DEVIS, AGENCE, Devis, packDuDevis } from '@/lib/paiements/devis'
-import { ipDe } from '@/lib/leads/public'
+import { ipDe, tropDeRequetes } from '@/lib/leads/public'
 import { notifier, eurosCourt } from '@/lib/notifier'
 
 export const dynamic = 'force-dynamic'
@@ -71,6 +71,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 
 // Acceptation : enregistre l'accord (nom, date, IP), crée l'échéancier et envoie vers le paiement de l'acompte
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
+  if (await tropDeRequetes(ipDe(req), 10, 10 * 60 * 1000, 'devis')) return page('Devis', '<p>Trop de tentatives. Merci de réessayer dans quelques minutes.</p>', 429)
   const params = await paramsP
   const r = await charger(String(params.token || ''))
   if (!r) return page('Devis introuvable', '<p>Ce lien de devis n\'est pas valide.</p>', 404)

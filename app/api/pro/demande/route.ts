@@ -22,7 +22,7 @@ function json(data: unknown, status = 200) {
 export async function POST(req: NextRequest) {
   const a = await proDepuisRequete(req)
   if ('erreur' in a) return json({ error: a.erreur }, a.status)
-  if (tropDeRequetes(ipDe(req), 10)) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
+  if (await tropDeRequetes(ipDe(req), 10)) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const body = await req.json().catch(() => ({} as Record<string, any>))
   const type = body.type === 'echantillons' ? 'echantillons' : 'commande'

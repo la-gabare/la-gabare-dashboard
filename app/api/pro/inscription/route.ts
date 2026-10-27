@@ -22,7 +22,7 @@ function json(data: unknown, status = 200) {
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({} as Record<string, unknown>))
   if (body.site_web) return json({ ok: true }) // piège à robots
-  if (tropDeRequetes(ipDe(req), 5)) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
+  if (await tropDeRequetes(ipDe(req), 5)) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const client = await clientParDomaine(String(body.domain || ''))
   if (!client?.boutique_active) return json({ error: 'L\'espace professionnel n\'est pas ouvert sur ce site.' }, 403)

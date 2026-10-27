@@ -28,7 +28,7 @@ const QUESTIONS: Record<string, [string, Record<string, string>]> = {
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({} as Record<string, unknown>))
   if (body.site_web) return json({ ok: true }) // piège à robots
-  if (tropDeRequetes(ipDe(req))) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
+  if (await tropDeRequetes(ipDe(req))) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const nom = texte(body.nom, 120)
   const email = (texte(body.email, 200) || '').toLowerCase()

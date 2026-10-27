@@ -19,7 +19,7 @@ function json(data: unknown, status = 200) {
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try { body = await req.json() } catch { return json({ error: 'Requête invalide' }, 400) }
-  if (tropDeRequetes(ipDe(req))) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
+  if (await tropDeRequetes(ipDe(req))) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const brief: Record<string, unknown> = {}
   for (const k of CHAMPS_BRIEF_TEXTE) brief[k] = texte(body[k])
