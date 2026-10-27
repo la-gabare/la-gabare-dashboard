@@ -44,7 +44,12 @@ export async function POST(req: NextRequest) {
 
   if (type === 'BOOKING_CANCELLED') {
     if (lead) {
-      await supabaseAdmin.from('leads').update({ statut: 'mail_envoye', rdv_at: null, rdv_uid: null }).eq('id', lead.id)
+      // Le rendez-vous disparaît ; le statut ne recule que s'il était « rdv_pris » (jamais pour un client ou un lead archivé)
+      await supabaseAdmin.from('leads').update({ rdv_at: null, rdv_uid: null }).eq('id', lead.id)
+      if (lead.statut === 'rdv_pris') {
+        const { count } = await supabaseAdmin.from('formulaire_complet').select('id', { count: 'exact', head: true }).eq('lead_id', lead.id)
+        await supabaseAdmin.from('leads').update({ statut: count ? 'formulaire_complete' : 'mail_envoye' }).eq('id', lead.id)
+      }
       try { await notifierAgenceRdv(lead, null, 'annule') } catch (e) { console.error('calcom notif', e) }
     }
     return NextResponse.json({ ok: true })
@@ -54,8 +59,10 @@ export async function POST(req: NextRequest) {
 
   const rdv = { statut: 'rdv_pris', rdv_at: p.startTime || null, rdv_uid: p.uid }
   if (lead) {
-    await supabaseAdmin.from('leads').update(rdv).eq('id', lead.id)
-    lead = { ...lead, ...rdv }
+    // Un lead déjà client garde son statut (on note seulement le rendez-vous)
+    const maj = lead.statut === 'client' ? { rdv_at: rdv.rdv_at, rdv_uid: rdv.rdv_uid } : rdv
+    await supabaseAdmin.from('leads').update(maj).eq('id', lead.id)
+    lead = { ...lead, ...maj }
   } else {
     if (!email) return NextResponse.json({ ok: true })
     const { data, error } = await supabaseAdmin.from('leads').insert({

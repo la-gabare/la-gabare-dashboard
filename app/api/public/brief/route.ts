@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
     console.error('public/brief insert', error)
     return json({ error: 'Enregistrement impossible pour le moment.' }, 500)
   }
-  if (leadId) await supabaseAdmin.from('leads').update({ statut: 'formulaire_complete' }).eq('id', leadId)
+  // Le statut n'avance que depuis les premières étapes : un lead déjà en rendez-vous, client ou archivé ne recule pas
+  if (leadId) await supabaseAdmin.from('leads').update({ statut: 'formulaire_complete' }).eq('id', leadId).in('statut', ['reception', 'mail_envoye', 'relance'])
   try { await notifierAgenceBrief(cree, Boolean(leadId)) } catch (e) { console.error('public/brief notif', e) }
 
   return json({ ok: true, id: cree.id, lead_id: leadId })
