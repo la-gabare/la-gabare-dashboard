@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
       if (!clientId || !lignes.length || !FORMULES[formule]) {
         return NextResponse.json({ error: 'Client, au moins une ligne et une formule sont requis' }, { status: 400 })
       }
+      const { data: cl } = await supabaseAdmin.from('clients').select('email_contact').eq('id', clientId).single()
+      if (!cl?.email_contact) return NextResponse.json({ error: "Ce client n'a pas d'adresse e-mail : ajoutez-la sur sa fiche avant d'envoyer un devis." }, { status: 400 })
       const t = calculer(lignes, formule, remise)
       const validite = new Date(Date.now() + (Number(body.validite_jours) || 30) * 24 * 60 * 60 * 1000)
       const { data: d, error } = await supabaseAdmin.from('devis').insert({
@@ -48,7 +50,13 @@ export async function POST(req: NextRequest) {
         validite: validite.toISOString().slice(0, 10), token: nouveauToken(), envoye_at: new Date().toISOString(),
       }).select().single()
       if (error || !d) throw new Error(error?.message || 'Création impossible')
-      await envoyerDevis(d as Devis)
+      try {
+        await envoyerDevis(d as Devis)
+      } catch (err) {
+        // Mail non parti : on annule le devis pour ne pas laisser de devis fantôme ni de doublon au prochain essai
+        await supabaseAdmin.from('devis').update({ statut: 'annule' }).eq('id', d.id)
+        throw new Error(`Le mail du devis n'est pas parti, le devis a été annulé. Réessayez. (${err instanceof Error ? err.message : 'erreur'})`)
+      }
       await notifier({ titre: `Devis envoyé — ${await nomClient(clientId)}`, corps: `${d.numero} · ${eurosCourt(d.total_ttc_cents)} TTC · ${formule}`, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${clientId}`, id: `devis-${d.id}` })
       return NextResponse.json({ ok: true, lien: lienDevis(d.token) })
     }

@@ -19,10 +19,11 @@ export async function POST(req: NextRequest) {
   try {
     if (body.action === 'soumettre_maquette') {
       if (!urlValide) return NextResponse.json({ error: 'Adresse de la maquette invalide (https://…)' }, { status: 400 })
+      // Mail d'abord : s'il échoue, la maquette n'est pas marquée « à valider » et l'agence le voit tout de suite
+      await mailMaquetteSoumise(c, url)
       await supabaseAdmin.from('clients').update({
         maquette_url: url, maquette_statut: 'a_valider', maquette_soumise_at: new Date().toISOString(),
       }).eq('id', c.id)
-      await mailMaquetteSoumise(c, url)
       await notifier({ titre: `Maquette envoyée au client — ${await nomClient(c.id)}`, corps: url, niveau: 'info', url: `https://admin.la-gabare.fr/clients/${c.id}` })
       return NextResponse.json({ ok: true })
     }

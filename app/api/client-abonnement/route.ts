@@ -5,6 +5,11 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { stripe } from '@/lib/stripe'
 import { sendMail } from '@/lib/mailer'
+
+// L'action (Stripe + fiche) est déjà faite quand les mails partent : un mail raté alerte l'agence mais ne renvoie pas d'erreur au client
+const mailSansBloquer = async (...args: Parameters<typeof sendMail>) => {
+  try { await sendMail(...args) } catch (e) { console.error('client-abonnement: mail non envoyé', args[1], e) }
+}
 import { finMoisOfferts, sessionAbonnement } from '@/lib/paiements/accompagnement-offert'
 import { dates, sortieAnticipee, INDEMNITE_PCT } from '@/lib/abonnement-cgv'
 
@@ -128,7 +133,7 @@ export async function POST(req: NextRequest) {
 
       const quand = effet ? `à partir du prélèvement du ${dateFr(effet)}` : 'dès le démarrage de votre abonnement'
       if (c.email_contact) {
-        await sendMail(c.email_contact, `Votre nouvelle formule ${FORMULES[formule]} — ${c.nom_domaine}`,
+        await mailSansBloquer(c.email_contact, `Votre nouvelle formule ${FORMULES[formule]} — ${c.nom_domaine}`,
           `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
            <p>Bonjour,</p><p>Votre abonnement passe de la formule ${esc(ancienne)} à la formule <strong>${FORMULES[formule]}</strong>
            (${(montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })} par mois), ${quand}.
@@ -136,7 +141,7 @@ export async function POST(req: NextRequest) {
           { fromName: 'La Gabare', replyTo: AGENCE || undefined })
       }
       if (AGENCE) {
-        await sendMail(AGENCE, `Formule changée — ${c.nom_domaine} : ${ancienne} → ${FORMULES[formule]}`,
+        await mailSansBloquer(AGENCE, `Formule changée — ${c.nom_domaine} : ${ancienne} → ${FORMULES[formule]}`,
           `<p style="font-family:Arial,sans-serif;font-size:14px;">${esc(c.nom_domaine)} est passé à la formule <strong>${FORMULES[formule]}</strong>
            depuis son espace client. Fait automatiquement : ${sub ? `tarif Stripe mis à jour (${quand})` : 'aucun abonnement Stripe en cours'}, fiche client à jour.</p>
            <p style="font-family:Arial,sans-serif;font-size:14px;"><a href="https://admin.la-gabare.fr/clients/${c.id}">Ouvrir la fiche client</a></p>`,
@@ -181,7 +186,7 @@ export async function POST(req: NextRequest) {
       }).eq('id', c.id)
       const motif = String(body.motif || '').trim().slice(0, 2000)
       if (c.email_contact) {
-        await sendMail(c.email_contact, `Votre demande de résiliation — ${c.nom_domaine}`,
+        await mailSansBloquer(c.email_contact, `Votre demande de résiliation — ${c.nom_domaine}`,
           `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
            <p>Bonjour,</p><p>Nous avons bien reçu votre demande de résiliation de l'abonnement ${esc(FORMULES[c.abonnement] || '')}
            le ${dateFr(new Date())}. Conformément à nos conditions générales, elle prendra effet le <strong>${dateFr(effet)}</strong> :
@@ -190,7 +195,7 @@ export async function POST(req: NextRequest) {
           { fromName: 'La Gabare', replyTo: AGENCE || undefined })
       }
       if (AGENCE) {
-        await sendMail(AGENCE, `Résiliation demandée — ${c.nom_domaine} (effet le ${dateFr(effet)})`,
+        await mailSansBloquer(AGENCE, `Résiliation demandée — ${c.nom_domaine} (effet le ${dateFr(effet)})`,
           `<p style="font-family:Arial,sans-serif;font-size:14px;">${esc(c.nom_domaine)} a demandé la résiliation de son abonnement depuis son espace client.
            Effet le ${dateFr(effet)}${sub ? ' (arrêt des prélèvements programmé dans Stripe)' : ' — aucun abonnement Stripe trouvé, à vérifier'}.</p>
            ${motif ? `<p style="font-family:Arial,sans-serif;font-size:14px;">Motif : ${esc(motif)}</p>` : ''}

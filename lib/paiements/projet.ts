@@ -18,8 +18,14 @@ export async function declencherVersement(clientId: number, etape: 'maquette' | 
     ? echeances[echeances.length - 1]
     : echeances.length === 3 ? echeances[1] : null
   if (!cible || cible.statut !== 'a_venir') return null
-  await envoyerEcheance(cible)
+  // Statut d'abord : le lien de paiement fonctionne même si le mail échoue (l'agence est prévenue)
   await supabaseAdmin.from('echeances').update({ statut: 'envoye', envoye_at: new Date().toISOString() }).eq('id', cible.id)
+  try {
+    await envoyerEcheance(cible)
+  } catch (err) {
+    console.error('versement: mail non envoyé', cible.id, err)
+    await notifier({ titre: `Versement non envoyé au client — ${cible.libelle}`, corps: "Le mail n'est pas parti : renvoyez-le depuis la fiche client (échéancier).", niveau: 'warning', url: `https://admin.la-gabare.fr/clients/${clientId}` })
+  }
   return cible
 }
 
