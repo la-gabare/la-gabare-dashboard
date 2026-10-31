@@ -5,6 +5,9 @@ import { fetchAdminData } from '@/lib/admin-data'
 import Link from 'next/link'
 import { STADES, LABELS_STADE as labels, type Stade } from '@/lib/prospects-hm'
 
+type Lien = { id: number; domaine?: string; nom_domaine?: string; nom?: string; statut?: string; email?: string; prospect_id?: number | null }
+const nomLien = (l: Lien) => l.nom_domaine || l.domaine || l.nom || `n° ${l.id}`
+
 type Prospect = {
   id: number; slug: string; nom: string; appellation?: string; commune?: string; site_etat?: string
   stade: Stade; resume?: string; brouillon_email?: string; dossier?: string
@@ -12,11 +15,15 @@ type Prospect = {
 
 export default function Pipeline() {
   const [prospects, setProspects] = useState<Prospect[]>([])
+  const [leads, setLeads] = useState<Lien[]>([])
+  const [clients, setClients] = useState<Lien[]>([])
   const [ouvert, setOuvert] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   const charger = async () => {
     setProspects(await fetchAdminData<Prospect>('prospects_hm', { order_column: 'updated_at', order_asc: 'false' }))
+    const [tousLeads, tousClients] = await Promise.all([fetchAdminData<Lien>('leads'), fetchAdminData<Lien>('clients')])
+    setLeads(tousLeads); setClients(tousClients)
     setLoading(false)
   }
   useEffect(() => { charger() }, [])
@@ -25,6 +32,9 @@ export default function Pipeline() {
     await fetch('/api/prospects', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, stade }) })
     charger()
   }
+
+  const leadsLibres = leads.filter((l) => !l.prospect_id)
+  const clientsLibres = clients.filter((c) => !c.prospect_id)
 
   if (loading) return <div className="container-dashboard">Chargement...</div>
 
@@ -71,6 +81,35 @@ export default function Pipeline() {
             </div>
           </div>
         ))}
+      </div>
+
+      <h2 className="text-lg font-bold mt-8 mb-2">Leads du formulaire non rattachés ({leadsLibres.length})</h2>
+      <div className="card space-y-2 text-sm">
+        {leadsLibres.length === 0 && <p className="text-gray-500">Tous les leads sont rattachés à un domaine.</p>}
+        {leadsLibres.map((l) => (
+          <div key={l.id} className="flex justify-between items-center border-b pb-2">
+            <span>{nomLien(l)} {l.statut && <span className="badge badge-info ml-2">{l.statut}</span>}</span>
+            <Link href="/leads" className="text-wine text-xs font-semibold">Voir dans Leads</Link>
+          </div>
+        ))}
+        {leads.some((l) => l.prospect_id) && (
+          <p className="text-xs text-gray-500">Les leads déjà rattachés se retrouvent dans la fiche de leur domaine : {leads.filter((l) => l.prospect_id).map((l) => (
+            <Link key={l.id} href={`/domaines/${l.prospect_id}`} className="text-wine underline mr-2">{nomLien(l)}</Link>
+          ))}</p>
+        )}
+        <Link href="/leads" className="inline-block text-wine font-semibold">Tous les leads →</Link>
+      </div>
+
+      <h2 className="text-lg font-bold mt-8 mb-2">Clients non rattachés ({clientsLibres.length})</h2>
+      <div className="card space-y-2 text-sm">
+        {clientsLibres.length === 0 && <p className="text-gray-500">Tous les clients sont rattachés à un domaine.</p>}
+        {clientsLibres.map((c) => (
+          <div key={c.id} className="flex justify-between items-center border-b pb-2">
+            <span>{nomLien(c)} {c.statut && <span className="badge badge-info ml-2">{c.statut}</span>}</span>
+            <Link href={`/clients/${c.id}`} className="text-wine text-xs font-semibold">Ouvrir le dossier</Link>
+          </div>
+        ))}
+        <Link href="/clients" className="inline-block text-wine font-semibold">Tous les clients →</Link>
       </div>
     </div>
   )
