@@ -11,7 +11,8 @@ type Prospect = {
   stade: Stade; resume?: string; brouillon_email?: string; dossier?: string
 }
 type Evenement = { id: number; type: string; titre: string; detail?: string; created_at: string }
-type Lien = { id: number; domaine?: string; nom_domaine?: string; statut?: string }
+type Lien = { id: number; domaine?: string; nom_domaine?: string; nom?: string; statut?: string; prospect_id?: number | null }
+const nomLien = (l: Lien) => l.nom_domaine || l.domaine || l.nom || `n° ${l.id}`
 
 export default function FicheDomaine() {
   const { id } = useParams<{ id: string }>()
@@ -19,23 +20,33 @@ export default function FicheDomaine() {
   const [evenements, setEvenements] = useState<Evenement[]>([])
   const [leads, setLeads] = useState<Lien[]>([])
   const [clients, setClients] = useState<Lien[]>([])
+  const [libresLeads, setLibresLeads] = useState<Lien[]>([])
+  const [libresClients, setLibresClients] = useState<Lien[]>([])
   const [onglet, setOnglet] = useState<'resume' | 'historique'>('resume')
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(true)
 
   const charger = async () => {
-    const [pr, ev, le, cl] = await Promise.all([
+    const [pr, ev, le, cl, tousLeads, tousClients] = await Promise.all([
       fetchAdminData<Prospect>('prospects_hm', { id }),
       fetchAdminData<Evenement>('evenements', { eq_column: 'prospect_id', eq_value: id, order_column: 'created_at', order_asc: 'false' }),
       fetchAdminData<Lien>('leads', { eq_column: 'prospect_id', eq_value: id }),
       fetchAdminData<Lien>('clients', { eq_column: 'prospect_id', eq_value: id }),
+      fetchAdminData<Lien>('leads'),
+      fetchAdminData<Lien>('clients'),
     ])
+    setLibresLeads(tousLeads.filter((l) => !l.prospect_id))
+    setLibresClients(tousClients.filter((c) => !c.prospect_id))
     setP(pr[0] || null); setEvenements(ev); setLeads(le); setClients(cl); setLoading(false)
   }
   useEffect(() => { charger() }, [id])
 
   const changerStade = async (stade: Stade) => {
     await fetch('/api/prospects', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: Number(id), stade }) })
+    charger()
+  }
+  const lier = async (type: 'lead' | 'client', lienId: number, lierOk: boolean) => {
+    await fetch('/api/prospects/lier', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type, id: lienId, prospect_id: Number(id), lier: lierOk }) })
     charger()
   }
   const ajouterNote = async () => {
@@ -87,9 +98,26 @@ export default function FicheDomaine() {
         <div className="card space-y-4 text-sm">
           {p.resume && <p className="whitespace-pre-wrap">{p.resume}</p>}
           {p.site_etat && <p><b>Site actuel :</b> {p.site_etat}</p>}
-          {(leads.length > 0 || clients.length > 0) && (
-            <p><b>Rattaché :</b> {leads.map((l) => `lead (${l.statut || '?'})`).concat(clients.map((c) => `client (${c.statut || '?'})`)).join(', ')}</p>
-          )}
+          <div>
+            <p className="font-semibold mb-1">Rattachements</p>
+            {leads.length === 0 && clients.length === 0 && <p className="text-gray-500 text-xs mb-2">Aucun lead ni client rattaché.</p>}
+            {leads.map((l) => (
+              <p key={`l${l.id}`} className="mb-1">Lead : {nomLien(l)} ({l.statut || '?'}) <Link href="/leads" className="text-wine text-xs ml-2">Voir</Link> <button onClick={() => lier('lead', l.id, false)} className="text-xs text-gray-500 ml-2 underline">Détacher</button></p>
+            ))}
+            {clients.map((c) => (
+              <p key={`c${c.id}`} className="mb-1">Client : {nomLien(c)} ({c.statut || '?'}) <Link href={`/clients/${c.id}`} className="text-wine font-semibold ml-2">Ouvrir le dossier client (argent, projet, contenu) →</Link> <button onClick={() => lier('client', c.id, false)} className="text-xs text-gray-500 ml-2 underline">Détacher</button></p>
+            ))}
+            <div className="flex flex-wrap gap-2 mt-2">
+              <select defaultValue="" onChange={(e) => { if (e.target.value) lier('lead', Number(e.target.value), true) }} className="px-2 py-1 border rounded text-xs">
+                <option value="">Rattacher un lead…</option>
+                {libresLeads.map((l) => <option key={l.id} value={l.id}>{nomLien(l)}</option>)}
+              </select>
+              <select defaultValue="" onChange={(e) => { if (e.target.value) lier('client', Number(e.target.value), true) }} className="px-2 py-1 border rounded text-xs">
+                <option value="">Rattacher un client…</option>
+                {libresClients.map((c) => <option key={c.id} value={c.id}>{nomLien(c)}</option>)}
+              </select>
+            </div>
+          </div>
           {p.brouillon_email && (
             <div>
               <p className="font-semibold">Brouillon de message (non envoyé)</p>
