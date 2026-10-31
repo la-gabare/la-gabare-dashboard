@@ -4,11 +4,16 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
 import { Tache, Client, PlanGeneration } from '@/lib/types'
+import type { ElementADecider } from '@/lib/a-decider'
 
 const prioriteBadge: Record<string, string> = {
   basse: 'badge-info',
   normale: 'badge-warning',
   haute: 'badge-danger',
+}
+
+const typeLabels: Record<ElementADecider['type'], string> = {
+  lead: 'Lead', devis: 'Devis', echeance: 'Paiement', texte: 'Contenu', tache: 'Tâche',
 }
 
 const statuts = ['a_faire', 'en_cours', 'terminee']
@@ -25,6 +30,7 @@ export default function Home() {
     articlesEnAttente: 0,
     postsEnAttente: 0,
   })
+  const [aDecider, setADecider] = useState<ElementADecider[]>([])
   const [taches, setTaches] = useState<Tache[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [clientsSansPlan, setClientsSansPlan] = useState<Client[]>([])
@@ -59,6 +65,7 @@ export default function Home() {
 
     fetchCounts()
     fetchTaches()
+    fetch('/api/a-decider').then((r) => (r.ok ? r.json() : [])).then(setADecider).catch(() => {})
   }, [])
 
   const updateStatut = async (id: number, statut: string) => {
@@ -85,15 +92,31 @@ export default function Home() {
 
   return (
     <div className="container-dashboard">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-2">Aujourd&apos;hui</h1>
+      <p className="text-gray-500 mb-6">
+        {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+      </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {cards.map((card) => (
-          <a key={card.label} href={card.href} className="card block hover:shadow-md transition">
-            <h2 className="text-gray-600 text-sm font-semibold">{card.label}</h2>
-            <p className="text-3xl font-bold text-wine mt-2">{card.value}</p>
-          </a>
-        ))}
+      <div className="card">
+        <h2 className="text-xl font-bold mb-4">À décider ({aDecider.length})</h2>
+        {aDecider.length === 0 ? (
+          <p className="text-gray-500 text-sm">Rien n&apos;attend de décision. 🎉</p>
+        ) : (
+          <div className="space-y-2">
+            {aDecider.map((e, i) => (
+              <Link key={i} href={e.lien} className="flex justify-between items-center border-b pb-2 hover:bg-gray-50">
+                <div>
+                  <p className="font-medium">
+                    <span className={`badge mr-2 ${e.urgence === 'haute' ? 'badge-danger' : 'badge-warning'}`}>{typeLabels[e.type]}</span>
+                    {e.titre}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{e.detail}</p>
+                </div>
+                <span className="text-wine text-sm font-semibold shrink-0 ml-3">Ouvrir →</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="card mt-8">
@@ -164,6 +187,16 @@ export default function Home() {
             ))}
           </div>
         )}
+      </div>
+
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+        {cards.map((card) => (
+          <a key={card.label} href={card.href} className="card block hover:shadow-md transition">
+            <h2 className="text-gray-600 text-sm font-semibold">{card.label}</h2>
+            <p className="text-3xl font-bold text-wine mt-2">{card.value}</p>
+          </a>
+        ))}
       </div>
     </div>
   )

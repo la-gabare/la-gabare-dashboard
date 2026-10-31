@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { chargerADecider } from '@/lib/a-decider'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +18,7 @@ function jetonValide(req: NextRequest) {
 export async function GET(req: NextRequest) {
   if (!jetonValide(req)) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
+  const a_decider = await chargerADecider().catch(() => [])
   const il_y_a_7j = new Date(Date.now() - 7 * 86400000).toISOString()
   const [leads, leadsNouveaux, clients, devis, echeances, erreurs] = await Promise.all([
     supabaseAdmin.from('leads').select('id', { count: 'exact', head: true }),
@@ -37,6 +39,7 @@ export async function GET(req: NextRequest) {
     genere_at: new Date().toISOString(),
     leads: { total: leads.count ?? null, derniers_7_jours: leadsNouveaux.data || [] },
     clients: { par_statut: parStatut },
+    a_decider,
     devis_en_attente: (devis.data || []).length,
     versements_en_attente: { nombre: versements.length, total_cents: versements.reduce((s, e) => s + (e.montant_cents || 0), 0), liste: echeances.data || [] },
     erreurs_7_jours: (erreurs.data || []).map((e: { message: string; occurrences: number; derniere_at: string }) => ({ ...e, message: String(e.message).split('\n')[0].slice(0, 160) })),
