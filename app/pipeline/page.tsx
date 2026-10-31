@@ -2,16 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
-import { STADES, type Stade } from '@/lib/prospects-hm'
+import Link from 'next/link'
+import { STADES, LABELS_STADE as labels, type Stade } from '@/lib/prospects-hm'
 
 type Prospect = {
   id: number; slug: string; nom: string; appellation?: string; commune?: string; site_etat?: string
   stade: Stade; resume?: string; brouillon_email?: string; dossier?: string
-}
-
-const labels: Record<Stade, string> = {
-  prospect: 'Prospect', pret: 'Prêt à valider', contacte: 'Contacté', repondu: 'A répondu',
-  lead: 'Lead', client: 'Client', abandonne: 'Abandonné',
 }
 
 export default function Pipeline() {
@@ -46,7 +42,7 @@ export default function Pipeline() {
                 <div key={p.id} className="border-b pb-2">
                   <div className="flex justify-between items-center cursor-pointer" onClick={() => setOuvert(ouvert === p.id ? null : p.id)}>
                     <div>
-                      <p className="font-medium">{p.nom}</p>
+                      <Link href={`/domaines/${p.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-wine hover:underline">{p.nom}</Link>
                       <p className="text-xs text-gray-500">{[p.appellation, p.commune, p.site_etat && `site : ${p.site_etat}`].filter(Boolean).join(' · ')}</p>
                     </div>
                     <select

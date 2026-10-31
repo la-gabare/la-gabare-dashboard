@@ -29,3 +29,23 @@ export function validerProspect(corps: unknown): { ok: true; prospect: ProspectE
     },
   }
 }
+
+export const LABELS_STADE: Record<Stade, string> = {
+  prospect: 'Prospect', pret: 'Prêt à valider', contacte: 'Contacté', repondu: 'A répondu',
+  lead: 'Lead', client: 'Client', abandonne: 'Abandonné',
+}
+
+// Ce qu'il y a à faire ensuite, selon le stade (rien n'est jamais envoyé automatiquement).
+export function prochaineAction(stade: Stade): string | null {
+  switch (stade) {
+    case 'prospect': return 'Faire préparer le dossier et le brouillon de message par l\'agent.'
+    case 'pret': return 'Relire le brouillon, l\'envoyer vous-même, puis marquer « Contacté ».'
+    case 'contacte': return 'Sans réponse après 7 jours : relancer, ou abandonner.'
+    case 'repondu': return 'Répondre et proposer un rendez-vous.'
+    case 'lead': return 'Envoyer le devis.'
+    case 'client': return 'Suivre le projet et le contenu du mois.'
+    default: return null
+  }
+}
+
+export const TYPES_EVENEMENT = ['prospect', 'mail', 'reponse', 'lead', 'devis', 'paiement', 'note'] as const

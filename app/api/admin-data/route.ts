@@ -19,6 +19,7 @@ const ALLOWED_TABLES = [
   'newsletter_abonnes',
   'sites_generes',
   'prospects_hm',
+  'evenements',
 ]
 
 export async function GET(req: NextRequest) {

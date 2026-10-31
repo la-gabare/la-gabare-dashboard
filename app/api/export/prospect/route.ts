@@ -19,7 +19,9 @@ export async function POST(req: NextRequest) {
   if (!jetonValide(req)) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   const v = validerProspect(await req.json().catch(() => null))
   if ('erreur' in v) return NextResponse.json({ error: v.erreur }, { status: 400 })
-  const { error } = await supabaseAdmin.from('prospects_hm').upsert({ ...v.prospect, updated_at: new Date().toISOString() }, { onConflict: 'slug' })
+  const { data: existant } = await supabaseAdmin.from('prospects_hm').select('id').eq('slug', v.prospect.slug).maybeSingle()
+  const { data: ligne, error } = await supabaseAdmin.from('prospects_hm').upsert({ ...v.prospect, updated_at: new Date().toISOString() }, { onConflict: 'slug' }).select('id').single()
   if (error) return NextResponse.json({ error: 'Enregistrement impossible' }, { status: 500 })
+  if (!existant && ligne) await supabaseAdmin.from('evenements').insert({ prospect_id: ligne.id, type: 'prospect', titre: 'Dossier déposé par Harness Maxxing' })
   return NextResponse.json({ ok: true, slug: v.prospect.slug })
 }

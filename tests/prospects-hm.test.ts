@@ -20,3 +20,8 @@ test('texte trop long tronqué', () => {
   assert.ok(r.ok)
   if (r.ok) assert.equal(r.prospect.brouillon_email?.length, 8000)
 })
+
+import { prochaineAction, STADES } from '@/lib/prospects-hm'
+test('chaque stade actif a une prochaine action, « abandonné » aucune', () => {
+  for (const s of STADES) assert.equal(prochaineAction(s) === null, s === 'abandonne')
+})
