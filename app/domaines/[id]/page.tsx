@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchAdminData } from '@/lib/admin-data'
+import type { Client } from '@/lib/types'
+import DevisPanel from '@/components/DevisPanel'
+import EcheancierPanel from '@/components/EcheancierPanel'
+import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
+import ProjetPanel from '@/components/ProjetPanel'
 import { STADES, LABELS_STADE, prochaineAction, type Stade } from '@/lib/prospects-hm'
 
 type Prospect = {
@@ -22,22 +27,25 @@ export default function FicheDomaine() {
   const [clients, setClients] = useState<Lien[]>([])
   const [libresLeads, setLibresLeads] = useState<Lien[]>([])
   const [libresClients, setLibresClients] = useState<Lien[]>([])
-  const [onglet, setOnglet] = useState<'resume' | 'historique'>('resume')
+  const [dossiers, setDossiers] = useState<Client[]>([])
+  const [versionPaiement, setVersionPaiement] = useState(0)
+  const [onglet, setOnglet] = useState<'resume' | 'argent' | 'site' | 'contenu' | 'historique'>('resume')
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(true)
 
   const charger = async () => {
-    const [pr, ev, le, cl, tousLeads, tousClients] = await Promise.all([
+    const [pr, ev, le, cl, dos, tousLeads, tousClients] = await Promise.all([
       fetchAdminData<Prospect>('prospects_hm', { id }),
       fetchAdminData<Evenement>('evenements', { eq_column: 'prospect_id', eq_value: id, order_column: 'created_at', order_asc: 'false' }),
       fetchAdminData<Lien>('leads', { eq_column: 'prospect_id', eq_value: id }),
       fetchAdminData<Lien>('clients', { eq_column: 'prospect_id', eq_value: id }),
+      fetchAdminData<Client>('clients', { eq_column: 'prospect_id', eq_value: id }),
       fetchAdminData<Lien>('leads'),
       fetchAdminData<Lien>('clients'),
     ])
     setLibresLeads(tousLeads.filter((l) => !l.prospect_id))
     setLibresClients(tousClients.filter((c) => !c.prospect_id))
-    setP(pr[0] || null); setEvenements(ev); setLeads(le); setClients(cl); setLoading(false)
+    setP(pr[0] || null); setEvenements(ev); setLeads(le); setClients(cl); setDossiers(dos); setLoading(false)
   }
   useEffect(() => { charger() }, [id])
 
@@ -47,6 +55,7 @@ export default function FicheDomaine() {
   }
   const lier = async (type: 'lead' | 'client', lienId: number, lierOk: boolean) => {
     await fetch('/api/prospects/lier', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type, id: lienId, prospect_id: Number(id), lier: lierOk }) })
+    if (type === 'client' && !lierOk) setOnglet('resume')
     charger()
   }
   const ajouterNote = async () => {
@@ -61,6 +70,12 @@ export default function FicheDomaine() {
   const etapes: Stade[] = STADES.filter((s) => s !== 'abandonne')
   const rang = etapes.indexOf(p.stade)
   const action = prochaineAction(p.stade)
+  const dossier = dossiers[0]
+  const onglets = [
+    ['resume', 'Résumé'],
+    ...(dossier ? [['argent', 'Argent'], ['site', 'Site & projet'], ['contenu', 'Contenu']] : []),
+    ['historique', `Historique (${evenements.length})`],
+  ] as [typeof onglet, string][]
 
   return (
     <div className="container-dashboard">
@@ -87,14 +102,27 @@ export default function FicheDomaine() {
       )}
 
       <div className="flex gap-4 border-b mb-4">
-        {(['resume', 'historique'] as const).map((o) => (
+        {onglets.map(([o, libelle]) => (
           <button key={o} onClick={() => setOnglet(o)} className={`pb-2 font-semibold ${onglet === o ? 'text-wine border-b-2 border-wine' : 'text-gray-500'}`}>
-            {o === 'resume' ? 'Résumé' : `Historique (${evenements.length})`}
+            {libelle}
           </button>
         ))}
       </div>
 
-      {onglet === 'resume' ? (
+      {onglet === 'argent' && dossier ? (
+        <div>
+          <DevisPanel client={dossier} onChange={() => setVersionPaiement((v) => v + 1)} />
+          <EcheancierPanel key={versionPaiement} client={dossier} />
+          <PaymentLinkGenerator client={dossier} />
+        </div>
+      ) : onglet === 'site' && dossier ? (
+        <ProjetPanel key={`projet-${versionPaiement}`} client={dossier} onChange={async () => { await charger(); setVersionPaiement((v) => v + 1) }} />
+      ) : onglet === 'contenu' && dossier ? (
+        <div className="card text-sm">
+          <p className="mb-2">Le plan éditorial, les articles et les posts de ce client se gèrent dans son dossier.</p>
+          <Link href={`/clients/${dossier.id}`} className="text-wine font-semibold">Ouvrir le plan de contenu du client →</Link>
+        </div>
+      ) : onglet === 'resume' ? (
         <div className="card space-y-4 text-sm">
           {p.resume && <p className="whitespace-pre-wrap">{p.resume}</p>}
           {p.site_etat && <p><b>Site actuel :</b> {p.site_etat}</p>}
