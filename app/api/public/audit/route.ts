@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rattacherLead } from '@/lib/rattacher'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { texte, emailValide, tropDeRequetes, ipDe } from '@/lib/leads/public'
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
     console.error('public/audit insert', error)
     return json({ error: 'Enregistrement impossible pour le moment.' }, 500)
   }
+  await rattacherLead(cree)
 
   // Sans clé Anthropic configurée : comportement classique (mail de prise de contact + alerte agence)
   if (!process.env.ANTHROPIC_API_KEY) {

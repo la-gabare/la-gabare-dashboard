@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rattacherLead } from '@/lib/rattacher'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { CHAMPS_LEAD, texte, emailValide, tropDeRequetes, ipDe } from '@/lib/leads/public'
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
     console.error('public/lead insert', error)
     return json({ error: 'Enregistrement impossible pour le moment.' }, 500)
   }
+  await rattacherLead(cree)
 
   let mailEnvoye = false
   try {
