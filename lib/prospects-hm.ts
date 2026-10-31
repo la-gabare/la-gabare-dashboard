@@ -4,7 +4,7 @@ export type Stade = (typeof STADES)[number]
 
 export type ProspectEntrant = {
   slug: string; nom: string; appellation?: string; siren?: string; commune?: string
-  site_etat?: string; stade: Stade; resume?: string; brouillon_email?: string; dossier?: string
+  site_etat?: string; stade: Stade; resume?: string; fiche?: string; brouillon_email?: string; dossier?: string
 }
 
 const texte = (v: unknown, max: number) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined)
@@ -25,7 +25,7 @@ export function validerProspect(corps: unknown): { ok: true; prospect: ProspectE
     prospect: {
       slug, nom, stade, siren,
       appellation: texte(b.appellation, 120), commune: texte(b.commune, 80), site_etat: texte(b.site_etat, 30),
-      resume: texte(b.resume, 3000), brouillon_email: texte(b.brouillon_email, 8000), dossier: texte(b.dossier, 200),
+      resume: texte(b.resume, 3000), fiche: texte(b.fiche, 30000), brouillon_email: texte(b.brouillon_email, 8000), dossier: texte(b.dossier, 200),
     },
   }
 }

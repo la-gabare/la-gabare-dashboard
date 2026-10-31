@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
 import Link from 'next/link'
+import FicheTexte from '@/components/FicheTexte'
 import { STADES, LABELS_STADE as labels, type Stade } from '@/lib/prospects-hm'
 
 type Lien = { id: number; domaine?: string; nom_domaine?: string; nom?: string; statut?: string; email?: string; prospect_id?: number | null }
@@ -10,7 +11,7 @@ const nomLien = (l: Lien) => l.nom_domaine || l.domaine || l.nom || `n° ${l.id}
 
 type Prospect = {
   id: number; slug: string; nom: string; appellation?: string; commune?: string; site_etat?: string
-  stade: Stade; resume?: string; brouillon_email?: string; dossier?: string
+  stade: Stade; resume?: string; fiche?: string; brouillon_email?: string; dossier?: string
 }
 
 export default function Pipeline() {
@@ -67,6 +68,8 @@ export default function Pipeline() {
                   {ouvert === p.id && (
                     <div className="mt-3 text-sm space-y-3">
                       {p.resume && <p className="whitespace-pre-wrap">{p.resume}</p>}
+                      {p.fiche && <div className="bg-gray-50 p-3 rounded max-h-96 overflow-y-auto"><FicheTexte texte={p.fiche} /></div>}
+                      <Link href={`/domaines/${p.id}`} className="text-wine font-semibold">Ouvrir la fiche complète →</Link>
                       {p.brouillon_email && (
                         <div>
                           <p className="font-semibold">Brouillon de message (non envoyé)</p>

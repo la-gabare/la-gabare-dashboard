@@ -9,11 +9,12 @@ import DevisPanel from '@/components/DevisPanel'
 import EcheancierPanel from '@/components/EcheancierPanel'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 import ProjetPanel from '@/components/ProjetPanel'
+import FicheTexte from '@/components/FicheTexte'
 import { STADES, LABELS_STADE, prochaineAction, type Stade } from '@/lib/prospects-hm'
 
 type Prospect = {
   id: number; slug: string; nom: string; appellation?: string; siren?: string; commune?: string; site_etat?: string
-  stade: Stade; resume?: string; brouillon_email?: string; dossier?: string
+  stade: Stade; resume?: string; fiche?: string; brouillon_email?: string; dossier?: string
 }
 type Evenement = { id: number; type: string; titre: string; detail?: string; created_at: string }
 type Lien = { id: number; domaine?: string; nom_domaine?: string; nom?: string; statut?: string; prospect_id?: number | null }
@@ -126,6 +127,12 @@ export default function FicheDomaine() {
         <div className="card space-y-4 text-sm">
           {p.resume && <p className="whitespace-pre-wrap">{p.resume}</p>}
           {p.site_etat && <p><b>Site actuel :</b> {p.site_etat}</p>}
+          {p.fiche && (
+            <div>
+              <p className="font-semibold mb-1">Ce que Harness Maxxing a trouvé</p>
+              <div className="bg-gray-50 p-3 rounded"><FicheTexte texte={p.fiche} /></div>
+            </div>
+          )}
           <div>
             <p className="font-semibold mb-1">Rattachements</p>
             {leads.length === 0 && clients.length === 0 && <p className="text-gray-500 text-xs mb-2">Aucun lead ni client rattaché.</p>}
