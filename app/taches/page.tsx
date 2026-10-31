@@ -132,7 +132,7 @@ export default function TachesPage() {
             className="w-full px-3 py-2 border rounded-lg"
             rows={3}
           />
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <select
               value={form.priorite}
               onChange={(e) => setForm({ ...form, priorite: e.target.value })}
