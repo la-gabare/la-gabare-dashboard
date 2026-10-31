@@ -13,7 +13,7 @@ const ROUTES_PUBLIQUES = [
   /^\/api\/pro\//,                    // espace professionnels des domaines (lien d'accès personnel)
   /^\/api\/client-[a-z-]+$/,          // espace client : authentifié par la session Supabase du client
   /^\/api\/stripe-webhook$/,
-  /^\/api\/export\/resume$/,      // résumé lecture seule pour Harness Maxxing : jeton ADMIN_API_TOKEN dans la route
+  /^\/api\/export\/(resume|prospect)$/,      // Harness Maxxing : résumé en lecture (ADMIN_API_TOKEN) et dépôt de prospects (ADMIN_WRITE_TOKEN), jetons vérifiés dans les routes
   /^\/api\/cron\//,                   // tâches planifiées Vercel : protégées par CRON_SECRET
   /^\/api\/stripe-connect-webhook$/,
   /^\/api\/(google|meta)-oauth-callback$/,

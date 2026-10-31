@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export type Urgence = 'haute' | 'normale'
 export type ElementADecider = {
-  type: 'lead' | 'devis' | 'echeance' | 'texte' | 'tache'
+  type: 'lead' | 'devis' | 'echeance' | 'texte' | 'tache' | 'prospect'
   titre: string
   detail: string
   urgence: Urgence
@@ -19,10 +19,11 @@ type Lead = { id: number; domaine?: string | null; nom?: string | null; statut?:
 type Devis = { id: number; client_id: number; numero: string; envoye_at?: string | null; created_at: string }
 type Echeance = { id: number; client_id: number; libelle?: string | null; statut: string; envoye_at?: string | null }
 type Texte = { client_id: number; type: 'article' | 'post' }
+type Prospect = { slug: string; nom: string; stade: string }
 type Tache = { id: number; titre: string; priorite?: string | null; deadline?: string | null; client_id?: number | null }
 
 export type Donnees = {
-  leads: Lead[]; devis: Devis[]; echeances: Echeance[]; textes: Texte[]; taches: Tache[]
+  leads: Lead[]; devis: Devis[]; echeances: Echeance[]; textes: Texte[]; taches: Tache[]; prospects?: Prospect[]
   noms_clients: Record<number, string>
 }
 
@@ -65,6 +66,15 @@ export function construireADecider(d: Donnees, maintenant = Date.now()): Element
     })
   }
 
+  for (const p of d.prospects || []) {
+    if (p.stade !== 'pret' && p.stade !== 'repondu') continue
+    liste.push({
+      type: 'prospect', titre: p.nom,
+      detail: p.stade === 'repondu' ? 'A répondu : à traiter' : 'Dossier prêt : à valider avant envoi',
+      urgence: p.stade === 'repondu' ? 'haute' : 'normale', lien: '/pipeline',
+    })
+  }
+
   const parClient = new Map<number, number>()
   for (const t of d.textes) parClient.set(t.client_id, (parClient.get(t.client_id) || 0) + 1)
   for (const [clientId, n] of parClient) {
@@ -82,7 +92,7 @@ export function construireADecider(d: Donnees, maintenant = Date.now()): Element
 }
 
 export async function chargerADecider(): Promise<ElementADecider[]> {
-  const [leads, devis, echeances, articles, posts, taches, clients] = await Promise.all([
+  const [leads, devis, echeances, articles, posts, taches, clients, prospects] = await Promise.all([
     supabaseAdmin.from('leads').select('id, domaine, nom, statut, created_at, mail_envoye_at').limit(200),
     supabaseAdmin.from('devis').select('id, client_id, numero, envoye_at, created_at').eq('statut', 'envoye'),
     supabaseAdmin.from('echeances').select('id, client_id, libelle, statut, envoye_at').in('statut', ['envoye', 'virement_en_attente']),
@@ -90,6 +100,7 @@ export async function chargerADecider(): Promise<ElementADecider[]> {
     supabaseAdmin.from('posts').select('client_id').eq('status', 'brouillon'),
     supabaseAdmin.from('taches').select('id, titre, priorite, deadline, client_id').neq('statut', 'terminee'),
     supabaseAdmin.from('clients').select('id, nom_domaine'),
+    supabaseAdmin.from('prospects_hm').select('slug, nom, stade').in('stade', ['pret', 'repondu']),
   ])
   const noms: Record<number, string> = {}
   for (const c of (clients.data || []) as { id: number; nom_domaine: string }[]) noms[c.id] = c.nom_domaine
@@ -100,5 +111,6 @@ export async function chargerADecider(): Promise<ElementADecider[]> {
   return construireADecider({
     leads: (leads.data || []) as Lead[], devis: (devis.data || []) as Devis[], echeances: (echeances.data || []) as Echeance[],
     textes, taches: (taches.data || []) as Tache[], noms_clients: noms,
+    prospects: (prospects.data || []) as Prospect[],
   })
 }

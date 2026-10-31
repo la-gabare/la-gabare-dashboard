@@ -13,7 +13,7 @@ const prioriteBadge: Record<string, string> = {
 }
 
 const typeLabels: Record<ElementADecider['type'], string> = {
-  lead: 'Lead', devis: 'Devis', echeance: 'Paiement', texte: 'Contenu', tache: 'Tâche',
+  lead: 'Lead', devis: 'Devis', echeance: 'Paiement', texte: 'Contenu', tache: 'Tâche', prospect: 'Prospect',
 }
 
 const statuts = ['a_faire', 'en_cours', 'terminee']

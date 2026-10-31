@@ -29,3 +29,10 @@ test('tri : haute avant normale, et aucun e-mail dans la sortie', () => {
   assert.equal(r[0].type, 'tache')
   assert.ok(!JSON.stringify(r).includes('@'))
 })
+
+test('prospect prêt ou ayant répondu remonte, prospect simple ignoré', () => {
+  const r = construireADecider({ ...vide, prospects: [
+    { slug: 'a', nom: 'A', stade: 'prospect' }, { slug: 'b', nom: 'B', stade: 'pret' }, { slug: 'c', nom: 'C', stade: 'repondu' },
+  ] }, NOW)
+  assert.deepEqual(r.map((x) => [x.titre, x.urgence]), [['C', 'haute'], ['B', 'normale']])
+})
