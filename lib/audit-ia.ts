@@ -170,6 +170,7 @@ function mailRapport(lead: Record<string, any>, r: Rapport) {
     </td></tr><tr><td style="height:8px;"></td></tr>`).join('')
   const titre = (t: string) => `<p style="margin:28px 0 10px 0;${sans};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">${t}</p>`
   const rdv = new URLSearchParams({ ...(lead.nom ? { name: lead.nom } : {}), ...(lead.email ? { email: lead.email } : {}), 'metadata[lead_id]': String(lead.id) })
+  const lienBrief = `https://la-gabare.fr/formulaire-complet.html?lead_id=${lead.id}`
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
 <tr><td style="background-color:#1A1310;padding:32px 40px;text-align:center;"><span style="${serif};font-size:24px;letter-spacing:0.04em;color:#F5F2EC;">La Gabare</span></td></tr>
@@ -183,7 +184,10 @@ function mailRapport(lead: Record<string, any>, r: Rapport) {
   ${titre('Trois gains à aller chercher')}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${blocs(r.gains, '#B08D57')}</table>
   ${r.conformite.length ? titre('Conformité loi Évin') + liste(r.conformite) : ''}
   ${titre('Notre recommandation')}<p style="margin:0 0 24px 0;">${esc(r.recommandation)}</p>
+  <p style="margin:0 0 16px 0;">Pour la suite, deux façons de faire, à votre choix :</p>
   <a href="https://cal.com/la-gabare/appel-decouverte-la-gabare?${rdv}" style="display:inline-block;padding:14px 28px;background-color:#5A1226;color:#F5F2EC;font-size:15px;font-weight:600;text-decoration:none;">Réserver un appel de 20 minutes &rarr;</a>
+  <p style="margin:14px 0;font-size:13px;color:#7a6f66;">ou, si vous préférez écrire</p>
+  <a href="${lienBrief}" style="display:inline-block;padding:12px 28px;border:1px solid #1A1310;color:#1A1310;font-size:14px;font-weight:600;text-decoration:none;">Compléter le formulaire &rarr;</a>
   <p style="margin:24px 0 0 0;font-size:12px;color:#7a6f66;">Audit réalisé à partir de vos réponses et d'une lecture automatique de la page d'accueil de votre site, puis rédigé avec l'aide d'une intelligence artificielle.
   Une question ? Répondez simplement à cet e-mail.</p>
 </td></tr>

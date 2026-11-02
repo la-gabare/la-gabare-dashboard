@@ -193,7 +193,7 @@ export async function envoyerAccueil(clientId: number) {
     `<p style="margin:0 0 16px 0;">Votre acompte est bien reçu : votre projet démarre. Pour avancer, nous avons besoin des éléments suivants,
      idéalement avant le <strong style="color:#1A1310;">${limite}</strong> :</p>
      <ul style="margin:0 0 20px 0;padding-left:20px;">${elements.map((e) => `<li style="margin-bottom:6px;">${esc(e)}</li>`).join('')}</ul>
-     <p style="margin:0 0 16px 0;">Vous allez recevoir un second e-mail pour créer le mot de passe de votre espace client. Vous y trouverez la liste
+     <p style="margin:0 0 16px 0;">Votre espace client vient d'être créé : vous allez recevoir un second e-mail d'activation de votre compte (pensez à vérifier vos courriers indésirables). Cliquez sur le lien qu'il contient pour choisir votre mot de passe. Vous y trouverez ensuite la liste
      de ces éléments, rubrique « Votre projet » : répondez directement en ligne, déposez vos photos dans la « Galerie photo », et cochez au fur et à mesure.</p>
      <p style="margin:0 0 8px 0;">Il vous manque quelque chose ? Pas d'inquiétude : envoyez ce que vous avez, nous complétons ensemble.</p>`),
     { fromName: 'La Gabare', replyTo: AGENCE.email })
