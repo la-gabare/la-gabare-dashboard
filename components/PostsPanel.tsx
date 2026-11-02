@@ -179,15 +179,6 @@ export default function PostsPanel() {
     setEnhancingId(null)
   }
 
-  const schedulePost = async (id: number) => {
-    await fetch('/api/posts', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status: 'programme' }),
-    })
-    fetchData()
-  }
-
   return (
     <div>
       <div className="flex justify-end mb-4">
@@ -383,13 +374,8 @@ export default function PostsPanel() {
                         >
                           {enhancingId === p.id ? 'Amélioration...' : '✨ Améliorer'}
                         </button>
-                        {p.status !== 'programme' && (
-                          <button
-                            onClick={() => schedulePost(p.id)}
-                            className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-                          >
-                            📅 Programmer
-                          </button>
+                        {p.status === 'programme' && (
+                          <span className="px-3 py-1 text-sm text-green-700">✓ Validé par le client, programmé</span>
                         )}
                         <button
                           onClick={() => publishPost(p.id)}

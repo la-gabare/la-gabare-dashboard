@@ -24,6 +24,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Post introuvable' }, { status: 404 })
   }
 
+  // Rien ne part sur le compte du client sans sa validation (statut « programme » posé depuis son espace).
+  if (post.status !== 'programme') {
+    return NextResponse.json({ error: "Le client n'a pas encore validé ce post dans son espace." }, { status: 400 })
+  }
+
   if (!post.media_url) {
     return NextResponse.json({ error: 'Aucun média envoyé pour ce post' }, { status: 400 })
   }
