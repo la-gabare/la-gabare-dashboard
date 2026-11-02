@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
   }
 
   const ext = file.name.split('.').pop()
-  const path = `clients/${client.id}/galerie/${angle}-${Date.now()}.${ext}`
+  // Le stockage refuse les accents et les caractères spéciaux dans le nom du fichier (le thème, lui, garde ses accents en base)
+  const angleFichier = angle.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/œ/gi, 'oe').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'photo'
+  const path = `clients/${client.id}/galerie/${angleFichier}-${Date.now()}.${ext}`
   const arrayBuffer = await file.arrayBuffer()
 
   const { error: uploadError } = await supabaseAdmin.storage
