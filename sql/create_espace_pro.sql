@@ -47,3 +47,8 @@ CREATE INDEX IF NOT EXISTS pro_demandes_client_idx ON pro_demandes (client_id, c
 -- Accès uniquement par le serveur (clé service role)
 ALTER TABLE pros ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pro_demandes ENABLE ROW LEVEL SECURITY;
+
+-- Depuis le 30/10/2026, Supabase n'expose plus les nouvelles tables : GRANT explicite (accès serveur uniquement, clé service)
+GRANT ALL ON TABLE pros TO service_role;
+GRANT ALL ON TABLE pro_demandes TO service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service_role;

@@ -98,3 +98,9 @@ CREATE TABLE IF NOT EXISTS prospection_settings (
 ALTER TABLE prospects             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prospect_activities   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prospection_settings  ENABLE ROW LEVEL SECURITY;
+
+-- Depuis le 30/10/2026, Supabase n'expose plus les nouvelles tables : GRANT explicite (accès serveur uniquement, clé service)
+GRANT ALL ON TABLE prospects TO service_role;
+GRANT ALL ON TABLE prospect_activities TO service_role;
+GRANT ALL ON TABLE prospection_settings TO service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service_role;

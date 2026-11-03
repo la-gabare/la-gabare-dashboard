@@ -67,6 +67,11 @@ CREATE INDEX IF NOT EXISTS commandes_client_idx ON commandes (client_id, created
 ALTER TABLE produits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE commandes ENABLE ROW LEVEL SECURITY;
 
+-- Depuis le 30/10/2026, Supabase n'expose plus les nouvelles tables : GRANT explicite (accès serveur uniquement, clé service)
+GRANT ALL ON TABLE produits TO service_role;
+GRANT ALL ON TABLE commandes TO service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service_role;
+
 -- 4. Réserve le stock de toutes les lignes et crée la commande en attente, ou rien (exception => rollback)
 CREATE OR REPLACE FUNCTION boutique_reserver(
   p_client_id BIGINT, p_lignes JSONB, p_sous_total INT, p_frais_port INT, p_livraison JSONB

@@ -22,4 +22,8 @@ create table if not exists echeances (
 create index if not exists echeances_client_idx on echeances (client_id, ordre);
 
 alter table echeances enable row level security;
+
+-- Depuis le 30/10/2026, Supabase n'expose plus les nouvelles tables : GRANT explicite (accès serveur uniquement, clé service)
+GRANT ALL ON TABLE echeances TO service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service_role;
 -- Aucune policy : seules les routes serveur du dashboard (clé service) y accèdent.
