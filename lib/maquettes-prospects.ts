@@ -31,3 +31,7 @@ export async function lireApercu(slug: string, vue: Vue): Promise<Buffer | null>
   if (error || !data) return null
   return Buffer.from(await data.arrayBuffer())
 }
+
+export async function supprimerApercus(slug: string): Promise<void> {
+  await supabaseAdmin.storage.from(BUCKET).remove(VUES.map((v) => `${slug}/${v}.jpg`))
+}

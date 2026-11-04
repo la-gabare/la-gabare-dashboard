@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { VUES, TAILLE_MAX, estJpeg, deposerApercus, urlApercu, type Vue } from '@/lib/maquettes-prospects'
+import { VUES, TAILLE_MAX, estJpeg, deposerApercus, supprimerApercus, urlApercu, type Vue } from '@/lib/maquettes-prospects'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30
@@ -33,5 +33,19 @@ export async function POST(req: NextRequest) {
   if (!(await deposerApercus(slug, images))) return NextResponse.json({ error: 'Enregistrement impossible' }, { status: 500 })
   await supabaseAdmin.from('prospects_hm').update({ maquette_url: urlApercu(slug), updated_at: new Date().toISOString() }).eq('id', p.id)
   await supabaseAdmin.from('evenements').insert({ prospect_id: p.id, type: 'prospect', titre: 'Maquette déposée par Harness Maxxing' })
+  return NextResponse.json({ ok: true, slug })
+}
+
+// Retire les captures d'un prospect (la maquette est à refaire ou abandonnée).
+export async function DELETE(req: NextRequest) {
+  if (!jetonValide(req)) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  const slug = req.nextUrl.searchParams.get('slug') || ''
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) return NextResponse.json({ error: 'slug invalide' }, { status: 400 })
+  const { data: p } = await supabaseAdmin.from('prospects_hm').select('id').eq('slug', slug).maybeSingle()
+  await supprimerApercus(slug)
+  if (p) {
+    await supabaseAdmin.from('prospects_hm').update({ maquette_url: null, updated_at: new Date().toISOString() }).eq('id', p.id)
+    await supabaseAdmin.from('evenements').insert({ prospect_id: p.id, type: 'prospect', titre: 'Maquette retirée' })
+  }
   return NextResponse.json({ ok: true, slug })
 }
