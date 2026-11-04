@@ -20,6 +20,7 @@ const ALLOWED_TABLES = [
   'sites_generes',
   'prospects_hm',
   'evenements',
+  'photos_galerie', // lecture seule : photos déposées par le client dans sa Galerie (récupérées par /gabare-production)
 ]
 
 export async function GET(req: NextRequest) {
