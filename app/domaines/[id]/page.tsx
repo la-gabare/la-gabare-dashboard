@@ -10,6 +10,7 @@ import EcheancierPanel from '@/components/EcheancierPanel'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 import ProjetPanel from '@/components/ProjetPanel'
 import FicheTexte from '@/components/FicheTexte'
+import MaquetteApercu from '@/components/MaquetteApercu'
 import ConvertirProspect from '@/components/ConvertirProspect'
 import { STADES, ETAPES_PUSH, LABELS_STADE, prochaineAction, peutDevenirClient, type Stade } from '@/lib/prospects-hm'
 
@@ -129,7 +130,7 @@ export default function FicheDomaine() {
         <div className="card space-y-4 text-sm">
           {p.resume && <p className="whitespace-pre-wrap">{p.resume}</p>}
           {p.site_etat && <p><b>Site actuel :</b> {p.site_etat}</p>}
-          {p.maquette_url && <p><b>Maquette du site :</b> <a href={p.maquette_url} target="_blank" rel="noopener noreferrer" className="text-wine underline">{p.maquette_url}</a></p>}
+          <MaquetteApercu url={p.maquette_url} />
           {p.fiche && (
             <div>
               <p className="font-semibold mb-1">Ce que Harness Maxxing a trouvé</p>

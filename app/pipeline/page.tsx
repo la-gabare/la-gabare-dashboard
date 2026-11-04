@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { fetchAdminData } from '@/lib/admin-data'
 import Link from 'next/link'
 import FicheTexte from '@/components/FicheTexte'
+import MaquetteApercu from '@/components/MaquetteApercu'
 import ConvertirProspect from '@/components/ConvertirProspect'
 import { STADES, ETAPES_PUSH, LABELS_STADE as labels, peutDevenirClient, type Stade } from '@/lib/prospects-hm'
 
@@ -102,6 +103,7 @@ export default function Pipeline() {
                         {ouvert === p.id && (
                           <div className="mt-3 text-sm space-y-3">
                             {p.resume && <p className="whitespace-pre-wrap">{p.resume}</p>}
+                            <MaquetteApercu url={p.maquette_url} />
                             {p.fiche && <div className="bg-gray-50 p-3 rounded max-h-96 overflow-y-auto"><FicheTexte texte={p.fiche} /></div>}
                             <Link href={`/domaines/${p.id}`} className="text-wine font-semibold">Ouvrir la fiche complète →</Link>
                             {p.brouillon_email && (
