@@ -10,11 +10,12 @@ import EcheancierPanel from '@/components/EcheancierPanel'
 import PaymentLinkGenerator from '@/components/PaymentLinkGenerator'
 import ProjetPanel from '@/components/ProjetPanel'
 import FicheTexte from '@/components/FicheTexte'
-import { STADES, LABELS_STADE, prochaineAction, type Stade } from '@/lib/prospects-hm'
+import ConvertirProspect from '@/components/ConvertirProspect'
+import { STADES, ETAPES_PUSH, LABELS_STADE, prochaineAction, peutDevenirClient, type Stade } from '@/lib/prospects-hm'
 
 type Prospect = {
   id: number; slug: string; nom: string; appellation?: string; siren?: string; commune?: string; site_etat?: string
-  stade: Stade; resume?: string; fiche?: string; brouillon_email?: string; dossier?: string
+  stade: Stade; resume?: string; fiche?: string; brouillon_email?: string; dossier?: string; maquette_url?: string
 }
 type Evenement = { id: number; type: string; titre: string; detail?: string; created_at: string }
 type Lien = { id: number; domaine?: string; nom_domaine?: string; nom?: string; statut?: string; prospect_id?: number | null }
@@ -68,8 +69,8 @@ export default function FicheDomaine() {
   if (loading) return <div className="container-dashboard">Chargement...</div>
   if (!p) return <div className="container-dashboard">Domaine introuvable. <Link href="/pipeline" className="text-wine">← Pipeline</Link></div>
 
-  const etapes: Stade[] = STADES.filter((s) => s !== 'abandonne')
-  const rang = etapes.indexOf(p.stade)
+  const etapes = ETAPES_PUSH
+  const rang = etapes.indexOf(p.stade === 'repondu' ? 'contacte' : p.stade)
   const action = prochaineAction(p.stade)
   const dossier = dossiers[0]
   const onglets = [
@@ -91,7 +92,7 @@ export default function FicheDomaine() {
             <span key={s} className={`badge ${i <= rang ? 'badge-success' : 'badge-info'}`}>{i <= rang ? '●' : '○'} {LABELS_STADE[s]}</span>
           ))}
         <select value={p.stade} onChange={(e) => changerStade(e.target.value as Stade)} className="ml-auto px-2 py-1 border rounded text-sm">
-          {STADES.map((x) => <option key={x} value={x}>{LABELS_STADE[x]}</option>)}
+          {STADES.filter((x) => x !== 'repondu' || p.stade === 'repondu').map((x) => <option key={x} value={x}>{LABELS_STADE[x]}</option>)}
         </select>
       </div>
 
@@ -99,6 +100,7 @@ export default function FicheDomaine() {
         <div className="card mb-6">
           <p className="text-xs text-gray-500 font-semibold uppercase">Prochaine action</p>
           <p className="font-medium mt-1">{action}</p>
+          {peutDevenirClient(p.stade) && clients.length === 0 && <div className="mt-3"><ConvertirProspect prospect={p} /></div>}
         </div>
       )}
 
@@ -127,6 +129,7 @@ export default function FicheDomaine() {
         <div className="card space-y-4 text-sm">
           {p.resume && <p className="whitespace-pre-wrap">{p.resume}</p>}
           {p.site_etat && <p><b>Site actuel :</b> {p.site_etat}</p>}
+          {p.maquette_url && <p><b>Maquette du site :</b> <a href={p.maquette_url} target="_blank" rel="noopener noreferrer" className="text-wine underline">{p.maquette_url}</a></p>}
           {p.fiche && (
             <div>
               <p className="font-semibold mb-1">Ce que Harness Maxxing a trouvé</p>

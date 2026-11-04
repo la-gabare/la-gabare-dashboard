@@ -4,7 +4,7 @@ export type Stade = (typeof STADES)[number]
 
 export type ProspectEntrant = {
   slug: string; nom: string; appellation?: string; siren?: string; commune?: string
-  site_etat?: string; stade: Stade; resume?: string; fiche?: string; brouillon_email?: string; dossier?: string
+  site_etat?: string; stade: Stade; resume?: string; fiche?: string; brouillon_email?: string; dossier?: string; maquette_url?: string
 }
 
 const texte = (v: unknown, max: number) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined)
@@ -25,25 +25,30 @@ export function validerProspect(corps: unknown): { ok: true; prospect: ProspectE
     prospect: {
       slug, nom, stade, siren,
       appellation: texte(b.appellation, 120), commune: texte(b.commune, 80), site_etat: texte(b.site_etat, 30),
-      resume: texte(b.resume, 3000), fiche: texte(b.fiche, 30000), brouillon_email: texte(b.brouillon_email, 8000), dossier: texte(b.dossier, 200),
+      resume: texte(b.resume, 3000), fiche: texte(b.fiche, 30000), brouillon_email: texte(b.brouillon_email, 8000), dossier: texte(b.dossier, 200), maquette_url: texte(b.maquette_url, 300),
     },
   }
 }
 
+// Prospection « push » (nous cherchons) : recherche -> maquette -> contact -> accord -> client.
+// Les valeurs de la base ne changent pas ; « repondu » (ancien) reste valide mais n'est plus proposé.
+export const ETAPES_PUSH: Stade[] = ['prospect', 'pret', 'contacte', 'lead', 'client']
 export const LABELS_STADE: Record<Stade, string> = {
-  prospect: 'Prospect', pret: 'Prêt à valider', contacte: 'Contacté', repondu: 'A répondu',
-  lead: 'Lead', client: 'Client', abandonne: 'Abandonné',
+  prospect: 'Recherche', pret: 'Maquette prête', contacte: 'Contacté', repondu: 'A répondu',
+  lead: 'A accepté', client: 'Client', abandonne: 'Abandonné',
 }
+// Stades où l'on peut créer le client (devis) depuis la fiche, comme pour un lead du formulaire
+export const peutDevenirClient = (stade: Stade) => ['pret', 'contacte', 'repondu', 'lead'].includes(stade)
 
 // Ce qu'il y a à faire ensuite, selon le stade (rien n'est jamais envoyé automatiquement).
 export function prochaineAction(stade: Stade): string | null {
   switch (stade) {
-    case 'prospect': return 'Faire préparer le dossier et le brouillon de message par l\'agent.'
-    case 'pret': return 'Relire le brouillon, l\'envoyer vous-même, puis marquer « Contacté ».'
-    case 'contacte': return 'Sans réponse après 7 jours : relancer, ou abandonner.'
-    case 'repondu': return 'Répondre et proposer un rendez-vous.'
-    case 'lead': return 'Envoyer le devis.'
-    case 'client': return 'Suivre le projet et le contenu du mois.'
+    case 'prospect': return 'Harness Maxxing recherche le domaine, prépare le dossier et la maquette du site.'
+    case 'pret': return 'Regarder la maquette, relire le brouillon, contacter le vigneron vous-même, puis marquer « Contacté ».'
+    case 'contacte': return 'Sans réponse après 7 jours : relancer, ou abandonner. S\'il accepte : « Client + devis ».'
+    case 'repondu': return 'Répondre ; s\'il accepte : « Client + devis ».'
+    case 'lead': return 'Il a accepté : cliquer sur « Client + devis » pour créer le client et envoyer le devis.'
+    case 'client': return 'Devis, premier jet du site, 2e paiement, mise en ligne : tout se suit dans les onglets ci-dessous.'
     default: return null
   }
 }

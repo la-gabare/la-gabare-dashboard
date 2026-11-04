@@ -35,7 +35,7 @@ export async function rattacherLead(lead: { id: number; domaine?: string | null 
     await supabaseAdmin.from('evenements').insert({
       prospect_id: p.id, type: 'lead',
       titre: `Lead n° ${lead.id} reçu via le formulaire (rattaché automatiquement)`,
-      detail: passe ? 'Le stade passe à « Lead ».' : null,
+      detail: passe ? 'Le stade passe à « A accepté ».' : null,
     })
   } catch {
     // volontairement silencieux (pas de console.error : il déclenche une alerte e-mail)
