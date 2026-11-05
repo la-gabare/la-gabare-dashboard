@@ -9,6 +9,7 @@ export const AGENCE = {
   nom: process.env.AGENCE_RAISON_SOCIALE || 'La Gabare',
   adresse: process.env.AGENCE_ADRESSE || '',
   siret: process.env.AGENCE_SIRET || '',
+  iban: process.env.AGENCE_IBAN || '',
   email: process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || 'contact@la-gabare.fr',
 }
 
@@ -89,7 +90,7 @@ export function htmlDevis(d: Devis, client: { nom_domaine: string; email_contact
     : `<tr class="total"><td>Total</td><td class="num">${euros(t.ttc)}</td></tr><tr><td colspan="2" class="muted">TVA non applicable, art. 293 B du CGI</td></tr>`
   return `<div class="devis">
   <div class="entete">
-    <div><p class="marque">La Gabare</p><p class="muted">${esc(AGENCE.nom)}${AGENCE.adresse ? `<br>${esc(AGENCE.adresse)}` : ''}${AGENCE.siret ? `<br>SIRET ${esc(AGENCE.siret)}` : ''}<br>${esc(AGENCE.email)}</p></div>
+    <div><p class="marque">La Gabare</p><p class="muted">${esc(AGENCE.nom)}${AGENCE.adresse ? `<br>${esc(AGENCE.adresse)}` : ''}${AGENCE.siret ? `<br>SIRET ${esc(AGENCE.siret)}` : ''}${AGENCE.iban ? `<br>IBAN ${esc(AGENCE.iban)}` : ''}<br>${esc(AGENCE.email)}</p></div>
     <div class="droite"><p class="titre">Devis ${esc(d.numero)}</p><p class="muted">Émis le ${dateFr(d.created_at)}<br>Valable jusqu'au ${dateFr(d.validite)}</p></div>
   </div>
   <p class="pour"><span class="muted">Pour</span><br><strong>${esc(client.nom_domaine)}</strong><br>${esc(client.email_contact || '')}</p>
