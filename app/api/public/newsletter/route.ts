@@ -1,3 +1,4 @@
+import { ressembleAUnRobot } from '@/lib/anti-spam'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
@@ -19,7 +20,7 @@ function json(data: unknown, status = 200) {
 // Alimente la liste newsletter_abonnes utilisée par le workflow d'envoi des newsletters.
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({} as Record<string, unknown>))
-  if (body.site_web) return json({ ok: true })
+  if (ressembleAUnRobot(body)) return json({ ok: true }) // piège à robots + envoi trop rapide
   if (await tropDeRequetes(ipDe(req), 20)) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const email = (texte(body.email, 200) || '').toLowerCase()

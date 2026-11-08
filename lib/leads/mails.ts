@@ -1,3 +1,4 @@
+import { lienBrief as lienBriefSigne } from '@/lib/anti-spam'
 import 'server-only'
 import { sendMail } from '@/lib/mailer'
 import { notifier } from '@/lib/notifier'
@@ -24,7 +25,7 @@ export interface ProspectMail {
 // Mail de prise de contact : réserver un appel ou compléter le formulaire détaillé
 export function mailPriseDeContact(p: ProspectMail): string {
   const pack = p.pack_demande ? ` (formule ${esc(p.pack_demande)})` : ''
-  const lienBrief = `https://la-gabare.fr/formulaire-complet.html${p.lead_id ? `?lead_id=${p.lead_id}` : ''}`
+  const lienBrief = lienBriefSigne(p.lead_id)
   // Pré-remplit Cal.com et y attache le lead : le webhook retrouve ainsi le prospect
   const cal = new URLSearchParams()
   if (p.nom) cal.set('name', p.nom)

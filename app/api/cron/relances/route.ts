@@ -9,10 +9,13 @@ import { envoyerRapportsMensuels } from '@/lib/rapport-mensuel'
 import { proposerOffres } from '@/lib/offres'
 import { envoyerMailsDuMois, envoyerMailsHebdoEnAttente } from '@/lib/mails-contenu'
 import { notifier } from '@/lib/notifier'
+import { executerTaches, prendreVerrou, libererVerrou } from '@/lib/cron-relances'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60 // inclut un éventuel rapport d'audit en rattrapage
 
+const VERROU = 'relances'
+const BUDGET_MS = 50_000     // marge sous maxDuration : les tâches non commencées sont reportées au lendemain
 const JOUR = 24 * 60 * 60 * 1000
 const DELAI_JOURS = 5        // première relance 5 jours après l'envoi, puis tous les 5 jours
 const MAX_RELANCES = 3       // ensuite, l'agence est prévenue pour reprendre la main
@@ -25,6 +28,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
+  if (!(await prendreVerrou(VERROU, 5 * 60))) return NextResponse.json({ ignore: 'déjà en cours' })
+  const debut = Date.now()
   const { data } = await supabaseAdmin.from('echeances')
     .select('*').in('statut', ['envoye', 'virement_en_attente']).not('envoye_at', 'is', null)
   const maintenant = Date.now()
@@ -55,16 +60,18 @@ export async function GET(req: NextRequest) {
       bilan.erreurs++
     }
   }
-  // Devis non acceptés et fin des mois d'accompagnement offerts
-  const devis = await relancerDevis()
-  const leads = await relancerLeads()
-  const moisOfferts = await suivreMoisOfferts()
-  const contenus = await relancerContenus()
-  const rapports = await envoyerRapportsMensuels()
-  const offres = await proposerOffres()
-  const audits = await rattraperRapports()
-  const mailsContenu = await envoyerMailsDuMois()
-  const mailsHebdo = await envoyerMailsHebdoEnAttente()
+  // Devis non acceptés, mois offerts, contenus, rapports, offres, audits, mails : chaque tâche est isolée
+  const { resultats, echecs, reportees } = await executerTaches([
+    { nom: 'devis', run: relancerDevis },
+    { nom: 'leads', run: relancerLeads },
+    { nom: 'mois_offerts', run: suivreMoisOfferts },
+    { nom: 'contenus', run: relancerContenus },
+    { nom: 'rapports', run: envoyerRapportsMensuels },
+    { nom: 'offres', run: proposerOffres },
+    { nom: 'audits', run: rattraperRapports },
+    { nom: 'mails_contenu', run: envoyerMailsDuMois },
+    { nom: 'mails_hebdo', run: envoyerMailsHebdoEnAttente },
+  ], BUDGET_MS, debut)
   if (bilan.relances || bilan.alertes) {
     await notifier({
       titre: `Versements : ${bilan.relances} relance(s), ${bilan.alertes} impayé(s) à reprendre`,
@@ -72,5 +79,10 @@ export async function GET(req: NextRequest) {
       id: `relances-${new Date().toISOString().slice(0, 10)}`,
     })
   }
-  return NextResponse.json({ versements: bilan, devis, leads, mois_offerts: moisOfferts, contenus, rapports, offres, audits, mails_contenu: mailsContenu, mails_hebdo: mailsHebdo })
+  if (echecs.length || reportees.length) {
+    await notifier({ titre: `Relances : ${echecs.length} tâche(s) en échec, ${reportees.length} reportée(s)`, corps: [...echecs, ...reportees].join(', '),
+      niveau: 'warning', id: `relances-taches-${new Date().toISOString().slice(0, 10)}` })
+  }
+  await libererVerrou(VERROU)
+  return NextResponse.json({ versements: bilan, ...resultats })
 }

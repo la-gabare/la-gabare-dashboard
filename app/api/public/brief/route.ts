@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { CHAMPS_BRIEF_TEXTE, CHAMPS_BRIEF_BOOLEENS, texte, emailValide, tropDeRequetes, ipDe } from '@/lib/leads/public'
+import { ressembleAUnRobot, jetonBriefValide } from '@/lib/anti-spam'
 import { notifierAgenceBrief } from '@/lib/leads/mails'
 
 export const dynamic = 'force-dynamic'
@@ -19,6 +20,7 @@ function json(data: unknown, status = 200) {
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try { body = await req.json() } catch { return json({ error: 'Requête invalide' }, 400) }
+  if (ressembleAUnRobot(body)) return json({ ok: true })
   if (await tropDeRequetes(ipDe(req))) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const brief: Record<string, unknown> = {}
@@ -34,7 +36,8 @@ export async function POST(req: NextRequest) {
   // Lead d'origine : celui du lien reçu par e-mail, sinon le plus récent avec la même adresse
   let leadId: number | null = null
   const demande = Number(body.lead_id)
-  if (Number.isInteger(demande) && demande > 0) {
+  // Le numéro seul ne suffit plus : il faut le jeton du lien (les anciens liens retombent sur l'e-mail)
+  if (Number.isInteger(demande) && demande > 0 && jetonBriefValide(demande, body.k)) {
     const { data } = await supabaseAdmin.from('leads').select('id').eq('id', demande).maybeSingle()
     if (data) leadId = data.id
   }

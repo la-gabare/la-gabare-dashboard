@@ -1,3 +1,4 @@
+import { lienBrief as lienBriefSigne } from '@/lib/anti-spam'
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { stripe } from '@/lib/stripe'
@@ -149,7 +150,7 @@ export async function relancerLeads() {
 <p style="margin:0 0 16px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">Nous n'avons pas eu de retour concernant votre demande pour <strong style="color:#1A1310;">${domaine}</strong>. Est-ce toujours d'actualité ?</p>
 <p style="margin:0 0 32px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">Si oui, choisissez l'option qui vous convient :</p></td></tr>
 <tr><td style="padding:0 40px 20px 40px;">${bouton('https://cal.com/la-gabare/appel-decouverte-la-gabare', 'Réserver un appel &rarr;', true)}</td></tr>
-<tr><td style="padding:0 40px 36px 40px;">${bouton(`https://la-gabare.fr/formulaire-complet.html?lead_id=${encodeURIComponent(l.id)}`, 'Compléter le formulaire &rarr;', false)}</td></tr>
+<tr><td style="padding:0 40px 36px 40px;">${bouton(lienBriefSigne(l.id), 'Compléter le formulaire &rarr;', false)}</td></tr>
 <tr><td style="background-color:#1A1310;padding:24px 40px;text-align:center;"><p style="margin:0;font-family:Arial,sans-serif;font-size:11px;letter-spacing:0.05em;color:rgba(245,242,236,0.5);">La Gabare — Agence pour les domaines viticoles de la Loire</p></td></tr></table></td></tr></table>`
       await sendMail(l.email, `Toujours intéressé par ${l.domaine || 'votre projet'} ?`, html)
       await supabaseAdmin.from('leads').update({ statut: 'relance' }).eq('id', l.id)

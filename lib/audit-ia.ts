@@ -1,3 +1,4 @@
+import { lienBrief as lienBriefSigne } from '@/lib/anti-spam'
 import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -170,7 +171,7 @@ function mailRapport(lead: Record<string, any>, r: Rapport) {
     </td></tr><tr><td style="height:8px;"></td></tr>`).join('')
   const titre = (t: string) => `<p style="margin:28px 0 10px 0;${sans};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">${t}</p>`
   const rdv = new URLSearchParams({ ...(lead.nom ? { name: lead.nom } : {}), ...(lead.email ? { email: lead.email } : {}), 'metadata[lead_id]': String(lead.id) })
-  const lienBrief = `https://la-gabare.fr/formulaire-complet.html?lead_id=${lead.id}`
+  const lienBrief = lienBriefSigne(lead.id)
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
 <tr><td style="background-color:#1A1310;padding:32px 40px;text-align:center;"><span style="${serif};font-size:24px;letter-spacing:0.04em;color:#F5F2EC;">La Gabare</span></td></tr>

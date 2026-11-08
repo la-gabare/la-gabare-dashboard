@@ -1,3 +1,4 @@
+import { ressembleAUnRobot } from '@/lib/anti-spam'
 import { NextRequest, NextResponse } from 'next/server'
 import { rattacherLead } from '@/lib/rattacher'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
   try { body = await req.json() } catch { return json({ error: 'Requête invalide' }, 400) }
 
-  if (body.site_web) return json({ ok: true }) // piège à robots
+  if (ressembleAUnRobot(body)) return json({ ok: true }) // piège à robots + envoi trop rapide
   if (await tropDeRequetes(ipDe(req))) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const lead: Record<string, unknown> = {}

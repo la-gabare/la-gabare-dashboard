@@ -1,3 +1,4 @@
+import { ressembleAUnRobot } from '@/lib/anti-spam'
 import { NextRequest, NextResponse } from 'next/server'
 import { rattacherLead } from '@/lib/rattacher'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -28,7 +29,7 @@ const QUESTIONS: Record<string, [string, Record<string, string>]> = {
 // Audit gratuit de la-gabare.fr : enregistré comme un lead (type « audit »), mail de prise de contact immédiat
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({} as Record<string, unknown>))
-  if (body.site_web) return json({ ok: true }) // piège à robots
+  if (ressembleAUnRobot(body)) return json({ ok: true }) // piège à robots + envoi trop rapide
   if (await tropDeRequetes(ipDe(req))) return json({ error: 'Trop de demandes, réessayez plus tard.' }, 429)
 
   const nom = texte(body.nom, 120)
