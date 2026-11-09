@@ -8,6 +8,7 @@ export const config = {
 }
 
 const ROUTES_PUBLIQUES = [
+  /^\/mail\/[a-z-]+\.png$/,          // images de la signature des e-mails (affichées chez les destinataires)
   /^\/api\/public\//,                 // formulaires du site, articles publiés
   /^\/api\/boutique\//,               // boutique des domaines (catalogue, paiement)
   /^\/api\/pro\//,                    // espace professionnels des domaines (lien d'accès personnel)

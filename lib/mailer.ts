@@ -1,5 +1,7 @@
 import 'server-only'
 import nodemailer from 'nodemailer'
+import { avecSignature } from '@/lib/signature-mail'
+import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -11,13 +13,13 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export async function sendMail(to: string, subject: string, html: string, options: { fromName?: string; replyTo?: string } = {}) {
+export async function sendMail(to: string, subject: string, html: string, options: { fromName?: string; replyTo?: string; signature?: boolean } = {}) {
   const fromName = (options.fromName || 'La Gabare').replace(/["<>]/g, '')
   await transporter.sendMail({
     from: `"${fromName}" <${process.env.SMTP_USER}>`,
     to,
     subject,
-    html,
+    html: avecSignature(html, to, options.fromName, options.signature),
     replyTo: options.replyTo,
   })
 }
@@ -28,12 +30,7 @@ export function paymentLinkEmail(nomDomaine: string, montant: number, type: 'sit
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;">
       <tr><td align="center">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-          <tr>
-            <td style="background-color:#1A1310;padding:32px 40px;text-align:center;">
-              <span style="font-family:Georgia,'Cormorant Garamond',serif;font-size:24px;letter-spacing:0.04em;color:#F5F2EC;">La Gabare</span>
-            </td>
-          </tr>
-          <tr><td style="height:3px;background:linear-gradient(90deg,#5A1226,#B08D57);font-size:0;line-height:0;">&nbsp;</td></tr>
+          ${ENTETE_MAIL}
           <tr>
             <td style="padding:44px 40px 24px 40px;">
               <p style="margin:0 0 6px 0;font-family:Arial,sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">Votre paiement</p>
@@ -50,13 +47,7 @@ export function paymentLinkEmail(nomDomaine: string, montant: number, type: 'sit
               </a>
             </td>
           </tr>
-          <tr>
-            <td style="background-color:#1A1310;padding:24px 40px;text-align:center;">
-              <p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:rgba(245,242,236,0.5);">
-                La Gabare — Agence pour les domaines viticoles de la Loire
-              </p>
-            </td>
-          </tr>
+          ${PIED_MAIL}
         </table>
       </td></tr>
     </table>

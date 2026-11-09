@@ -4,6 +4,7 @@ import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
+import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
 
 export const ADMIN_URL = 'https://admin.la-gabare.fr'
 
@@ -113,8 +114,7 @@ const serif = "font-family:Georgia,'Cormorant Garamond',serif"
 function gabarit(surtitre: string, titre: string, corps: string, bouton: string, lien: string) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-<tr><td style="background-color:#1A1310;padding:32px 40px;text-align:center;"><span style="${serif};font-size:24px;letter-spacing:0.04em;color:#F5F2EC;">La Gabare</span></td></tr>
-<tr><td style="height:3px;background:linear-gradient(90deg,#5A1226,#B08D57);font-size:0;line-height:0;">&nbsp;</td></tr>
+${ENTETE_MAIL}
 <tr><td style="padding:44px 40px 36px 40px;">
   <p style="margin:0 0 6px 0;${sans};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">${surtitre}</p>
   <h1 style="margin:0 0 20px 0;${serif};font-weight:400;font-size:26px;color:#1A1310;">${titre}</h1>
@@ -122,7 +122,7 @@ function gabarit(surtitre: string, titre: string, corps: string, bouton: string,
   <a href="${lien}" style="display:inline-block;padding:14px 32px;background-color:#5A1226;color:#F5F2EC;${sans};font-size:15px;font-weight:600;text-decoration:none;">${bouton} &rarr;</a>
   <p style="margin:24px 0 0 0;${sans};font-size:13px;line-height:1.6;color:#4A3E37;">Vous pouvez régler par carte bancaire ou par virement : la page de paiement vous indique l'IBAN à utiliser.</p>
 </td></tr>
-<tr><td style="background-color:#1A1310;padding:24px 40px;text-align:center;"><p style="margin:0;${sans};font-size:11px;color:rgba(245,242,236,0.5);">La Gabare — Agence pour les domaines viticoles de la Loire</p></td></tr>
+${PIED_MAIL}
 </table></td></tr></table>`
 }
 
