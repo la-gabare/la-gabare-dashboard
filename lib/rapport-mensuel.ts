@@ -1,7 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
-import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
+import { gabaritMail, SANS, SERIF } from '@/lib/mail-cadre'
 
 // Bilan d'activité d'un abonné sur une période : sert au rapport mensuel et au récapitulatif de fin des mois offerts.
 
@@ -51,21 +51,29 @@ export const bilanVide = (b: Bilan) => !b.articles.length && !b.posts && !b.avis
 
 // Bloc HTML (e-mail) : chiffres clés + titres des articles + à venir
 export function htmlBilan(b: Bilan) {
-  const sans = 'font-family:Arial,sans-serif'
-  const case_ = (chiffre: string | number, libelle: string) => `<td style="padding:12px 8px;text-align:center;background:#FBF9F5;border:1px solid rgba(26,19,16,0.08);">
-    <div style="font-family:Georgia,serif;font-size:26px;color:#5A1226;">${chiffre}</div><div style="${sans};font-size:12px;color:#7a6f66;">${libelle}</div></td>`
+  const sans = SANS
+  const p = (marge: string) => `margin:${marge};${sans};font-size:14px;font-weight:300;line-height:1.7;color:#4A3E37;`
+  const case_ = (chiffre: string | number, libelle: string) => `<td width="33%" style="padding:16px 8px;text-align:center;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.07);border-radius:3px;">
+    <div style="${SERIF};font-size:34px;font-weight:600;line-height:1.1;color:#1A1310;">${chiffre}</div><div style="${sans};font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#4A3E37;margin-top:6px;">${libelle}</div></td>`
   const reseaux = Object.entries(b.postsParReseau).map(([r, n]) => `${RESEAUX[r] || r} : ${n}`).join(' · ')
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="6" style="margin:8px 0 16px 0;"><tr>
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="6" style="margin:8px 0 16px 0;border-collapse:separate;"><tr>
       ${case_(b.articles.length, b.articles.length > 1 ? 'articles publiés' : 'article publié')}
       ${case_(b.posts, b.posts > 1 ? 'publications' : 'publication')}
       ${case_(b.avis, b.avis > 1 ? 'avis Google' : 'avis Google')}
     </tr></table>
-    ${reseaux ? `<p style="margin:0 0 10px 0;${sans};font-size:14px;color:#4A3E37;">Réseaux : ${esc(reseaux)}</p>` : ''}
-    ${b.avis ? `<p style="margin:0 0 10px 0;${sans};font-size:14px;color:#4A3E37;">Avis : ${b.noteMoyenne !== null ? `note moyenne ${String(b.noteMoyenne).replace('.', ',')}/5, ` : ''}${b.avisRepondus} réponse${b.avisRepondus > 1 ? 's' : ''} publiée${b.avisRepondus > 1 ? 's' : ''}.</p>` : ''}
-    ${b.newsletters ? `<p style="margin:0 0 10px 0;${sans};font-size:14px;color:#4A3E37;">Newsletter : ${b.newsletters} envoi${b.newsletters > 1 ? 's' : ''} à vos abonnés.</p>` : ''}
-    ${b.articles.length ? `<p style="margin:12px 0 6px 0;${sans};font-size:14px;color:#1A1310;font-weight:700;">Articles publiés</p>
-      <ul style="margin:0 0 12px 0;padding-left:20px;${sans};font-size:14px;color:#4A3E37;">${b.articles.map((t) => `<li style="margin-bottom:4px;">${esc(t)}</li>`).join('')}</ul>` : ''}
-    ${b.aVenir.articles || b.aVenir.posts ? `<p style="margin:12px 0 0 0;${sans};font-size:14px;color:#4A3E37;">À venir dans les 30 prochains jours : ${b.aVenir.articles} article${b.aVenir.articles > 1 ? 's' : ''} et ${b.aVenir.posts} publication${b.aVenir.posts > 1 ? 's' : ''}, déjà planifiés.</p>` : ''}`
+    ${reseaux ? `<p style="${p('0 0 10px 0')}">Réseaux : ${esc(reseaux)}</p>` : ''}
+    ${b.avis ? `<p style="${p('0 0 10px 0')}">Avis : ${b.noteMoyenne !== null ? `note moyenne ${String(b.noteMoyenne).replace('.', ',')}/5, ` : ''}${b.avisRepondus} réponse${b.avisRepondus > 1 ? 's' : ''} publiée${b.avisRepondus > 1 ? 's' : ''}.</p>` : ''}
+    ${b.newsletters ? `<p style="${p('0 0 10px 0')}">Newsletter : ${b.newsletters} envoi${b.newsletters > 1 ? 's' : ''} à vos abonnés.</p>` : ''}
+    ${b.articles.length ? `<p style="margin:20px 0 8px 0;${sans};font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:#B08D57;">Articles publiés</p>
+      <ul style="${p('0 0 12px 0')}padding-left:20px;">${b.articles.map((t) => `<li style="margin-bottom:4px;">${esc(t)}</li>`).join('')}</ul>` : ''}
+    ${b.aVenir.articles || b.aVenir.posts ? `<p style="${p('12px 0 0 0')}">À venir dans les 30 prochains jours : ${b.aVenir.articles} article${b.aVenir.articles > 1 ? 's' : ''} et ${b.aVenir.posts} publication${b.aVenir.posts > 1 ? 's' : ''}, déjà planifiés.</p>` : ''}`
+}
+
+// HTML du bilan mensuel envoyé à l'abonné : pur, prévisualisable
+export function mailBilanMensuel(nomDomaine: string, nomMois: string, b: Bilan) {
+  return gabarit(
+    `Votre bilan de ${nomMois}`, `${esc(nomDomaine)}, voici votre mois en ligne.`,
+    `${htmlBilan(b)}<p style="margin:16px 0 0 0;">Retrouvez le détail et validez les prochains contenus dans votre espace client.</p>`)
 }
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
@@ -90,9 +98,7 @@ export async function envoyerRapportsMensuels() {
       if (bilanVide(b)) {
         bilan.vides++ // rien de publié : pas de rapport vide, l'agence est prévenue plus bas
       } else {
-        await sendMail(c.email_contact, `Votre bilan de ${nomMois} — ${c.nom_domaine}`, gabarit(
-          `Votre bilan de ${nomMois}`, `${esc(c.nom_domaine)}, voici votre mois en ligne.`,
-          `${htmlBilan(b)}<p style="margin:16px 0 0 0;font-family:Arial,sans-serif;font-size:14px;color:#4A3E37;">Retrouvez le détail et validez les prochains contenus dans votre espace client.</p>`),
+        await sendMail(c.email_contact, `Votre bilan de ${nomMois} — ${c.nom_domaine}`, mailBilanMensuel(c.nom_domaine, nomMois, b),
           { fromName: 'La Gabare', replyTo: AGENCE || undefined })
         bilan.envoyes++
       }
@@ -110,17 +116,8 @@ export async function envoyerRapportsMensuels() {
   return bilan
 }
 
+// Mails aux abonnés (bilan, offres) : gabarit unique de la charte, bouton vers l'espace client
 export function gabarit(surtitre: string, titre: string, corps: string) {
-  const serif = "font-family:Georgia,'Cormorant Garamond',serif"
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-${ENTETE_MAIL}
-<tr><td style="padding:40px 40px 36px 40px;font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">
-  <p style="margin:0 0 6px 0;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">${surtitre}</p>
-  <h1 style="margin:0 0 16px 0;${serif};font-weight:400;font-size:26px;color:#1A1310;">${titre}</h1>
-  ${corps}
-  <p style="margin:24px 0 0 0;"><a href="https://la-gabare.fr/espace-client.html" style="display:inline-block;padding:14px 28px;background-color:#5A1226;color:#F5F2EC;font-size:15px;font-weight:600;text-decoration:none;">Ouvrir mon espace client &rarr;</a></p>
-</td></tr>
-${PIED_MAIL}
-</table></td></tr></table>`
+  return gabaritMail({ label: surtitre, titre, corps,
+    bouton: { texte: 'Ouvrir mon espace client &rarr;', lien: 'https://la-gabare.fr/espace-client.html' } })
 }

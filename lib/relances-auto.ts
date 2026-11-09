@@ -3,10 +3,10 @@ import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { stripe } from '@/lib/stripe'
 import { sendMail } from '@/lib/mailer'
-import { envoyerDevis, Devis } from '@/lib/paiements/devis'
+import { envoyerDevis, type Devis } from '@/lib/paiements/devis'
 import { finMoisOfferts, ACCOMPAGNEMENT_INCLUS } from '@/lib/paiements/accompagnement-offert'
 import { bilanActivite, bilanVide, htmlBilan } from '@/lib/rapport-mensuel'
-import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
+import { gabaritMail, boutonMail } from '@/lib/mail-cadre'
 
 const JOUR = 24 * 60 * 60 * 1000
 const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
@@ -63,18 +63,21 @@ async function aUnAbonnement(customer: string | null) {
   return data.some((s) => ['active', 'trialing', 'past_due', 'unpaid'].includes(s.status))
 }
 
-function mailFinOffert(nom: string, formule: string, fin: Date, etape: 'j15' | 'j7' | 'fin', recap = '') {
+// Charte e-mail ; signature automatique (photo) à la place de « L'équipe La Gabare ». Pur, prévisualisable.
+export function mailFinOffert(nom: string, formule: string, fin: Date, etape: 'j15' | 'j7' | 'fin', recap = '') {
   const titre = etape === 'fin' ? `${esc(nom)}, votre accompagnement est en pause.` : `${esc(nom)}, vos mois offerts se terminent bientôt.`
   const corps = etape === 'fin'
     ? `Vos mois d'accompagnement ${esc(formule)} offerts avec votre site sont arrivés à leur terme le ${dateFr(fin)}. Faute de moyen de paiement enregistré,
        nous avons mis en pause vos articles et publications. Pour les reprendre, il suffit d'enregistrer votre carte ou votre IBAN : tout redémarre aussitôt.`
-    : `Vos mois d'accompagnement ${esc(formule)} offerts se terminent le <strong>${dateFr(fin)}</strong>. Pour que vos articles et publications continuent
+    : `Vos mois d'accompagnement ${esc(formule)} offerts se terminent le <strong style="color:#1A1310;font-weight:600;">${dateFr(fin)}</strong>. Pour que vos articles et publications continuent
        sans interruption, enregistrez dès maintenant votre carte ou votre IBAN. Aucun prélèvement n'aura lieu avant cette date.`
-  return `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
-    <p style="font-family:Georgia,serif;font-size:22px;color:#1A1310;">${titre}</p>
-    ${recap ? `<p style="margin:0 0 4px 0;font-weight:700;color:#1A1310;">Ce que nous avons fait pour vous depuis le début</p>${recap}` : ''}<p>${corps}</p>
-    <p><a href="https://la-gabare.fr/espace-client.html" style="display:inline-block;padding:14px 28px;background:#5A1226;color:#F5F2EC;text-decoration:none;font-weight:600;">Enregistrer mon moyen de paiement &rarr;</a></p>
-    <p style="font-size:13px;">Dans votre espace client : Paramètres › Abonnement.</p><p>L'équipe La Gabare</p></div>`
+  return gabaritMail({
+    label: 'Votre accompagnement',
+    titre,
+    corps: `${recap ? `<p style="margin:0 0 8px 0;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:#B08D57;">Ce que nous avons fait pour vous depuis le début</p>${recap}` : ''}<p style="margin:16px 0 16px 0;">${corps}</p>`,
+    bouton: { texte: 'Enregistrer mon moyen de paiement &rarr;', lien: 'https://la-gabare.fr/espace-client.html' },
+    apresBouton: `<p style="margin:20px 0 0 0;font-size:13px;line-height:1.6;">Dans votre espace client : Paramètres › Abonnement.</p>`,
+  })
 }
 
 // Premier rappel avant la fin des mois offerts : récapitulatif de tout ce qui a été publié depuis le démarrage
@@ -131,6 +134,19 @@ export async function suivreMoisOfferts() {
   return bilan
 }
 
+// HTML de la relance d'un lead (charte e-mail) : pur, prévisualisable
+export function mailRelanceLead(l: { id: string; nom: string | null; domaine: string | null }) {
+  const domaine = esc(l.domaine || 'votre domaine')
+  return gabaritMail({
+    label: 'Petite relance',
+    titre: `Bonjour ${esc(l.nom || '')},`,
+    corps: `<p style="margin:0 0 16px 0;">Nous n'avons pas eu de retour concernant votre demande pour <strong style="color:#1A1310;font-weight:600;">${domaine}</strong>. Est-ce toujours d'actualité ?</p>
+<p style="margin:0 0 8px 0;">Si oui, choisissez l'option qui vous convient :</p>`,
+    bouton: { texte: 'Réserver un appel &rarr;', lien: 'https://cal.com/la-gabare/appel-decouverte-la-gabare' },
+    apresBouton: boutonMail('Compléter le formulaire &rarr;', lienBriefSigne(l.id), { secondaire: true, marge: '12px 0 0 0' }),
+  })
+}
+
 // ── Leads sans réponse : une relance 5 jours après le premier mail (remplace le workflow n8n « 06 Relance leads ») ──
 export async function relancerLeads() {
   const bilan = { relances: 0, erreurs: 0 }
@@ -140,18 +156,7 @@ export async function relancerLeads() {
   for (const l of (data || []) as { id: string; nom: string | null; email: string | null; domaine: string | null }[]) {
     if (!l.email) continue
     try {
-      const domaine = esc(l.domaine || 'votre domaine')
-      const bouton = (href: string, texte: string, plein: boolean) =>
-        `<a href="${href}" style="display:inline-block;padding:12px 28px;${plein ? 'background-color:#5A1226;color:#F5F2EC;' : 'border:1px solid #1A1310;color:#1A1310;'}font-family:Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;">${texte}</a>`
-      const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-${ENTETE_MAIL}
-<tr><td style="padding:44px 40px 24px 40px;"><p style="margin:0 0 6px 0;font-family:Arial,sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">Petite relance</p>
-<h1 style="margin:0 0 20px 0;font-family:Georgia,serif;font-weight:400;font-size:26px;line-height:1.25;color:#1A1310;">Bonjour ${esc(l.nom || '')},</h1>
-<p style="margin:0 0 16px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">Nous n'avons pas eu de retour concernant votre demande pour <strong style="color:#1A1310;">${domaine}</strong>. Est-ce toujours d'actualité ?</p>
-<p style="margin:0 0 32px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;">Si oui, choisissez l'option qui vous convient :</p></td></tr>
-<tr><td style="padding:0 40px 20px 40px;">${bouton('https://cal.com/la-gabare/appel-decouverte-la-gabare', 'Réserver un appel &rarr;', true)}</td></tr>
-<tr><td style="padding:0 40px 36px 40px;">${bouton(lienBriefSigne(l.id), 'Compléter le formulaire &rarr;', false)}</td></tr>
-${PIED_MAIL}</table></td></tr></table>`
+      const html = mailRelanceLead(l)
       await sendMail(l.email, `Toujours intéressé par ${l.domaine || 'votre projet'} ?`, html)
       await supabaseAdmin.from('leads').update({ statut: 'relance' }).eq('id', l.id)
       bilan.relances++

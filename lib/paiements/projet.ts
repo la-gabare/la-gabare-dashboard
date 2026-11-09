@@ -2,8 +2,8 @@ import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { notifier, enTexte } from '@/lib/notifier'
-import { envoyerEcheance, Echeance } from '@/lib/paiements/echeancier'
-import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
+import { envoyerEcheance, type Echeance } from '@/lib/paiements/echeancier'
+import { gabaritMail } from '@/lib/mail-cadre'
 
 const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
@@ -30,39 +30,41 @@ export async function declencherVersement(clientId: number, etape: 'maquette' | 
   return cible
 }
 
+// Mails « Votre site » : gabarit unique de la charte
 function mail(titre: string, corps: string, bouton?: { texte: string; lien: string }) {
-  const sans = 'font-family:Arial,sans-serif'
-  const serif = "font-family:Georgia,'Cormorant Garamond',serif"
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-${ENTETE_MAIL}
-<tr><td style="padding:44px 40px 36px 40px;${sans};font-size:15px;line-height:1.7;color:#4A3E37;">
-  <p style="margin:0 0 6px 0;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">Votre site</p>
-  <h1 style="margin:0 0 20px 0;${serif};font-weight:400;font-size:26px;color:#1A1310;">${titre}</h1>
-  ${corps}
-  ${bouton ? `<a href="${bouton.lien}" style="display:inline-block;margin-top:8px;padding:14px 32px;background-color:#5A1226;color:#F5F2EC;font-size:15px;font-weight:600;text-decoration:none;">${bouton.texte} &rarr;</a>` : ''}
-</td></tr>
-${PIED_MAIL}
-</table></td></tr></table>`
+  return gabaritMail({ label: 'Votre site', titre, corps, bouton: bouton ? { texte: `${bouton.texte} &rarr;`, lien: bouton.lien } : undefined })
+}
+
+const LIEN = 'color:#5A1226;font-weight:500;'
+
+// HTML purs, prévisualisables
+export function htmlMaquettePrete(nomDomaine: string, url: string) {
+  return mail(
+    `${esc(nomDomaine)}, votre maquette est prête.`,
+    `<p style="margin:0 0 16px 0;">Vous pouvez la découvrir ici : <a href="${esc(url)}" style="${LIEN}">${esc(url)}</a></p>
+     <p style="margin:0 0 24px 0;">Prenez le temps de la parcourir. Ensuite, depuis votre espace client, validez-la ou indiquez-nous les corrections
+     souhaitées : nous les intégrons avant la mise en ligne.</p>`,
+    { texte: 'Valider ou commenter la maquette', lien: 'https://la-gabare.fr/espace-client.html' })
+}
+
+export function htmlSiteEnLigne(nomDomaine: string, url: string) {
+  return mail(
+    `${esc(nomDomaine)}, votre site est en ligne !`,
+    `<p style="margin:0 0 24px 0;">Il est désormais accessible à l'adresse <a href="${esc(url)}" style="${LIEN}">${esc(url)}</a>.
+     Merci pour votre confiance. Votre espace client reste votre point d'entrée pour suivre vos articles, vos publications et vos factures.</p>`,
+    { texte: 'Découvrir mon site', lien: url })
 }
 
 export async function mailMaquetteSoumise(client: { nom_domaine: string; email_contact: string | null }, url: string) {
   if (!client.email_contact) throw new Error('Ce client n\'a pas d\'adresse e-mail')
-  await sendMail(client.email_contact, `Votre maquette est prête — ${client.nom_domaine}`, mail(
-    `${esc(client.nom_domaine)}, votre maquette est prête.`,
-    `<p style="margin:0 0 16px 0;">Vous pouvez la découvrir ici : <a href="${esc(url)}" style="color:#5A1226;">${esc(url)}</a></p>
-     <p style="margin:0 0 24px 0;">Prenez le temps de la parcourir. Ensuite, depuis votre espace client, validez-la ou indiquez-nous les corrections
-     souhaitées : nous les intégrons avant la mise en ligne.</p>`,
-    { texte: 'Valider ou commenter la maquette', lien: 'https://la-gabare.fr/espace-client.html' }), { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+  await sendMail(client.email_contact, `Votre maquette est prête — ${client.nom_domaine}`, htmlMaquettePrete(client.nom_domaine, url),
+    { fromName: 'La Gabare', replyTo: AGENCE || undefined })
 }
 
 export async function mailMiseEnLigne(client: { nom_domaine: string; email_contact: string | null }, url: string) {
   if (!client.email_contact) return
-  await sendMail(client.email_contact, `Votre site est en ligne — ${client.nom_domaine}`, mail(
-    `${esc(client.nom_domaine)}, votre site est en ligne !`,
-    `<p style="margin:0 0 24px 0;">Il est désormais accessible à l'adresse <a href="${esc(url)}" style="color:#5A1226;">${esc(url)}</a>.
-     Merci pour votre confiance. Votre espace client reste votre point d'entrée pour suivre vos articles, vos publications et vos factures.</p>`,
-    { texte: 'Découvrir mon site', lien: url }), { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+  await sendMail(client.email_contact, `Votre site est en ligne — ${client.nom_domaine}`, htmlSiteEnLigne(client.nom_domaine, url),
+    { fromName: 'La Gabare', replyTo: AGENCE || undefined })
 }
 
 export async function notifierAgence(sujet: string, html: string) {

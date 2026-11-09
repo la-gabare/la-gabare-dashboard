@@ -2,6 +2,7 @@ import 'server-only'
 import crypto from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
+import { gabaritMail } from '@/lib/mail-cadre'
 
 // Règles du parrainage (modifiables ici)
 export const PARRAINAGE = {
@@ -70,11 +71,7 @@ export async function recompenserParrain(filleulId: number) {
   const montant = (montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
   if (p.email_contact) {
     await sendMail(p.email_contact, `Merci pour votre recommandation — 1 mois offert`,
-      `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;"><p>Bonjour,</p>
-       <p>${esc(f.nom_domaine)} a rejoint La Gabare grâce à vous. Merci !</p>
-       <p>${credite ? `Comme promis, <strong>un mois d'accompagnement vous est offert</strong> : ${montant} seront déduits de votre prochaine facture.`
-         : `Comme promis, <strong>un mois d'accompagnement vous est offert</strong> : nous l'appliquons sur votre prochaine facture.`}</p>
-       <p>L'équipe La Gabare</p></div>`, { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+      mailParrainage(f.nom_domaine, credite, montant), { fromName: 'La Gabare', replyTo: AGENCE || undefined })
   }
   if (AGENCE) {
     await sendMail(AGENCE, `Parrainage récompensé — ${p.nom_domaine} → ${f.nom_domaine}`,
@@ -82,4 +79,16 @@ export async function recompenserParrain(filleulId: number) {
        ${credite ? `Crédit de ${montant} enregistré dans Stripe (déduit de sa prochaine facture).` : 'Aucun abonnement Stripe trouvé pour le parrain : à appliquer à la main.'}</p>`,
       { fromName: 'La Gabare — Parrainage' })
   }
+}
+
+// HTML du remerciement au parrain (charte e-mail ; signature automatique à la place de « L'équipe La Gabare ») : pur
+export function mailParrainage(filleul: string, credite: boolean, montant: string) {
+  return gabaritMail({
+    label: 'Parrainage',
+    titre: 'Merci pour votre recommandation.',
+    corps: `<p style="margin:0 0 16px 0;">Bonjour,</p>
+<p style="margin:0 0 16px 0;">${esc(filleul)} a rejoint La Gabare grâce à vous. Merci !</p>
+<p style="margin:0 0 8px 0;">${credite ? `Comme promis, <strong style="color:#1A1310;font-weight:600;">un mois d'accompagnement vous est offert</strong> : ${montant} seront déduits de votre prochaine facture.`
+  : `Comme promis, <strong style="color:#1A1310;font-weight:600;">un mois d'accompagnement vous est offert</strong> : nous l'appliquons sur votre prochaine facture.`}</p>`,
+  })
 }

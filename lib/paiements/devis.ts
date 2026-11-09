@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { ADMIN_URL, FORMULES, euros } from '@/lib/paiements/echeancier'
-import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
+import { gabaritMail } from '@/lib/mail-cadre'
 
 // Identité de l'agence sur les devis — à compléter dans Vercel une fois l'entreprise créée
 export const AGENCE = {
@@ -129,20 +129,11 @@ export const STYLE_DEVIS = `
 @media (max-width:520px){.devis .droite{text-align:left}}
 `
 
-export function mailGabarit(surtitre: string, titre: string, corps: string, bouton?: { texte: string; lien: string }) {
-  const sans = 'font-family:Arial,sans-serif'
-  const serif = "font-family:Georgia,'Cormorant Garamond',serif"
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-${ENTETE_MAIL}
-<tr><td style="padding:44px 40px 36px 40px;${sans};font-size:15px;line-height:1.7;color:#4A3E37;">
-  <p style="margin:0 0 6px 0;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">${surtitre}</p>
-  <h1 style="margin:0 0 20px 0;${serif};font-weight:400;font-size:26px;color:#1A1310;">${titre}</h1>
-  ${corps}
-  ${bouton ? `<a href="${bouton.lien}" style="display:inline-block;margin-top:8px;padding:14px 32px;background-color:#5A1226;color:#F5F2EC;font-size:15px;font-weight:600;text-decoration:none;">${bouton.texte} &rarr;</a>` : ''}
-</td></tr>
-${PIED_MAIL}
-</table></td></tr></table>`
+// Mails La Gabare des devis / paiements : gabarit unique de la charte (lib/mail-cadre.ts)
+export function mailGabarit(surtitre: string, titre: string, corps: string, bouton?: { texte: string; lien: string },
+  signature: 'auto' | 'a-tres-vite' = 'auto') {
+  return gabaritMail({ label: surtitre, titre, corps, signature,
+    bouton: bouton ? { texte: `${bouton.texte} &rarr;`, lien: bouton.lien } : undefined })
 }
 
 // Relances : 1 = quelques jours après l'envoi, 2 = une semaine après, 3 = juste avant l'expiration
@@ -152,32 +143,39 @@ const RELANCES_DEVIS: Record<number, (d: Devis) => string> = {
   3: (d) => `Votre devis arrive à échéance le ${dateFr(d.validite)}. Pour conserver ces conditions, il suffit de l'accepter en ligne avant cette date.`,
 }
 
-export async function envoyerDevis(d: Devis, relance = 0) {
-  const { data: client } = await supabaseAdmin.from('clients').select('nom_domaine, email_contact').eq('id', d.client_id).single()
-  if (!client?.email_contact) throw new Error('Ce client n\'a pas d\'adresse e-mail')
+// HTML du mail de devis (ou de sa relance n° 1 à 3) : pur, prévisualisable
+export function mailDevis(d: Devis, nomDomaine: string, relance = 0) {
   if (relance && RELANCES_DEVIS[relance]) {
-    await sendMail(client.email_contact, `${relance === 3 ? 'Dernier rappel' : 'Rappel'} — votre devis ${d.numero} · ${client.nom_domaine}`, mailGabarit(
-      'Votre devis', `${esc(client.nom_domaine)}, un petit mot.`,
+    return mailGabarit(
+      'Votre devis', `${esc(nomDomaine)}, un petit mot.`,
       `<p style="margin:0 0 16px 0;">${RELANCES_DEVIS[relance](d)}</p>
        <p style="margin:0 0 24px 0;">Rappel : ${euros(d.total_ttc_cents)}, ${esc(FORMULES[d.formule].nom.toLowerCase())}, valable jusqu'au ${dateFr(d.validite)}.</p>`,
-      { texte: 'Revoir le devis', lien: lienDevis(d.token) }), { fromName: 'La Gabare', replyTo: AGENCE.email })
-    return
+      { texte: 'Revoir le devis', lien: lienDevis(d.token) })
   }
-  await sendMail(client.email_contact, `Votre devis ${d.numero} — ${client.nom_domaine}`, mailGabarit(
-    'Votre devis', `${esc(client.nom_domaine)}, voici notre proposition.`,
+  return mailGabarit(
+    'Votre devis', `${esc(nomDomaine)}, voici notre proposition.`,
     `<p style="margin:0 0 16px 0;">Merci pour notre échange. Vous trouverez votre devis en ligne : montant <strong style="color:#1A1310;">${euros(d.total_ttc_cents)}</strong>,
      ${esc(FORMULES[d.formule].nom.toLowerCase())}, valable jusqu'au ${dateFr(d.validite)}.</p>
      <p style="margin:0 0 24px 0;">Vous pouvez le télécharger en PDF, et l'accepter en ligne en un clic : vous serez alors dirigé vers le paiement de l'acompte,
      par carte ou par virement.</p>`,
-    { texte: 'Voir et accepter le devis', lien: lienDevis(d.token) }), { fromName: 'La Gabare', replyTo: AGENCE.email })
+    { texte: 'Voir et accepter le devis', lien: lienDevis(d.token) })
 }
 
-// Contenus à fournir, selon le pack, envoyés au premier paiement
-export async function envoyerAccueil(clientId: number) {
-  const { data: client } = await supabaseAdmin.from('clients')
-    .select('id, nom_domaine, email_contact, pack_site, accueil_envoye_at').eq('id', clientId).single()
-  if (!client?.email_contact || client.accueil_envoye_at) return
-  const pack = String(client.pack_site || '').toLowerCase()
+export async function envoyerDevis(d: Devis, relance = 0) {
+  const { data: client } = await supabaseAdmin.from('clients').select('nom_domaine, email_contact').eq('id', d.client_id).single()
+  if (!client?.email_contact) throw new Error('Ce client n\'a pas d\'adresse e-mail')
+  if (relance && RELANCES_DEVIS[relance]) {
+    await sendMail(client.email_contact, `${relance === 3 ? 'Dernier rappel' : 'Rappel'} — votre devis ${d.numero} · ${client.nom_domaine}`,
+      mailDevis(d, client.nom_domaine, relance), { fromName: 'La Gabare', replyTo: AGENCE.email })
+    return
+  }
+  await sendMail(client.email_contact, `Votre devis ${d.numero} — ${client.nom_domaine}`, mailDevis(d, client.nom_domaine),
+    { fromName: 'La Gabare', replyTo: AGENCE.email })
+}
+
+// HTML du mail de bienvenue (contenus à fournir selon le pack) : pur, prévisualisable. Bloc « À très vite » (modèle Bienvenue).
+export function mailAccueil(nomDomaine: string, packSite: string | null | undefined, limite: string) {
+  const pack = String(packSite || '').toLowerCase()
   const elements = [
     'Votre logo (fichier d\'origine si possible : PDF, SVG ou PNG haute définition)',
     'Des photos du domaine, des vignes, du chai et de l\'équipe — même prises au téléphone, nous trions',
@@ -188,15 +186,24 @@ export async function envoyerAccueil(clientId: number) {
     ...(pack === 'pro' || pack === 'premium' ? ['Vos tarifs (particuliers et professionnels), frais de port et conditions de retrait au caveau'] : []),
     ...(pack === 'premium' ? ['Vos créneaux de visite et de dégustation, avec le montant de l\'acompte souhaité'] : []),
   ]
-  const limite = dateFr(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000))
-  await sendMail(client.email_contact, `Bienvenue — lançons le site de ${client.nom_domaine}`, mailGabarit(
-    'Bienvenue', `Merci, ${esc(client.nom_domaine)}.`,
+  return mailGabarit(
+    'Bienvenue', `Merci, ${esc(nomDomaine)}.`,
     `<p style="margin:0 0 16px 0;">Votre acompte est bien reçu : votre projet démarre. Pour avancer, nous avons besoin des éléments suivants,
      idéalement avant le <strong style="color:#1A1310;">${limite}</strong> :</p>
      <ul style="margin:0 0 20px 0;padding-left:20px;">${elements.map((e) => `<li style="margin-bottom:6px;">${esc(e)}</li>`).join('')}</ul>
      <p style="margin:0 0 16px 0;">Votre espace client vient d'être créé : vous allez recevoir un second e-mail d'activation de votre compte (pensez à vérifier vos courriers indésirables). Cliquez sur le lien qu'il contient pour choisir votre mot de passe. Vous y trouverez ensuite la liste
      de ces éléments, rubrique « Votre projet » : répondez directement en ligne, déposez vos photos dans la « Galerie photo », et cochez au fur et à mesure.</p>
-     <p style="margin:0 0 8px 0;">Il vous manque quelque chose ? Pas d'inquiétude : envoyez ce que vous avez, nous complétons ensemble.</p>`),
+     <p style="margin:0 0 8px 0;">Il vous manque quelque chose ? Pas d'inquiétude : envoyez ce que vous avez, nous complétons ensemble.</p>`,
+    undefined, 'a-tres-vite')
+}
+
+// Contenus à fournir, selon le pack, envoyés au premier paiement
+export async function envoyerAccueil(clientId: number) {
+  const { data: client } = await supabaseAdmin.from('clients')
+    .select('id, nom_domaine, email_contact, pack_site, accueil_envoye_at').eq('id', clientId).single()
+  if (!client?.email_contact || client.accueil_envoye_at) return
+  const limite = dateFr(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000))
+  await sendMail(client.email_contact, `Bienvenue — lançons le site de ${client.nom_domaine}`, mailAccueil(client.nom_domaine, client.pack_site, limite),
     { fromName: 'La Gabare', replyTo: AGENCE.email })
   // Date souhaitée pour les contenus : point de départ des relances automatiques
   const dateLimite = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)

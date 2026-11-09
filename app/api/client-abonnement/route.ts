@@ -4,6 +4,7 @@ import { getClientFromRequest } from '@/lib/auth-client'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { withCors, corsPreflight } from '@/lib/cors'
 import { stripe } from '@/lib/stripe'
+import { mailChangementFormule, mailDemandeResiliation } from '@/lib/mails-abonnement'
 import { sendMail } from '@/lib/mailer'
 
 // L'action (Stripe + fiche) est déjà faite quand les mails partent : un mail raté alerte l'agence mais ne renvoie pas d'erreur au client
@@ -134,10 +135,7 @@ export async function POST(req: NextRequest) {
       const quand = effet ? `à partir du prélèvement du ${dateFr(effet)}` : 'dès le démarrage de votre abonnement'
       if (c.email_contact) {
         await mailSansBloquer(c.email_contact, `Votre nouvelle formule ${FORMULES[formule]} — ${c.nom_domaine}`,
-          `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
-           <p>Bonjour,</p><p>Votre abonnement passe de la formule ${esc(ancienne)} à la formule <strong>${FORMULES[formule]}</strong>
-           (${(montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })} par mois), ${quand}.
-           Votre prochain plan éditorial suivra la nouvelle formule.</p><p>L'équipe La Gabare</p></div>`,
+          mailChangementFormule(c.nom_domaine, ancienne, FORMULES[formule], (montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }), quand),
           { fromName: 'La Gabare', replyTo: AGENCE || undefined })
       }
       if (AGENCE) {
@@ -187,11 +185,7 @@ export async function POST(req: NextRequest) {
       const motif = String(body.motif || '').trim().slice(0, 2000)
       if (c.email_contact) {
         await mailSansBloquer(c.email_contact, `Votre demande de résiliation — ${c.nom_domaine}`,
-          `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
-           <p>Bonjour,</p><p>Nous avons bien reçu votre demande de résiliation de l'abonnement ${esc(FORMULES[c.abonnement] || '')}
-           le ${dateFr(new Date())}. Conformément à nos conditions générales, elle prendra effet le <strong>${dateFr(effet)}</strong> :
-           l'accompagnement et les prélèvements se poursuivent jusqu'à cette date, puis s'arrêtent automatiquement.</p>
-           <p>Votre site reste le vôtre. Si vous changez d'avis, répondez simplement à ce message.</p><p>L'équipe La Gabare</p></div>`,
+          mailDemandeResiliation(c.nom_domaine, FORMULES[c.abonnement] || '', dateFr(new Date()), dateFr(effet)),
           { fromName: 'La Gabare', replyTo: AGENCE || undefined })
       }
       if (AGENCE) {

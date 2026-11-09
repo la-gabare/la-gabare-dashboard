@@ -1,4 +1,5 @@
 import 'server-only'
+import { gabaritMail } from '@/lib/mail-cadre'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
@@ -68,21 +69,28 @@ export async function demarrerAccompagnementOffert(clientId: number) {
     try {
       const prix = (montantCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
       await sendMail(c.email_contact, `Votre accompagnement ${nomFormule} offert démarre — ${c.nom_domaine}`,
-        `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
-         <p>Bonjour,</p>
-         <p>Votre site est en ligne et, comme prévu dans votre pack, vos <strong>${moisOfferts} mois d'accompagnement ${esc(inclus.nom)}</strong> commencent aujourd'hui :
-         articles, publications et suivi de votre présence en ligne. Votre premier plan éditorial est en préparation.</p>
-         <p>Pour que l'accompagnement continue sans interruption après le ${dateFr(finOffert)}, enregistrez dès maintenant votre moyen de paiement
-         (carte ou prélèvement SEPA). <strong>Aucun prélèvement avant le ${dateFr(finOffert)}</strong> ; ensuite ${prix} par mois (formule ${esc(nomFormule)}).</p>
-         <p><a href="${session.url}" style="display:inline-block;padding:14px 28px;background:#5A1226;color:#F5F2EC;text-decoration:none;font-weight:600;">Enregistrer mon moyen de paiement &rarr;</a></p>
-         <p style="font-size:13px;">Ce lien est valable 24 heures ; vous pourrez aussi le faire depuis votre espace client (Paramètres › Abonnement).</p>
-         <p>L'équipe La Gabare</p></div>`,
+        mailAccompagnementOffert({ nomDomaine: c.nom_domaine, moisOfferts, nomInclus: inclus.nom, fin: finOffert, prix, nomFormule, url: session.url }),
         { fromName: 'La Gabare' })
     } catch (e) {
       await prevenirEchec(`Le mail n'est pas parti (${e instanceof Error ? e.message : 'erreur'})`)
     }
   }
   return { formule, fin_offert: finOffert.toISOString(), lien: session.url }
+}
+
+// HTML du mail « accompagnement offert » (charte e-mail) : pur, prévisualisable
+export function mailAccompagnementOffert(o: { nomDomaine: string; moisOfferts: number; nomInclus: string; fin: Date; prix: string; nomFormule: string; url: string }) {
+  return gabaritMail({
+    label: 'Votre accompagnement',
+    titre: `${esc(o.nomDomaine)}, votre accompagnement démarre.`,
+    corps: `<p style="margin:0 0 16px 0;">Bonjour,</p>
+<p style="margin:0 0 16px 0;">Votre site est en ligne et, comme prévu dans votre pack, vos <strong style="color:#1A1310;font-weight:600;">${o.moisOfferts} mois d'accompagnement ${esc(o.nomInclus)}</strong> commencent aujourd'hui :
+articles, publications et suivi de votre présence en ligne. Votre premier plan éditorial est en préparation.</p>
+<p style="margin:0 0 16px 0;">Pour que l'accompagnement continue sans interruption après le ${dateFr(o.fin)}, enregistrez dès maintenant votre moyen de paiement
+(carte ou prélèvement SEPA). <strong style="color:#1A1310;font-weight:600;">Aucun prélèvement avant le ${dateFr(o.fin)}</strong> ; ensuite ${o.prix} par mois (formule ${esc(o.nomFormule)}).</p>`,
+    bouton: { texte: 'Enregistrer mon moyen de paiement &rarr;', lien: o.url },
+    apresBouton: `<p style="margin:20px 0 0 0;font-size:13px;line-height:1.6;">Ce lien est valable 24 heures ; vous pourrez aussi le faire depuis votre espace client (Paramètres › Abonnement).</p>`,
+  })
 }
 
 // Fin des mois offerts d'un client (date de début d'abonnement + mois inclus dans son pack), ou null

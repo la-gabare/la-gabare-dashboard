@@ -4,7 +4,7 @@ import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
-import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
+import { gabaritMail } from '@/lib/mail-cadre'
 
 export const ADMIN_URL = 'https://admin.la-gabare.fr'
 
@@ -108,33 +108,20 @@ export async function ouvrirPaiement(e: Echeance) {
   return session.url!
 }
 
-const sans = "font-family:Arial,sans-serif"
-const serif = "font-family:Georgia,'Cormorant Garamond',serif"
-
+// Mails de versement : gabarit unique de la charte (modèle Paiement)
 function gabarit(surtitre: string, titre: string, corps: string, bouton: string, lien: string) {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-${ENTETE_MAIL}
-<tr><td style="padding:44px 40px 36px 40px;">
-  <p style="margin:0 0 6px 0;${sans};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">${surtitre}</p>
-  <h1 style="margin:0 0 20px 0;${serif};font-weight:400;font-size:26px;color:#1A1310;">${titre}</h1>
-  ${corps}
-  <a href="${lien}" style="display:inline-block;padding:14px 32px;background-color:#5A1226;color:#F5F2EC;${sans};font-size:15px;font-weight:600;text-decoration:none;">${bouton} &rarr;</a>
-  <p style="margin:24px 0 0 0;${sans};font-size:13px;line-height:1.6;color:#4A3E37;">Vous pouvez régler par carte bancaire ou par virement : la page de paiement vous indique l'IBAN à utiliser.</p>
-</td></tr>
-${PIED_MAIL}
-</table></td></tr></table>`
+  return gabaritMail({ label: surtitre, titre, corps, bouton: { texte: `${bouton} &rarr;`, lien },
+    apresBouton: `<p style="margin:24px 0 0 0;font-size:13px;line-height:1.6;">Vous pouvez régler par carte bancaire ou par virement : la page de paiement vous indique l'IBAN à utiliser.</p>` })
 }
 
-const para = (t: string) => `<p style="margin:0 0 24px 0;${sans};font-size:15px;line-height:1.7;color:#4A3E37;">${t}</p>`
+const para = (t: string) => `<p style="margin:0 0 24px 0;">${t}</p>`
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 
-export async function envoyerEcheance(e: Echeance, relance = false) {
-  const { data: client } = await supabaseAdmin.from('clients').select('nom_domaine, email_contact').eq('id', e.client_id).single()
-  if (!client?.email_contact) throw new Error('Ce client n\'a pas d\'adresse e-mail')
-  const nom = esc(client.nom_domaine)
-  const montant = `<strong style="color:#1A1310;">${euros(e.montant_cents)}</strong>`
-  const html = relance
+// HTML du mail de versement (ou de son rappel) : pur, prévisualisable
+export function mailEcheance(nomDomaine: string, e: Pick<Echeance, 'libelle' | 'montant_cents' | 'ordre' | 'token'>, relance = false) {
+  const nom = esc(nomDomaine)
+  const montant = `<strong style="color:#1A1310;font-weight:600;">${euros(e.montant_cents)}</strong>`
+  return relance
     ? gabarit('Rappel', `${nom}, petit rappel.`,
         para(`Sauf erreur de notre part, le versement « ${esc(e.libelle)} » de ${montant} pour votre site n'a pas encore été reçu.
           Si vous l'avez déjà réglé, merci de ne pas tenir compte de ce message.`),
@@ -143,6 +130,12 @@ export async function envoyerEcheance(e: Echeance, relance = false) {
         para(`Voici le lien de paiement sécurisé pour le versement « ${esc(e.libelle)} » de ${montant}.
           ${e.ordre === 1 ? 'Dès réception, nous lançons la création de votre site et vous recevez l\'accès à votre espace personnel.' : ''}`),
         'Procéder au paiement', lienPaiement(e))
+}
+
+export async function envoyerEcheance(e: Echeance, relance = false) {
+  const { data: client } = await supabaseAdmin.from('clients').select('nom_domaine, email_contact').eq('id', e.client_id).single()
+  if (!client?.email_contact) throw new Error('Ce client n\'a pas d\'adresse e-mail')
+  const html = mailEcheance(client.nom_domaine, e, relance)
   await sendMail(client.email_contact,
     `${relance ? 'Rappel — ' : ''}${e.libelle} — ${client.nom_domaine}`, html, { fromName: 'La Gabare' })
 }

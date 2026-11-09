@@ -1,7 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
-import { gabarit } from '@/lib/rapport-mensuel'
+import { gabaritMail, boutonMail } from '@/lib/mail-cadre'
 
 // Propositions d'options au bon moment (tâche quotidienne). Chaque proposition part une seule fois par client
 // (la traduction : une fois par an), au plus une proposition tous les 60 jours, jamais pendant la création du site.
@@ -72,6 +72,18 @@ export const OFFRES: Offre[] = [
   },
 ]
 
+// HTML d'une proposition (charte e-mail) : pur, prévisualisable
+export function mailOffre(offre: Offre, c: ClientOffre) {
+  return gabaritMail({
+    label: 'Une idée pour votre domaine',
+    titre: offre.titre(c),
+    corps: offre.corps(c) + `<p style="margin:0 0 14px 0;">Envie d'en parler ? Réservez 20 minutes, ou répondez simplement à ce message.</p>`,
+    bouton: { texte: 'Réserver un appel &rarr;', lien: RDV },
+    apresBouton: boutonMail('Ouvrir mon espace client &rarr;', 'https://la-gabare.fr/espace-client.html', { secondaire: true, marge: '12px 0 0 0' })
+      + `<p style="margin:24px 0 0 0;font-size:12px;color:#7A6F66;">Vous ne souhaitez plus recevoir nos suggestions ? Répondez « stop » à ce message.</p>`,
+  })
+}
+
 export async function proposerOffres() {
   const bilan = { envoyees: 0, erreurs: 0 }
   const maintenant = new Date()
@@ -92,10 +104,7 @@ export async function proposerOffres() {
       const offre = OFFRES.find((o) => !deja[o.cle(c, annee)] && o.eligible(c, { traductionAchetee, mois: maintenant.getMonth() }))
       if (!offre) continue
 
-      const corps = offre.corps(c) + `<p style="margin:0 0 14px 0;">Envie d'en parler ? Réservez 20 minutes, ou répondez simplement à ce message.</p>
-        <p style="margin:0 0 8px 0;"><a href="${RDV}" style="display:inline-block;padding:12px 24px;background:#5A1226;color:#F5F2EC;text-decoration:none;font-weight:600;">Réserver un appel &rarr;</a></p>
-        <p style="margin:16px 0 0 0;font-size:12px;color:#7a6f66;">Vous ne souhaitez plus recevoir nos suggestions ? Répondez « stop » à ce message.</p>`
-      await sendMail(c.email_contact, offre.sujet(c), gabarit('Une idée pour votre domaine', offre.titre(c), corps),
+      await sendMail(c.email_contact, offre.sujet(c), mailOffre(offre, c),
         { fromName: 'La Gabare', replyTo: AGENCE || undefined })
       await supabaseAdmin.from('clients')
         .update({ offres_envoyees: { ...deja, [offre.cle(c, annee)]: maintenant.toISOString() } }).eq('id', c.id)

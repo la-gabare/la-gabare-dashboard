@@ -1,9 +1,11 @@
 // Signature d'Alexandre ajoutée en bas des e-mails envoyés au nom de La Gabare (clients, prospects).
 // Les images sont dans public/mail/ (adresses publiques, voir middleware.ts).
+import { MARQUE_SIGNATURE, MARQUE_SANS_SIGNATURE } from '@/lib/mail-cadre'
+
 const BASE = 'https://admin.la-gabare.fr/mail'
 
 export const SIGNATURE_HTML = `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="520" style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin-top:28px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;max-width:520px;margin-top:40px;">
   <tr><td colspan="3" style="padding:0 0 16px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="48" height="2" style="width:48px;height:2px;line-height:2px;font-size:0;background:#5A1226;">&nbsp;</td><td width="24" height="2" style="width:24px;height:2px;line-height:2px;font-size:0;background:#B08D57;">&nbsp;</td></tr></table></td></tr>
   <tr>
     <td width="84" style="vertical-align:top;padding:0 20px 0 0;"><img src="${BASE}/photo-carre.png" width="64" height="64" alt="Alexandre Bruzailles" style="display:block;width:64px;height:64px;border-radius:3px;"></td>
@@ -21,10 +23,14 @@ export const SIGNATURE_HTML = `
 </table>`
 
 // Mail envoyé au nom de La Gabare (et non d'un domaine client) vers un destinataire externe : on ajoute la signature.
+// Mails de la charte (gabaritMail) : la signature prend la place du marqueur, dans la carte ; le marqueur
+// « sans signature » (bloc « À très vite » déjà présent) l'empêche. Autres mails : ajoutée à la fin.
 export function avecSignature(html: string, to: string, fromName?: string, signature?: boolean): string {
-  if (signature === false) return html
+  const place = html.includes(MARQUE_SIGNATURE)
+  const sans = (h: string) => h.split(MARQUE_SIGNATURE).join('')
+  if (signature === false || html.includes(MARQUE_SANS_SIGNATURE)) return sans(html)
   const interne = [process.env.AGENCE_NOTIF_EMAIL, process.env.SMTP_USER].filter(Boolean).map((a) => a!.toLowerCase())
   const nomAgence = !fromName || fromName.trim() === 'La Gabare'
-  if (signature !== true && (!nomAgence || interne.includes(to.trim().toLowerCase()))) return html
-  return html + SIGNATURE_HTML
+  if (signature !== true && (!nomAgence || interne.includes(to.trim().toLowerCase()))) return sans(html)
+  return place ? html.replace(MARQUE_SIGNATURE, SIGNATURE_HTML) : html + SIGNATURE_HTML
 }

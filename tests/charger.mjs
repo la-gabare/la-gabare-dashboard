@@ -23,6 +23,7 @@ function avecExtension(fichier) {
 
 export async function resolve(specifier, context, suivant) {
   if (SIMULES.has(specifier)) return { url: DOUBLURE, shortCircuit: true }
+  if (specifier === 'next/server') return suivant('next/server.js', context) // paquet sans « exports » : extension explicite
   let cible = null
   if (specifier.startsWith('@/')) cible = path.join(RACINE, specifier.slice(2))
   else if ((specifier.startsWith('.') || specifier.startsWith('/')) && context.parentURL?.startsWith('file:'))

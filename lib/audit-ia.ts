@@ -4,7 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { notifierAgenceLead } from '@/lib/leads/mails'
-import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
+import { gabaritMail, boutonMail, carteMail, labelMail, listeMail } from '@/lib/mail-cadre'
 
 // Audit gratuit automatique : relevé factuel du site du domaine + rédaction du rapport par Claude,
 // envoyé au prospect quelques minutes après sa demande (au lieu d'une réponse manuelle sous 48 h).
@@ -161,39 +161,31 @@ export async function redigerRapport(lead: Record<string, any>, releve: Releve |
   return JSON.parse(texte.text) as Rapport
 }
 
-function mailRapport(lead: Record<string, any>, r: Rapport) {
-  const sans = 'font-family:Arial,sans-serif'
-  const serif = "font-family:Georgia,'Cormorant Garamond',serif"
-  const liste = (items: string[]) => `<ul style="margin:0 0 20px 0;padding-left:20px;">${items.map((i) => `<li style="margin-bottom:6px;">${esc(i)}</li>`).join('')}</ul>`
-  const blocs = (items: { titre: string; detail: string }[], couleur: string) => items.map((p, i) => `
-    <tr><td style="padding:14px 16px;border-left:3px solid ${couleur};background:#FBF9F5;">
-      <p style="margin:0 0 4px 0;${sans};font-size:15px;font-weight:700;color:#1A1310;">${i + 1}. ${esc(p.titre)}</p>
-      <p style="margin:0;${sans};font-size:14px;line-height:1.6;color:#4A3E37;">${esc(p.detail)}</p>
-    </td></tr><tr><td style="height:8px;"></td></tr>`).join('')
-  const titre = (t: string) => `<p style="margin:28px 0 10px 0;${sans};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">${t}</p>`
+// HTML du rapport d'audit (charte e-mail) : pur, prévisualisable
+export function mailRapport(lead: Record<string, any>, r: Rapport) {
+  const liste = (items: string[]) => listeMail(items.map(esc))
+  const blocs = (items: { titre: string; detail: string }[], couleur: string) => items.map((p, i) => carteMail(
+    `<p style="margin:0 0 4px 0;font-size:14px;font-weight:600;color:#1A1310;">${i + 1}. ${esc(p.titre)}</p>
+     <p style="margin:0;font-size:13px;line-height:1.6;">${esc(p.detail)}</p>`, { bordGauche: couleur, padding: '14px 18px', marge: '0 0 8px 0' })).join('')
+  const titre = (t: string) => labelMail(t)
   const rdv = new URLSearchParams({ ...(lead.nom ? { name: lead.nom } : {}), ...(lead.email ? { email: lead.email } : {}), 'metadata[lead_id]': String(lead.id) })
   const lienBrief = lienBriefSigne(lead.id)
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-${ENTETE_MAIL}
-<tr><td style="padding:40px 40px 36px 40px;${sans};font-size:15px;line-height:1.7;color:#4A3E37;">
-  <p style="margin:0 0 6px 0;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">Votre audit gratuit</p>
-  <h1 style="margin:0 0 20px 0;${serif};font-weight:400;font-size:26px;color:#1A1310;">${esc(lead.domaine || lead.nom || 'Votre domaine')}</h1>
-  <p style="margin:0;">${esc(r.synthese)}</p>
+  return gabaritMail({
+    label: 'Votre audit gratuit',
+    titre: esc(lead.domaine || lead.nom || 'Votre domaine'),
+    corps: `<p style="margin:0;">${esc(r.synthese)}</p>
   ${r.points_forts.length ? titre('Ce qui fonctionne') + liste(r.points_forts) : ''}
-  ${titre('Trois points à corriger')}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${blocs(r.problemes, '#5A1226')}</table>
-  ${titre('Trois gains à aller chercher')}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${blocs(r.gains, '#B08D57')}</table>
+  ${titre('Trois points à corriger')}${blocs(r.problemes, '#5A1226')}
+  ${titre('Trois gains à aller chercher')}${blocs(r.gains, '#B08D57')}
   ${r.conformite.length ? titre('Conformité loi Évin') + liste(r.conformite) : ''}
   ${titre('Notre recommandation')}<p style="margin:0 0 24px 0;">${esc(r.recommandation)}</p>
-  <p style="margin:0 0 16px 0;">Pour la suite, deux façons de faire, à votre choix :</p>
-  <a href="https://cal.com/la-gabare/appel-decouverte-la-gabare?${rdv}" style="display:inline-block;padding:14px 28px;background-color:#5A1226;color:#F5F2EC;font-size:15px;font-weight:600;text-decoration:none;">Réserver un appel de 20 minutes &rarr;</a>
-  <p style="margin:14px 0;font-size:13px;color:#7a6f66;">ou, si vous préférez écrire</p>
-  <a href="${lienBrief}" style="display:inline-block;padding:12px 28px;border:1px solid #1A1310;color:#1A1310;font-size:14px;font-weight:600;text-decoration:none;">Compléter le formulaire &rarr;</a>
-  <p style="margin:24px 0 0 0;font-size:12px;color:#7a6f66;">Audit réalisé à partir de vos réponses et d'une lecture automatique de la page d'accueil de votre site, puis rédigé avec l'aide d'une intelligence artificielle.
-  Une question ? Répondez simplement à cet e-mail.</p>
-</td></tr>
-${PIED_MAIL}
-</table></td></tr></table>`
+  <p style="margin:0 0 8px 0;">Pour la suite, deux façons de faire, à votre choix :</p>`,
+    bouton: { texte: 'Réserver un appel de 20 minutes &rarr;', lien: `https://cal.com/la-gabare/appel-decouverte-la-gabare?${rdv}` },
+    apresBouton: `<p style="margin:14px 0 0 0;font-size:13px;color:#7A6F66;">ou, si vous préférez écrire</p>
+  ${boutonMail('Compléter le formulaire &rarr;', lienBrief, { secondaire: true, marge: '10px 0 0 0' })}
+  <p style="margin:24px 0 0 0;font-size:12px;line-height:1.6;color:#7A6F66;">Audit réalisé à partir de vos réponses et d'une lecture automatique de la page d'accueil de votre site, puis rédigé avec l'aide d'une intelligence artificielle.
+  Une question ? Répondez simplement à cet e-mail.</p>`,
+  })
 }
 
 // Relevé + rédaction + envoi ; idempotent (rien si le rapport est déjà parti)

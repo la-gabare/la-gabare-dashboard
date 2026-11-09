@@ -1,6 +1,9 @@
 import 'server-only'
 import { esc, euros } from '@/lib/boutique/core'
 import { DUREE_ACCES_JOURS } from '@/lib/pro/core'
+import { gabaritMail } from '@/lib/mail-cadre'
+
+// Mails AU VIGNERON (client La Gabare) : charte e-mail La Gabare. Mails AUX PROFESSIONNELS (au nom du domaine) : cadre neutre ci-dessous.
 
 function cadre(titre: string, corps: string) {
   return `
@@ -20,12 +23,12 @@ function bouton(lien: string, texte: string) {
 }
 
 export function mailDemandeAccesDomaine(domaine: string, p: Record<string, unknown>) {
-  return cadre('Nouvelle demande d\'accès professionnel', `
-    <p><b>${esc(p.entreprise)}</b>${p.activite ? ' — ' + esc(p.activite) : ''}${p.ville ? ', ' + esc(p.ville) : ''}</p>
-    <p>${esc(p.nom || '')} · ${esc(p.email)}${p.telephone ? ' · ' + esc(p.telephone) : ''}${p.siret ? '<br>SIRET : ' + esc(p.siret) : ''}</p>
-    ${p.message ? `<p style="border-left:3px solid #B08D57;padding-left:12px;color:#4A3E37;">${esc(p.message)}</p>` : ''}
-    <p>Validez ou refusez cette demande dans votre espace : <b>Ma boutique › Professionnels</b>.</p>
-    ${bouton('https://la-gabare.fr/espace-client.html?boutique=pros', 'Ouvrir mon espace')}`)
+  return gabaritMail({ label: 'Votre espace professionnels', titre: 'Nouvelle demande d\'accès professionnel', corps: `
+    <p style="margin:0 0 12px 0;"><b style="color:#1A1310;font-weight:600;">${esc(p.entreprise)}</b>${p.activite ? ' — ' + esc(p.activite) : ''}${p.ville ? ', ' + esc(p.ville) : ''}</p>
+    <p style="margin:0 0 16px 0;">${esc(p.nom || '')} · ${esc(p.email)}${p.telephone ? ' · ' + esc(p.telephone) : ''}${p.siret ? '<br>SIRET : ' + esc(p.siret) : ''}</p>
+    ${p.message ? `<p style="margin:0 0 16px 0;border-left:3px solid #B08D57;padding-left:12px;color:#4A3E37;">${esc(p.message)}</p>` : ''}
+    <p style="margin:0 0 8px 0;">Validez ou refusez cette demande dans votre espace : <b style="color:#1A1310;font-weight:600;">Ma boutique › Professionnels</b>.</p>`,
+    bouton: { texte: 'Ouvrir mon espace', lien: 'https://la-gabare.fr/espace-client.html?boutique=pros' } })
 }
 
 export function mailAccuseDemandePro(domaine: string, entreprise: string) {
@@ -46,12 +49,12 @@ export function mailAccesPro(domaine: string, nom: string | null, lien: string, 
 
 export function mailDemandePro(domaine: string, pro: Record<string, unknown>, d: { type: string; lignes: any[]; total_ht_cents: number; message?: string | null }) {
   const lignes = d.lignes.map((l) => `<tr><td style="padding:5px 0;">${l.quantite} × ${esc(l.nom)}${l.millesime ? ' ' + esc(l.millesime) : ''}</td><td style="text-align:right;">${l.prix_pro_cents != null ? euros(l.prix_pro_cents * l.quantite) + ' HT' : ''}</td></tr>`).join('')
-  return cadre(d.type === 'commande' ? 'Demande de commande professionnelle' : 'Demande d\'échantillons', `
-    <p><b>${esc(pro.entreprise)}</b> — ${esc(pro.nom || '')} · ${esc(pro.email)}</p>
-    <table role="presentation" width="100%" style="font-size:14px;border-top:1px solid rgba(26,19,16,.15);margin:12px 0;">${lignes}
-      ${d.type === 'commande' ? `<tr><td style="padding:8px 0;border-top:1px solid rgba(26,19,16,.15);font-weight:bold;">Total HT indicatif</td><td style="text-align:right;border-top:1px solid rgba(26,19,16,.15);font-weight:bold;">${euros(d.total_ht_cents)}</td></tr>` : ''}
+  return gabaritMail({ label: 'Votre espace professionnels', titre: d.type === 'commande' ? 'Demande de commande professionnelle' : 'Demande d\'échantillons', corps: `
+    <p style="margin:0 0 12px 0;"><b style="color:#1A1310;font-weight:600;">${esc(pro.entreprise)}</b> — ${esc(pro.nom || '')} · ${esc(pro.email)}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#4A3E37;border-top:1px solid rgba(26,19,16,.14);margin:12px 0 16px 0;">${lignes}
+      ${d.type === 'commande' ? `<tr><td style="padding:8px 0;border-top:1px solid rgba(26,19,16,.14);font-weight:600;color:#1A1310;">Total HT indicatif</td><td style="text-align:right;border-top:1px solid rgba(26,19,16,.14);font-weight:600;color:#1A1310;">${euros(d.total_ht_cents)}</td></tr>` : ''}
     </table>
-    ${d.message ? `<p style="border-left:3px solid #B08D57;padding-left:12px;color:#4A3E37;">${esc(d.message)}</p>` : ''}
-    <p>Répondez directement à cet e-mail pour confirmer, envoyer votre facture ou organiser l'envoi.</p>
-    ${bouton('https://la-gabare.fr/espace-client.html?boutique=pros', 'Voir dans mon espace')}`)
+    ${d.message ? `<p style="margin:0 0 16px 0;border-left:3px solid #B08D57;padding-left:12px;color:#4A3E37;">${esc(d.message)}</p>` : ''}
+    <p style="margin:0 0 8px 0;">Répondez directement à cet e-mail pour confirmer, envoyer votre facture ou organiser l'envoi.</p>`,
+    bouton: { texte: 'Voir dans mon espace', lien: 'https://la-gabare.fr/espace-client.html?boutique=pros' } })
 }

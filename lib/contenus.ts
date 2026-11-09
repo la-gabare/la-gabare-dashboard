@@ -2,6 +2,7 @@ import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
 import { manquants } from '@/lib/contenus-defs'
+import { gabaritMail } from '@/lib/mail-cadre'
 
 export { CONTENUS, contenusDuPack, listeContenus, manquants } from '@/lib/contenus-defs'
 export type { ContenuDef, EtatContenu } from '@/lib/contenus-defs'
@@ -9,6 +10,20 @@ export type { ContenuDef, EtatContenu } from '@/lib/contenus-defs'
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 const AGENCE = process.env.AGENCE_NOTIF_EMAIL || process.env.SMTP_USER || ''
 const JOUR = 24 * 60 * 60 * 1000
+
+// HTML de la relance « contenus manquants » (charte e-mail ; signature automatique à la place de « L'équipe La Gabare ») : pur
+export function mailContenusManquants(nomDomaine: string, reste: { libelle: string; aide: string }[]) {
+  const liste = reste.map((r) => `<li style="margin-bottom:6px;"><strong style="color:#1A1310;font-weight:600;">${esc(r.libelle)}</strong> — ${esc(r.aide)}</li>`).join('')
+  return gabaritMail({
+    label: 'Votre site',
+    titre: `${esc(nomDomaine)}, il nous manque quelques éléments.`,
+    corps: `<p style="margin:0 0 16px 0;">Bonjour,</p><p style="margin:0 0 12px 0;">Pour avancer sur le site de ${esc(nomDomaine)}, il nous manque encore :</p>
+<ul style="margin:0 0 20px 0;padding-left:20px;">${liste}</ul>
+<p style="margin:0 0 16px 0;">Le plus simple : votre espace client, rubrique « Votre projet », où vous pouvez tout compléter en quelques minutes.
+Il vous manque quelque chose ? Envoyez ce que vous avez, nous complétons ensemble.</p>`,
+    bouton: { texte: 'Compléter mes contenus &rarr;', lien: 'https://la-gabare.fr/espace-client.html' },
+  })
+}
 
 // Relances : à la date limite puis tous les 5 jours (3 fois), ensuite l'agence est prévenue. Arrêt dès la maquette envoyée.
 export async function relancerContenus() {
@@ -24,14 +39,8 @@ export async function relancerContenus() {
       if (maintenant < new Date(c.contenus_limite).getTime()) continue
       if (c.contenus_derniere_relance_at && maintenant - new Date(c.contenus_derniere_relance_at).getTime() < 5 * JOUR) continue
       if (c.contenus_relances < 3 && c.email_contact) {
-        const liste = reste.map((r) => `<li style="margin-bottom:6px;"><strong>${esc(r.libelle)}</strong> — ${esc(r.aide)}</li>`).join('')
         await sendMail(c.email_contact, `Votre site — il nous manque ${reste.length} élément${reste.length > 1 ? 's' : ''} · ${c.nom_domaine}`,
-          `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;">
-           <p>Bonjour,</p><p>Pour avancer sur le site de ${esc(c.nom_domaine)}, il nous manque encore :</p><ul>${liste}</ul>
-           <p>Le plus simple : votre espace client, rubrique « Votre projet », où vous pouvez tout compléter en quelques minutes.
-           Il vous manque quelque chose ? Envoyez ce que vous avez, nous complétons ensemble.</p>
-           <p><a href="https://la-gabare.fr/espace-client.html" style="display:inline-block;padding:14px 28px;background:#5A1226;color:#F5F2EC;text-decoration:none;font-weight:600;">Compléter mes contenus &rarr;</a></p>
-           <p>L'équipe La Gabare</p></div>`, { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+          mailContenusManquants(c.nom_domaine, reste), { fromName: 'La Gabare', replyTo: AGENCE || undefined })
         bilan.relances++
       } else if (AGENCE) {
         await sendMail(AGENCE, `Contenus toujours incomplets — ${c.nom_domaine}`,

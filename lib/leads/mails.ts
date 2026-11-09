@@ -2,7 +2,7 @@ import { lienBrief as lienBriefSigne } from '@/lib/anti-spam'
 import 'server-only'
 import { sendMail } from '@/lib/mailer'
 import { notifier } from '@/lib/notifier'
-import { ENTETE_MAIL, PIED_MAIL } from '@/lib/mail-cadre'
+import { gabaritMail, carteMail, labelMail, titreCarte, boutonMail, STYLE_PETIT } from '@/lib/mail-cadre'
 
 // Mails des prospects, envoyés directement par le dashboard (remplace le workflow n8n « Nouveau Lead »)
 
@@ -33,32 +33,17 @@ export function mailPriseDeContact(p: ProspectMail): string {
   if (p.email) cal.set('email', p.email)
   if (p.lead_id) cal.set('metadata[lead_id]', String(p.lead_id))
   const lienCal = `https://cal.com/la-gabare/appel-decouverte-la-gabare${cal.toString() ? `?${cal}` : ''}`
-  const sans = "font-family:Arial,'Geist',sans-serif"
-  const serif = "font-family:Georgia,'Cormorant Garamond',serif"
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EDE9E2;padding:40px 16px;"><tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#F5F2EC;border:1px solid rgba(26,19,16,0.1);">
-${ENTETE_MAIL}
-<tr><td style="padding:44px 40px 24px 40px;">
-  <p style="margin:0 0 6px 0;${sans};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B08D57;">Votre demande</p>
-  <h1 style="margin:0 0 20px 0;${serif};font-weight:400;font-size:28px;line-height:1.25;color:#1A1310;">Merci, ${esc(p.nom || '')}.</h1>
-  <p style="margin:0 0 16px 0;${sans};font-size:15px;line-height:1.7;color:#4A3E37;">Nous avons bien reçu votre demande concernant <strong style="color:#1A1310;">${esc(p.domaine || 'votre domaine')}</strong>${pack}.</p>
-  <p style="margin:0 0 32px 0;${sans};font-size:15px;line-height:1.7;color:#4A3E37;">Pour avancer, deux options s'offrent à vous : choisissez celle qui vous convient le mieux.</p>
-</td></tr>
-<tr><td style="padding:0 40px 20px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(26,19,16,0.14);"><tr><td style="padding:24px;">
-  <p style="margin:0 0 6px 0;${sans};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#B08D57;">Option 1</p>
-  <p style="margin:0 0 14px 0;${serif};font-size:19px;color:#1A1310;">Réserver un appel de 20 minutes</p>
-  <p style="margin:0 0 18px 0;${sans};font-size:14px;line-height:1.6;color:#4A3E37;">Le moyen le plus rapide pour qu'on comprenne bien votre projet et qu'on vous propose la formule adaptée.</p>
-  <a href="${esc(lienCal)}" style="display:inline-block;padding:12px 28px;background-color:#5A1226;color:#F5F2EC;${sans};font-size:14px;font-weight:600;text-decoration:none;">Réserver un créneau &rarr;</a>
-</td></tr></table></td></tr>
-<tr><td style="padding:0 40px 36px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(26,19,16,0.14);"><tr><td style="padding:24px;">
-  <p style="margin:0 0 6px 0;${sans};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#B08D57;">Option 2</p>
-  <p style="margin:0 0 14px 0;${serif};font-size:19px;color:#1A1310;">Compléter le formulaire détaillé</p>
-  <p style="margin:0 0 18px 0;${sans};font-size:14px;line-height:1.6;color:#4A3E37;">Vous préférez écrire ? Prenez le temps qu'il vous faut, à votre rythme.</p>
-  <a href="${lienBrief}" style="display:inline-block;padding:12px 28px;background-color:transparent;border:1px solid #1A1310;color:#1A1310;${sans};font-size:14px;font-weight:600;text-decoration:none;">Compléter le formulaire &rarr;</a>
-</td></tr></table></td></tr>
-<tr><td style="padding:0 40px 40px 40px;"><p style="margin:0;${sans};font-size:13px;line-height:1.6;color:#4A3E37;font-style:italic;">Sans nouvelle de votre part sous 5 jours, nous reviendrons vers vous.</p></td></tr>
-${PIED_MAIL}
-</table></td></tr></table>`
+  const option = (n: string, titre: string, texte: string, bouton: string) => carteMail(
+    `${labelMail(n, '0 0 6px 0')}${titreCarte(titre)}<p style="margin:0 0 4px 0;">${texte}</p>${bouton}`, { padding: '24px' })
+  return gabaritMail({
+    label: 'Votre demande',
+    titre: `Merci, ${esc(p.nom || '')}.`,
+    corps: `<p style="margin:0 0 16px 0;">Nous avons bien reçu votre demande concernant <strong style="color:#1A1310;font-weight:600;">${esc(p.domaine || 'votre domaine')}</strong>${pack}.</p>
+<p style="margin:0 0 24px 0;">Pour avancer, deux options s'offrent à vous : choisissez celle qui vous convient le mieux.</p>
+${option('Option 1', 'Réserver un appel de 20 minutes', 'Le moyen le plus rapide pour qu\'on comprenne bien votre projet et qu\'on vous propose la formule adaptée.', boutonMail('Réserver un créneau &rarr;', esc(lienCal), { marge: '14px 0 0 0' }))}
+${option('Option 2', 'Compléter le formulaire détaillé', 'Vous préférez écrire ? Prenez le temps qu\'il vous faut, à votre rythme.', boutonMail('Compléter le formulaire &rarr;', lienBrief, { secondaire: true, marge: '14px 0 0 0' }))}
+<p style="${STYLE_PETIT}margin:8px 0 0 0;font-style:italic;">Sans nouvelle de votre part sous 5 jours, nous reviendrons vers vous.</p>`,
+  })
 }
 
 export async function envoyerPriseDeContact(p: ProspectMail) {

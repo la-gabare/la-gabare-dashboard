@@ -1,5 +1,6 @@
 import 'server-only'
-import { esc, euros, LigneCommande } from '@/lib/boutique/core'
+import { esc, euros, type LigneCommande } from '@/lib/boutique/core'
+import { gabaritMail } from '@/lib/mail-cadre'
 
 interface CommandeMail {
   numero: number | null
@@ -59,12 +60,13 @@ export function mailConfirmationAcheteur(domaine: string, c: CommandeMail) {
     <p>À bientôt,<br>${esc(domaine)}</p>`)
 }
 
+// Mail AU VIGNERON (client La Gabare) : charte e-mail La Gabare ; les mails à l'acheteur restent au nom du domaine (cadre neutre)
 export function mailNouvelleCommandeDomaine(domaine: string, c: CommandeMail) {
-  return cadre(`Nouvelle commande n° ${c.numero}`, `
-    <p><b>${esc(c.nom || 'Client')}</b> — ${esc(c.email || '')}${c.telephone ? ' — ' + esc(c.telephone) : ''}</p>
+  return gabaritMail({ label: 'Votre boutique', titre: `Nouvelle commande n° ${c.numero}`, corps: `
+    <p style="margin:0 0 8px 0;"><b style="color:#1A1310;font-weight:600;">${esc(c.nom || 'Client')}</b> — ${esc(c.email || '')}${c.telephone ? ' — ' + esc(c.telephone) : ''}</p>
     ${tableau(c)}
     ${adresse(c)}
-    <p><a href="https://la-gabare.fr/espace-client.html" style="color:#8a6d3b;">Ouvrir mon espace › Ma boutique</a> pour la préparer et l'expédier.</p>`)
+    <p style="margin:16px 0 0 0;"><a href="https://la-gabare.fr/espace-client.html" style="color:#5A1226;font-weight:500;">Ouvrir mon espace › Ma boutique</a> pour la préparer et l'expédier.</p>` })
 }
 
 export function mailExpedition(domaine: string, c: CommandeMail) {

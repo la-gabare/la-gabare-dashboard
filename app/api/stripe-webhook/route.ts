@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { mailResiliationAnticipee } from '@/lib/mails-abonnement'
 import { sendMail } from '@/lib/mailer'
 import { notifier, enTexte } from '@/lib/notifier'
 import { marquerPayee, activerClient, euros } from '@/lib/paiements/echeancier'
@@ -109,10 +110,7 @@ export async function POST(req: NextRequest) {
     if (c?.email_contact) {
       try {
         await sendMail(c.email_contact, `Résiliation de votre abonnement — ${c.nom_domaine}`,
-          `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#4A3E37;max-width:560px;"><p>Bonjour,</p>
-           <p>Votre règlement est bien reçu : votre abonnement est résilié à compter d'aujourd'hui et plus aucun prélèvement ne sera effectué.
-           Votre site reste le vôtre. Merci pour ces mois passés ensemble — si vous souhaitez revenir, il suffit de répondre à ce message.</p>
-           <p>L'équipe La Gabare</p></div>`, { fromName: 'La Gabare', replyTo: AGENCE || undefined })
+          mailResiliationAnticipee(c.nom_domaine), { fromName: 'La Gabare', replyTo: AGENCE || undefined })
       } catch (e) { console.error('mail résiliation anticipée', e) }
     }
     await notifierAgence(`Résiliation anticipée — ${c?.nom_domaine || clientId}`,
