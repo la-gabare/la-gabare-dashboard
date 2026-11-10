@@ -18,7 +18,7 @@ export const SIGNATURE_HTML = `
         <a href="https://la-gabare.fr" style="color:#5A1226;text-decoration:none;font-weight:bold;">la-gabare.fr</a>
       </div>
     </td>
-    <td width="72" align="center" style="vertical-align:middle;"><img src="${BASE}/logo-gabare.png" width="56" height="35" alt="La Gabare" style="display:block;width:56px;height:35px;"></td>
+    <td width="88" align="center" style="vertical-align:middle;"><img src="${BASE}/logo-pastille.png" width="56" height="56" alt="La Gabare" style="display:block;width:56px;height:56px;"></td>
   </tr>
 </table>`
 
