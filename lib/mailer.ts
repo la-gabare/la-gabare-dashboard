@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export async function sendMail(to: string, subject: string, html: string, options: { fromName?: string; replyTo?: string; signature?: boolean } = {}) {
+export async function sendMail(to: string, subject: string, html: string, options: { fromName?: string; replyTo?: string; signature?: boolean; attachments?: { filename: string; content: Buffer; contentType?: string; cid?: string }[] } = {}) {
   const fromName = (options.fromName || 'La Gabare').replace(/["<>]/g, '')
   await transporter.sendMail({
     from: `"${fromName}" <${process.env.SMTP_USER}>`,
@@ -20,6 +20,7 @@ export async function sendMail(to: string, subject: string, html: string, option
     subject,
     html: avecSignature(html, to, options.fromName, options.signature),
     replyTo: options.replyTo,
+    attachments: options.attachments,
   })
 }
 

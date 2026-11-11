@@ -6,6 +6,7 @@ import Link from 'next/link'
 import FicheTexte from '@/components/FicheTexte'
 import MaquetteApercu from '@/components/MaquetteApercu'
 import ConvertirProspect from '@/components/ConvertirProspect'
+import EnvoyerMaquette from '@/components/EnvoyerMaquette'
 import { STADES, ETAPES_PUSH, LABELS_STADE as labels, peutDevenirClient, type Stade } from '@/lib/prospects-hm'
 
 type Lead = { id: number; domaine?: string; nom?: string; statut?: string; type_demande?: string; created_at?: string; prospect_id?: number | null }
@@ -89,6 +90,7 @@ export default function Pipeline() {
                             {p.maquette_url && (
                               <a href={p.maquette_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs text-wine font-semibold underline">Maquette</a>
                             )}
+                            {p.maquette_url && p.stade !== 'client' && p.stade !== 'abandonne' && <EnvoyerMaquette prospect={p} onEnvoye={charger} />}
                             {peutDevenirClient(p.stade) && <ConvertirProspect prospect={p} />}
                             <select
                               value={p.stade}
