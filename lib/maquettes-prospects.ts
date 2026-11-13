@@ -1,5 +1,6 @@
 // Aperçus (captures JPEG) des maquettes de prospects, déposés par Harness Maxxing.
 // Stockés dans un bucket PRIVÉ ; l'admin les affiche via /api/prospects/maquette/<slug>/<vue> (protégé par le mot de passe).
+import sharp from 'sharp'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const BUCKET = 'maquettes-prospects'
@@ -34,4 +35,19 @@ export async function lireApercu(slug: string, vue: Vue): Promise<Buffer | null>
 
 export async function supprimerApercus(slug: string): Promise<void> {
   await supabaseAdmin.storage.from(BUCKET).remove(VUES.map((v) => `${slug}/${v}.jpg`))
+}
+
+// Filigrane diagonal répété « Maquette La Gabare - non publiée », posé sur la copie envoyée (l'original reste intact).
+export async function filigraner(img: Buffer): Promise<Buffer> {
+  const { width = 0, height = 0 } = await sharp(img).metadata()
+  if (!width || !height) return img
+  const taille = Math.max(14, Math.round(width / 28))
+  const pasX = taille * 20
+  const pasY = taille * 7
+  const texte = 'Maquette La Gabare - non publiée'
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+<defs><pattern id="f" width="${pasX}" height="${pasY}" patternUnits="userSpaceOnUse" patternTransform="rotate(-25)">
+<text x="0" y="${taille}" font-family="DejaVu Sans, Arial, sans-serif" font-size="${taille}" font-weight="bold" fill="#ffffff" fill-opacity="0.55" stroke="#2A0810" stroke-opacity="0.35" stroke-width="1">${texte}</text>
+</pattern></defs><rect width="100%" height="100%" fill="url(#f)"/></svg>`
+  return sharp(img).composite([{ input: Buffer.from(svg) }]).jpeg({ quality: 85 }).toBuffer()
 }

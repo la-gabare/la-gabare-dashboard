@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
-import { lireApercu, urlApercu } from '@/lib/maquettes-prospects'
+import { filigraner, lireApercu, urlApercu } from '@/lib/maquettes-prospects'
 import { EMAIL_RE, htmlMailMaquette, messageParDefaut, objetParDefaut } from '@/lib/mail-maquette'
 
 export const dynamic = 'force-dynamic'
@@ -32,13 +32,13 @@ export async function POST(req: NextRequest) {
   const interne = pr.maquette_url.startsWith('/api/prospects/maquette/')
   const lien = interne ? null : pr.maquette_url
   const [bureau, mobile] = interne
-    ? await Promise.all([lireApercu(pr.slug, 'bureau'), lireApercu(pr.slug, 'mobile')])
+    ? await Promise.all([lireApercu(pr.slug, 'bureau'), lireApercu(pr.slug, 'mobile')].map(async (c) => { const i = await c; return i && filigraner(i) }))
     : [null, null]
   if (interne && !bureau) return NextResponse.json({ error: 'Capture de la maquette introuvable' }, { status: 400 })
 
   if (b.confirme !== true) {
     const base = urlApercu(pr.slug).replace(/\/bureau$/, '')
-    const html = htmlMailMaquette(pr, message, { srcBureau: bureau ? `${base}/bureau` : undefined, srcMobile: mobile ? `${base}/mobile` : undefined, lien })
+    const html = htmlMailMaquette(pr, message, { srcBureau: bureau ? `${base}/bureau?filigrane=1` : undefined, srcMobile: mobile ? `${base}/mobile?filigrane=1` : undefined, lien })
     return NextResponse.json({ apercu: html, to, objet })
   }
 
