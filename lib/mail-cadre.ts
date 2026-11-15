@@ -81,7 +81,8 @@ ${role ? `<p style="margin:4px 0 0 0;${SANS};font-size:11px;font-weight:500;lett
 </td></tr></table>`
 }
 
-export const ENTETE_MAIL = `<tr><td align="center" style="background-color:${C.nuit};padding:24px 40px;text-align:center;"><img src="https://admin.la-gabare.fr/mail/logo-creme.png" width="60" height="38" alt="" style="display:inline-block;vertical-align:middle;border:0;"><span style="${SERIF};font-size:24px;font-weight:500;letter-spacing:1px;color:${C.creme};vertical-align:middle;">&nbsp;&nbsp;La Gabare</span></td></tr>
+// Logo + nom dans UNE seule image (fond compris) : le mode sombre des messageries ne peut pas en changer les couleurs.
+export const ENTETE_MAIL = `<tr><td align="center" bgcolor="${C.nuit}" style="background-color:${C.nuit};padding:0;line-height:0;font-size:0;"><img src="https://admin.la-gabare.fr/mail/entete-gabare.png" width="600" height="86" alt="La Gabare" style="display:block;width:100%;max-width:600px;height:auto;border:0;color:${C.creme};"></td></tr>
 <tr><td style="height:2px;background-color:${C.or};background-image:linear-gradient(90deg,#B08D57 0%,#C9A971 50%,#B08D57 100%);font-size:0;line-height:0;">&nbsp;</td></tr>`
 
 export const PIED_MAIL = `<tr><td align="center" style="background-color:${C.nuit};padding:24px 40px;text-align:center;"><p style="margin:0;${SANS};font-size:11px;font-weight:500;letter-spacing:1.5px;color:${C.or};">La Gabare — Agence web pour domaines viticoles</p><p style="margin:8px 0 0 0;${SANS};font-size:11px;color:#7B6668;"><a href="https://la-gabare.fr" style="color:#7B6668;text-decoration:none;">la-gabare.fr</a> · <a href="mailto:contact@la-gabare.fr" style="color:#7B6668;text-decoration:none;">contact@la-gabare.fr</a></p></td></tr>`
