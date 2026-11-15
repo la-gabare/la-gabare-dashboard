@@ -103,8 +103,8 @@ function Redaction({ d, restant, onFermer }: { d: Dest; restant: number; onFerme
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[92vh] overflow-y-auto p-5 space-y-3 text-sm">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-stretch sm:items-center justify-center sm:p-4">
+      <div className="bg-white sm:rounded-lg w-full max-w-3xl h-[100dvh] sm:h-auto sm:max-h-[92vh] overflow-y-auto p-4 sm:p-5 space-y-3 text-sm">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-bold">Présentation pour {d.nom}</h3>
           <button onClick={onFermer} className="text-gray-500 text-xl leading-none" aria-label="Fermer">×</button>
@@ -114,12 +114,12 @@ function Redaction({ d, restant, onFermer }: { d: Dest; restant: number; onFerme
         {etape === 'redaction' && (
           <>
             <label className="block"><span className="font-semibold">Objet</span>
-              <input value={objet} onChange={(e) => setObjet(e.target.value)} className="w-full px-3 py-2 border rounded mt-1" /></label>
+              <input value={objet} onChange={(e) => setObjet(e.target.value)} className="w-full px-3 py-2 border rounded mt-1 text-base sm:text-sm" /></label>
             <label className="block"><span className="font-semibold">Message</span>
-              <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={13} className="w-full px-3 py-2 border rounded mt-1" /></label>
+              <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={13} className="w-full px-3 py-2 border rounded mt-1 text-base sm:text-sm" /></label>
             <p className="text-xs text-gray-500">Remplacez la phrase entre crochets par une phrase personnelle. Les boutons (site, audit gratuit), la mention « stop » et votre signature sont ajoutés automatiquement.</p>
             {erreur && <p className="text-red-600">{erreur}</p>}
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end sticky bottom-0 bg-white pt-2 pb-[env(safe-area-inset-bottom)] [&>button]:py-3 sm:[&>button]:py-2">
               <button onClick={onFermer} className="px-3 py-2 border rounded">Annuler</button>
               <button onClick={() => lancer({ action: 'apercu', objet, message }, (j) => { setApercu(j.apercu); setEtape('apercu') })} disabled={occupe || !objet || !message} className="px-3 py-2 bg-wine text-white rounded disabled:opacity-50">Voir l&apos;aperçu</button>
             </div>
@@ -129,14 +129,14 @@ function Redaction({ d, restant, onFermer }: { d: Dest; restant: number; onFerme
         {etape === 'apercu' && (
           <>
             <p className="text-gray-500"><b>Rien n&apos;est parti.</b> Objet : {objet}</p>
-            <iframe title="Aperçu du mail" srcDoc={apercu} sandbox="" className="w-full h-[50vh] border rounded bg-gray-100" />
-            <div className="flex gap-2 items-center">
-              <input type="email" value={moi} onChange={(e) => setMoi(e.target.value)} placeholder="Votre adresse pour un test" className="flex-1 px-3 py-2 border rounded" />
+            <iframe title="Aperçu du mail" srcDoc={apercu} sandbox="" className="w-full h-[58dvh] sm:h-[50vh] border rounded bg-gray-100" />
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <input type="email" value={moi} onChange={(e) => setMoi(e.target.value)} placeholder="Votre adresse pour un test" className="flex-1 px-3 py-3 sm:py-2 border rounded text-base sm:text-sm" />
               <button onClick={() => lancer({ action: 'test', to: moi, objet, message }, () => setInfo(`Test envoyé à ${moi}`))} disabled={occupe || !moi} className="px-3 py-2 border rounded disabled:opacity-50">M&apos;envoyer un test</button>
             </div>
             {info && <p className="text-green-700">{info}</p>}
             {erreur && <p className="text-red-600">{erreur}</p>}
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end sticky bottom-0 bg-white pt-2 pb-[env(safe-area-inset-bottom)] [&>button]:py-3 sm:[&>button]:py-2">
               <button onClick={() => setEtape('redaction')} className="px-3 py-2 border rounded">Modifier</button>
               <button onClick={() => lancer({ action: 'envoyer', id: d.id, objet, message, confirme: true }, () => setEtape('envoye'))} disabled={occupe} className="px-3 py-2 bg-wine text-white rounded disabled:opacity-50">{occupe ? 'Envoi…' : `Valider et envoyer à ${d.email}`}</button>
             </div>
