@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Target, Users, BookOpen, CheckSquare } from 'lucide-react'
+import { Home, Target, Users, BookOpen, CheckSquare, Mail } from 'lucide-react'
 
 const navItems = [
   { icon: Home, label: 'Aujourd\'hui', court: 'Accueil', href: '/' },
   { icon: Target, label: 'Pipeline', court: 'Pipeline', href: '/pipeline' },
+  { icon: Mail, label: 'Campagne', court: 'Campagne', href: '/campagne' },
   { icon: Users, label: 'Clients', court: 'Clients', href: '/clients' },
   { icon: BookOpen, label: 'Contenu', court: 'Contenu', href: '/contenu' },
   { icon: CheckSquare, label: 'Tâches', court: 'Tâches', href: '/taches' },
