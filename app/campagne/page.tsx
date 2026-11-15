@@ -39,7 +39,7 @@ export default function CampagnePage() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 md:p-6 space-y-4">
       <div>
         <h1 className="text-2xl font-bold">Campagne de présentation</h1>
         <p className="text-sm text-gray-500">Prospection par e-mail de domaines qui ne nous connaissent pas encore (ce n&apos;est pas la newsletter). Un mail à la fois, relu et validé par vous.</p>
@@ -54,9 +54,26 @@ export default function CampagnePage() {
                 {f === 'tous' ? 'Tous' : LIBELLE[f]} ({etat.destinataires.filter((d) => f === 'tous' || d.statut === f).length})
               </button>
             ))}
-            <input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher" className="px-3 py-1 border rounded" />
+            <input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher" className="px-3 py-2 md:py-1 border rounded w-full md:w-auto" />
           </div>
-          <div className="overflow-x-auto border rounded">
+          <div className="md:hidden space-y-3">
+            {liste.map((d) => (
+              <div key={d.id} className="border rounded-lg bg-white p-3 space-y-2 text-sm">
+                <div className="flex justify-between gap-2">
+                  <div className="min-w-0"><b>{d.nom}</b><br /><span className="text-gray-500">{[d.commune, d.appellation].filter(Boolean).join(' · ')}</span><br /><span className="text-gray-500 break-all">{d.email}</span></div>
+                  <span className="text-xs shrink-0 text-gray-600">{LIBELLE[d.statut]}{d.envoye_le && <><br />{new Date(d.envoye_le).toLocaleDateString('fr-FR')}</>}</span>
+                </div>
+                {d.site && <a href={d.site} target="_blank" rel="noreferrer" className="text-wine underline text-xs break-all">{d.site}</a>}
+                {d.indices && <details className="text-xs text-gray-600"><summary className="cursor-pointer">Indices</summary><p className="mt-1">{d.indices}</p></details>}
+                <div className="flex gap-2">
+                  {(d.statut === 'a_contacter' || d.statut === 'erreur') && <button onClick={() => setOuvert(d)} className="flex-1 py-3 bg-wine text-white rounded font-semibold">Écrire</button>}
+                  {d.statut !== 'refus' && <button onClick={() => refuser(d)} className="px-4 py-3 border rounded">Refus</button>}
+                </div>
+              </div>
+            ))}
+            {!liste.length && <p className="p-4 text-center text-gray-500">Aucun destinataire.</p>}
+          </div>
+          <div className="hidden md:block overflow-x-auto border rounded">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-left"><tr><th className="p-2">Domaine</th><th className="p-2">Appellation</th><th className="p-2">Indices</th><th className="p-2">Statut</th><th className="p-2"></th></tr></thead>
               <tbody>
