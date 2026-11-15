@@ -47,7 +47,7 @@ export default function Sidebar() {
       <header className="md:hidden bg-wine text-white px-4 py-3 shrink-0">
         <h1 className="font-bold text-lg">La Gabare</h1>
       </header>
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-wine text-white border-t border-white/20 grid grid-cols-5 pb-[env(safe-area-inset-bottom)]">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-wine text-white border-t border-white/20 grid grid-cols-6 pb-[env(safe-area-inset-bottom)]">
         {navItems.map((item) => (
           <Link
             key={item.href}
