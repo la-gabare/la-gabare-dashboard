@@ -51,14 +51,6 @@ export async function pageExiste(slug: string): Promise<boolean> {
   return !!data?.some((f) => f.name === 'page.html')
 }
 
-// Page .html en pièce jointe d'un mail : 8 Mo maximum (au-delà, les messageries la refusent).
-export const PAGE_MAX_MAIL = 8_000_000
-export async function lirePage(slug: string): Promise<Buffer | null> {
-  const { data, error } = await supabaseAdmin.storage.from(BUCKET).download(`${slug}/page.html`)
-  if (error || !data) return null
-  return Buffer.from(await data.arrayBuffer())
-}
-
 // Adresse de téléchargement valable 5 minutes (le fichier s'enregistre, il ne s'affiche pas : Supabase sert le HTML en texte brut).
 export async function adresseTelechargementPage(slug: string, nom: string): Promise<string | null> {
   const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(`${slug}/page.html`, 300, { download: nom })

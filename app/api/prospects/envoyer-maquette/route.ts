@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendMail } from '@/lib/mailer'
-import { MARQUE_HTML, PAGE_MAX_MAIL, filigraner, lireApercu, lirePage, urlApercu } from '@/lib/maquettes-prospects'
+import { filigraner, lireApercu, urlApercu } from '@/lib/maquettes-prospects'
 import { EMAIL_RE, htmlMailMaquette, messageParDefaut, objetParDefaut } from '@/lib/mail-maquette'
 
 export const dynamic = 'force-dynamic'
@@ -36,31 +36,24 @@ export async function POST(req: NextRequest) {
     : [null, null]
   if (interne && !bureau) return NextResponse.json({ error: 'Capture de la maquette introuvable' }, { status: 400 })
 
-  // Page .html complète déposée (maquette_url finit par ?html=1) : jointe au mail.
-  const page = interne && pr.maquette_url.endsWith(MARQUE_HTML) ? await lirePage(pr.slug) : null
-  if (interne && pr.maquette_url.endsWith(MARQUE_HTML) && !page) return NextResponse.json({ error: 'Page .html déposée mais introuvable' }, { status: 400 })
-  if (page && page.length > PAGE_MAX_MAIL) return NextResponse.json({ error: `Page .html trop lourde pour un mail (${Math.round(page.length / 1e6)} Mo, 8 Mo maximum) : envoyez-la depuis votre messagerie` }, { status: 400 })
-  const pieceJointe = page ? `${pr.slug}.html (${(page.length / 1e6).toFixed(1).replace('.', ',')} Mo)` : null
-
   if (b.confirme !== true) {
     const base = urlApercu(pr.slug).replace(/\/bureau$/, '')
     const html = htmlMailMaquette(pr, message, { srcBureau: bureau ? `${base}/bureau?filigrane=1` : undefined, srcMobile: mobile ? `${base}/mobile?filigrane=1` : undefined, lien })
-    return NextResponse.json({ apercu: html, to, objet, pieceJointe })
+    return NextResponse.json({ apercu: html, to, objet })
   }
 
   const html = htmlMailMaquette(pr, message, { srcBureau: bureau ? 'cid:maquette-bureau' : undefined, srcMobile: mobile ? 'cid:maquette-mobile' : undefined, lien })
   const attachments = [
     bureau && { filename: 'maquette-bureau.jpg', content: bureau, contentType: 'image/jpeg', cid: 'maquette-bureau' },
     mobile && { filename: 'maquette-mobile.jpg', content: mobile, contentType: 'image/jpeg', cid: 'maquette-mobile' },
-    page && { filename: `${pr.slug}.html`, content: page, contentType: 'text/html' },
-  ].filter(Boolean) as { filename: string; content: Buffer; contentType: string; cid?: string }[]
+  ].filter(Boolean) as { filename: string; content: Buffer; contentType: string; cid: string }[]
   try {
     await sendMail(to, objet, html, { replyTo: process.env.SMTP_USER, attachments })
   } catch (e) {
     console.error('envoi maquette prospect', pr.id, e)
     return NextResponse.json({ error: 'Envoi impossible : le mail n\'est pas parti' }, { status: 502 })
   }
-  await supabaseAdmin.from('evenements').insert({ prospect_id: pr.id, type: 'mail', titre: 'Maquette envoyée par mail', detail: `Objet : ${objet}${pieceJointe ? `\nPièce jointe : ${pieceJointe}` : ''}\n\n${message}` })
+  await supabaseAdmin.from('evenements').insert({ prospect_id: pr.id, type: 'mail', titre: 'Maquette envoyée par mail', detail: `Objet : ${objet}\n\n${message}` })
   if (pr.stade === 'prospect' || pr.stade === 'pret') {
     await supabaseAdmin.from('prospects_hm').update({ stade: 'contacte', updated_at: new Date().toISOString() }).eq('id', pr.id)
   }
