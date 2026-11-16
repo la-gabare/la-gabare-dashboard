@@ -40,18 +40,21 @@ export async function POST(req: NextRequest) {
   const pdf = interne && pr.maquette_url.endsWith(MARQUE_PDF) ? await lirePdf(pr.slug) : null
   if (interne && pr.maquette_url.endsWith(MARQUE_PDF) && !pdf) return NextResponse.json({ error: 'PDF déposé mais introuvable' }, { status: 400 })
   if (pdf && pdf.length > PDF_MAX_MAIL) return NextResponse.json({ error: `PDF trop lourd pour un mail (${Math.round(pdf.length / 1e6)} Mo, 8 Mo maximum) : envoyez-la depuis votre messagerie` }, { status: 400 })
+  // Avec le PDF joint, les captures dans le corps du mail sont inutiles.
+  const imgBureau = pdf ? null : bureau
+  const imgMobile = pdf ? null : mobile
   const pieceJointe = pdf ? `${pr.slug}.pdf (${(pdf.length / 1e6).toFixed(1).replace('.', ',')} Mo)` : null
 
   if (b.confirme !== true) {
     const base = urlApercu(pr.slug).replace(/\/bureau$/, '')
-    const html = htmlMailMaquette(pr, message, { srcBureau: bureau ? `${base}/bureau?filigrane=1` : undefined, srcMobile: mobile ? `${base}/mobile?filigrane=1` : undefined, lien })
+    const html = htmlMailMaquette(pr, message, { srcBureau: imgBureau ? `${base}/bureau?filigrane=1` : undefined, srcMobile: imgMobile ? `${base}/mobile?filigrane=1` : undefined, lien })
     return NextResponse.json({ apercu: html, to, objet, pieceJointe })
   }
 
-  const html = htmlMailMaquette(pr, message, { srcBureau: bureau ? 'cid:maquette-bureau' : undefined, srcMobile: mobile ? 'cid:maquette-mobile' : undefined, lien })
+  const html = htmlMailMaquette(pr, message, { srcBureau: imgBureau ? 'cid:maquette-bureau' : undefined, srcMobile: imgMobile ? 'cid:maquette-mobile' : undefined, lien })
   const attachments = [
-    bureau && { filename: 'maquette-bureau.jpg', content: bureau, contentType: 'image/jpeg', cid: 'maquette-bureau' },
-    mobile && { filename: 'maquette-mobile.jpg', content: mobile, contentType: 'image/jpeg', cid: 'maquette-mobile' },
+    imgBureau && { filename: 'maquette-bureau.jpg', content: bureau, contentType: 'image/jpeg', cid: 'maquette-bureau' },
+    imgMobile && { filename: 'maquette-mobile.jpg', content: mobile, contentType: 'image/jpeg', cid: 'maquette-mobile' },
     pdf && { filename: `${pr.slug}.pdf`, content: pdf, contentType: 'application/pdf' },
   ].filter(Boolean) as { filename: string; content: Buffer; contentType: string; cid?: string }[]
   try {
