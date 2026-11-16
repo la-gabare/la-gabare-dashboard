@@ -4,8 +4,8 @@ export default function MaquetteApercu({ url }: { url?: string }) {
   if (!url) return null
   const interne = url.startsWith('/api/prospects/maquette/')
   if (!interne) return <p><b>Maquette du site :</b> <a href={url} target="_blank" rel="noopener noreferrer" className="text-wine underline">{url}</a></p>
-  const base = url.replace(/\/bureau(\?html=1)?$/, '')
-  const avecPage = url.endsWith('?html=1')
+  const base = url.replace(/\/bureau(\?pdf=1)?$/, '')
+  const avecPdf = url.endsWith('?pdf=1')
   return (
     <div>
       <p className="font-semibold mb-1">Maquette du site (aperçu privé, non publié)</p>
@@ -13,7 +13,7 @@ export default function MaquetteApercu({ url }: { url?: string }) {
         <a href={`${base}/bureau`} target="_blank" rel="noopener noreferrer"><img src={`${base}/bureau`} alt="Maquette, version ordinateur" className="rounded border w-full max-w-xl" /></a>
         <a href={`${base}/mobile`} target="_blank" rel="noopener noreferrer"><img src={`${base}/mobile`} alt="Maquette, version mobile" className="rounded border w-40" /></a>
       </div>
-      {avecPage && <p className="mt-2"><a href={`${base}/page`} className="text-wine underline">Télécharger la page .html (à joindre au mail)</a></p>}
+      {avecPdf && <p className="mt-2"><a href={`${base}/pdf`} className="text-wine underline">Télécharger le PDF (joint au mail d’envoi)</a></p>}
     </div>
   )
 }

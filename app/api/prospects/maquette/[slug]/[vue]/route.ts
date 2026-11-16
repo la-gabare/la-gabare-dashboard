@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { VUES, filigraner, lireApercu, adresseTelechargementPage, type Vue } from '@/lib/maquettes-prospects'
+import { VUES, filigraner, lireApercu, adresseTelechargementPdf, type Vue } from '@/lib/maquettes-prospects'
 
 export const dynamic = 'force-dynamic'
 
 // Affiche la capture d'une maquette de prospect (protégé par le mot de passe via le middleware).
 export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: string; vue: string }> }) {
   const { slug, vue } = await ctx.params
-  if (vue === 'page' && /^[a-z0-9][a-z0-9-]*$/.test(slug)) {
-    const adresse = await adresseTelechargementPage(slug, `${slug}.html`)
+  if (vue === 'pdf' && /^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+    const adresse = await adresseTelechargementPdf(slug, `${slug}.pdf`)
     return adresse ? NextResponse.redirect(adresse) : new NextResponse('Introuvable', { status: 404 })
   }
   if (!/^[a-z0-9][a-z0-9-]*$/.test(slug) || !VUES.includes(vue as Vue)) return new NextResponse('Introuvable', { status: 404 })

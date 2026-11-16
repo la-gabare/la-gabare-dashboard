@@ -11,6 +11,7 @@ export default function EnvoyerMaquette({ prospect, onEnvoye }: { prospect: { id
   const [objet, setObjet] = useState('')
   const [message, setMessage] = useState('')
   const [apercu, setApercu] = useState('')
+  const [pieceJointe, setPieceJointe] = useState('')
   const [erreur, setErreur] = useState('')
   const [occupe, setOccupe] = useState(false)
 
@@ -31,7 +32,7 @@ export default function EnvoyerMaquette({ prospect, onEnvoye }: { prospect: { id
   }
   const verifier = async () => {
     const j = await appeler({ to, objet, message })
-    if (j) { setApercu(j.apercu); setEtape('apercu') }
+    if (j) { setApercu(j.apercu); setPieceJointe(j.pieceJointe || ''); setEtape('apercu') }
   }
   const envoyer = async () => {
     const j = await appeler({ to, objet, message, confirme: true })
@@ -74,7 +75,7 @@ export default function EnvoyerMaquette({ prospect, onEnvoye }: { prospect: { id
             {etape === 'apercu' && (
               <>
                 <p className="text-gray-500">Étape 2 sur 3 : relisez. <b>Rien n&apos;est parti.</b></p>
-                <p><b>À :</b> {to}<br /><b>Objet :</b> {objet}</p>
+                <p><b>À :</b> {to}<br /><b>Objet :</b> {objet}{pieceJointe && <><br /><b>Pièce jointe :</b> {pieceJointe}</>}</p>
                 <iframe title="Aperçu du mail" srcDoc={apercu} sandbox="" className="w-full h-[55vh] border rounded bg-gray-100" />
                 {erreur && <p className="text-red-600">{erreur}</p>}
                 <div className="flex gap-2 justify-end">
