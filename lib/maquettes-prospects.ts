@@ -8,6 +8,8 @@ export const VUES = ['bureau', 'mobile'] as const
 export type Vue = (typeof VUES)[number]
 export const TAILLE_MAX = 1_500_000
 export const urlApercu = (slug: string) => `/api/prospects/maquette/${slug}/bureau`
+// La page .html complète (pièce jointe du mail) : « ?html=1 » dans maquette_url dit qu'elle est déposée.
+export const MARQUE_HTML = '?html=1'
 
 export const estJpeg = (b: Buffer) => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff
 
@@ -34,7 +36,25 @@ export async function lireApercu(slug: string, vue: Vue): Promise<Buffer | null>
 }
 
 export async function supprimerApercus(slug: string): Promise<void> {
-  await supabaseAdmin.storage.from(BUCKET).remove(VUES.map((v) => `${slug}/${v}.jpg`))
+  await supabaseAdmin.storage.from(BUCKET).remove([...VUES.map((v) => `${slug}/${v}.jpg`), `${slug}/page.html`])
+}
+
+// Page .html : envoyée directement dans le bucket par une adresse signée (la limite de 4,5 Mo des fonctions Vercel ne s'applique pas).
+export async function adresseDepotPage(slug: string): Promise<string | null> {
+  await assurerBucket()
+  const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUploadUrl(`${slug}/page.html`, { upsert: true })
+  return error || !data ? null : data.signedUrl
+}
+
+export async function pageExiste(slug: string): Promise<boolean> {
+  const { data } = await supabaseAdmin.storage.from(BUCKET).list(slug, { search: 'page.html' })
+  return !!data?.some((f) => f.name === 'page.html')
+}
+
+// Adresse de téléchargement valable 5 minutes (le fichier s'enregistre, il ne s'affiche pas : Supabase sert le HTML en texte brut).
+export async function adresseTelechargementPage(slug: string, nom: string): Promise<string | null> {
+  const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(`${slug}/page.html`, 300, { download: nom })
+  return error || !data ? null : data.signedUrl
 }
 
 // Filigrane diagonal répété « Maquette La Gabare - non publiée », posé sur la copie envoyée (l'original reste intact).
