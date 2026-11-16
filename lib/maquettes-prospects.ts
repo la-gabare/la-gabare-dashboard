@@ -62,12 +62,12 @@ export async function filigraner(img: Buffer): Promise<Buffer> {
   const { width = 0, height = 0 } = await sharp(img).metadata()
   if (!width || !height) return img
   const taille = Math.max(14, Math.round(width / 28))
-  const pasX = taille * 20
-  const pasY = taille * 7
+  const pasX = taille * 26
+  const pasY = taille * 9
   const texte = 'Maquette La Gabare - non publiée'
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
 <defs><pattern id="f" width="${pasX}" height="${pasY}" patternUnits="userSpaceOnUse" patternTransform="rotate(-25)">
-<text x="0" y="${taille}" font-family="DejaVu Sans, Arial, sans-serif" font-size="${taille}" font-weight="bold" fill="#ffffff" fill-opacity="0.55" stroke="#2A0810" stroke-opacity="0.35" stroke-width="1">${texte}</text>
+<text x="0" y="${taille}" font-family="DejaVu Sans, Arial, sans-serif" font-size="${taille}" font-weight="bold" fill="#ffffff" fill-opacity="0.16" stroke="#2A0810" stroke-opacity="0.1" stroke-width="1">${texte}</text>
 </pattern></defs><rect width="100%" height="100%" fill="url(#f)"/></svg>`
   return sharp(img).composite([{ input: Buffer.from(svg) }]).jpeg({ quality: 85 }).toBuffer()
 }
