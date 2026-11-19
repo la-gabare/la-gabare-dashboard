@@ -2,6 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+const SANS_APPELLATION = 'Sans appellation'
+const INDICES = ['Site présent', 'Sans site', 'Boutique en ligne probable', 'Boutique non détectée', 'Adresse grand public', 'Coopérative'] as const
+// Les indices sont un texte libre : on en déduit des étiquettes filtrables.
+function tagsIndices(t: string | null): string[] {
+  const x = (t || '').toLowerCase()
+  const tags: string[] = []
+  if (/pas de site|aucun site|aucun déclaré|injoignable/.test(x)) tags.push('Sans site')
+  else if (/site\s*:?\s*présent/.test(x)) tags.push('Site présent')
+  if (/boutique en ligne\s*:?\s*(probable|présente)/.test(x)) tags.push('Boutique en ligne probable')
+  else if (/boutique en ligne\s*:?\s*non détectée/.test(x)) tags.push('Boutique non détectée')
+  if (/gmail|orange|wanadoo|hotmail|free\.fr|laposte|sfr|yahoo|grand public|\bfai\b/.test(x)) tags.push('Adresse grand public')
+  if (/coop/.test(x)) tags.push('Coopérative')
+  return tags
+}
+
 interface Dest { id: number; nom: string; appellation: string | null; commune: string | null; site: string | null; email: string; telephone: string | null; indices: string | null; statut: 'a_contacter' | 'envoye' | 'refus' | 'erreur'; envoye_le: string | null; erreur: string | null }
 interface Etat { destinataires: Dest[]; aujourdhui: number; limite: number; restant: number }
 
@@ -18,6 +33,8 @@ export default function CampagnePage() {
   const [erreur, setErreur] = useState('')
   const [filtre, setFiltre] = useState<'a_contacter' | 'envoye' | 'refus' | 'tous'>('a_contacter')
   const [recherche, setRecherche] = useState('')
+  const [appellation, setAppellation] = useState('')
+  const [indice, setIndice] = useState('')
   const [ouvert, setOuvert] = useState<Dest | null>(null)
 
   const charger = useCallback(async () => {
@@ -30,7 +47,15 @@ export default function CampagnePage() {
 
   const liste = useMemo(() => (etat?.destinataires ?? []).filter((d) =>
     (filtre === 'tous' || d.statut === filtre || (filtre === 'a_contacter' && d.statut === 'erreur')) &&
-    (!recherche || `${d.nom} ${d.commune} ${d.appellation}`.toLowerCase().includes(recherche.toLowerCase()))), [etat, filtre, recherche])
+    (!appellation || (d.appellation || SANS_APPELLATION) === appellation) &&
+    (!indice || tagsIndices(d.indices).includes(indice)) &&
+    (!recherche || `${d.nom} ${d.commune} ${d.appellation}`.toLowerCase().includes(recherche.toLowerCase()))), [etat, filtre, recherche, appellation, indice])
+
+  const appellations = useMemo(() => {
+    const n = new Map<string, number>()
+    for (const d of etat?.destinataires ?? []) { const a = d.appellation || SANS_APPELLATION; n.set(a, (n.get(a) ?? 0) + 1) }
+    return [...n.entries()].sort((a, b) => a[0].localeCompare(b[0], 'fr'))
+  }, [etat])
 
   const refuser = async (d: Dest) => {
     if (!confirm(`Marquer ${d.nom} comme refus ? Il ne sera plus jamais contacté.`)) return
@@ -54,6 +79,14 @@ export default function CampagnePage() {
                 {f === 'tous' ? 'Tous' : LIBELLE[f]} ({etat.destinataires.filter((d) => f === 'tous' || d.statut === f).length})
               </button>
             ))}
+            <select value={appellation} onChange={(e) => setAppellation(e.target.value)} className="px-3 py-2 md:py-1 border rounded w-full md:w-auto">
+              <option value="">Toutes les appellations</option>
+              {appellations.map(([a, n]) => <option key={a} value={a}>{a} ({n})</option>)}
+            </select>
+            <select value={indice} onChange={(e) => setIndice(e.target.value)} className="px-3 py-2 md:py-1 border rounded w-full md:w-auto">
+              <option value="">Tous les indices</option>
+              {INDICES.map((i) => <option key={i} value={i}>{i}</option>)}
+            </select>
             <input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher" className="px-3 py-2 md:py-1 border rounded w-full md:w-auto" />
           </div>
           <div className="md:hidden space-y-3">
