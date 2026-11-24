@@ -1,6 +1,7 @@
 // Mail « Votre maquette » envoyé à un prospect push : message type modifiable, mis en page avec la charte.
 // Rien ne part sans aperçu puis validation explicite de Louis (voir /api/prospects/envoyer-maquette).
-import { gabaritMail, p } from '@/lib/mail-cadre'
+import { gabaritMail, boutonMail, p } from '@/lib/mail-cadre'
+import { LIEN_SITE, LIEN_AUDIT } from '@/lib/mail-presentation'
 
 export const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 export const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]{2,}$/
@@ -14,11 +15,13 @@ export function messageParDefaut(pr: ProspectMail): string {
   const lieu = [pr.appellation, pr.commune].filter(Boolean).join(', ')
   return `Bonjour,
 
+Je suis Alexandre, de La Gabare : une petite agence web qui travaille uniquement avec des domaines viticoles de la Loire (sites, boutique en ligne, accompagnement).
+
 J'ai découvert ${pr.nom}${lieu ? ` (${lieu})` : ''} et j'ai pris le temps d'imaginer ce que pourrait être votre site. [Ajoutez ici une phrase personnelle.]
 
 Vous trouverez ci-dessous une maquette, préparée sans aucun engagement. Elle n'est pas publiée : elle n'existe que pour vous la montrer.
 
-La Gabare est une agence web réservée aux domaines viticoles de la Loire. Si la maquette vous parle, je serais ravi d'en discuter lors d'un court échange, quand cela vous arrange.
+Pour voir comment nous travaillons, tout est sur notre site. Et si vous êtes curieux de savoir ce que l'on voit de votre domaine sur Google, nous proposons un audit gratuit : un rapport par mail, en quelques minutes, sans engagement.
 
 Belle journée à vous,`
 }
@@ -39,7 +42,9 @@ export function htmlMailMaquette(pr: ProspectMail, message: string, m: { srcBure
     label: 'Votre maquette',
     titre: `Un site pour ${esc(pr.nom)}`,
     corps: `${messageEnHtml(message)}\n${images ? `<div style="margin:24px 0 8px 0;">${images}</div>` : ''}`,
-    bouton: m.lien ? { texte: 'Voir la maquette en ligne', lien: m.lien } : undefined,
-    apresBouton: p(`<span style="font-size:11px;">Pour ne plus recevoir de message de La Gabare, répondez simplement « stop ».</span>`, '24px 0 0 0'),
+    bouton: m.lien ? { texte: 'Voir la maquette en ligne', lien: m.lien } : { texte: 'Découvrir le site La Gabare', lien: LIEN_SITE },
+    apresBouton: `${m.lien ? boutonMail('Découvrir le site La Gabare', esc(LIEN_SITE), { secondaire: true, marge: '12px 0 0 0' }) : ''}
+${boutonMail('Recevoir mon audit gratuit', esc(LIEN_AUDIT), { secondaire: true, marge: '12px 0 0 0' })}
+${p(`<span style="font-size:11px;">Pour ne plus recevoir de message de La Gabare, répondez simplement « stop ».</span>`, '24px 0 0 0')}`,
   })
 }
